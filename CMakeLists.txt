@@ -53,6 +53,19 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(PUGIXML REQUIRED pugixml)
 pkg_check_modules(CONFIGPP REQUIRED libconfig++)
 
+# 如果 pkg-config 找不到，尝试使用 find_package
+if(NOT CONFIGPP_FOUND)
+    find_library(CONFIGPP_LIBRARIES config++)
+    find_path(CONFIGPP_INCLUDE_DIRS libconfig.h++)
+    if(CONFIGPP_LIBRARIES AND CONFIGPP_INCLUDE_DIRS)
+        set(CONFIGPP_FOUND TRUE)
+    endif()
+endif()
+
+if(NOT CONFIGPP_FOUND)
+    message(FATAL_ERROR "libconfig++ not found. Please install libconfig++-dev")
+endif()
+
 # 包含目录
 include_directories(
     ${CMAKE_SOURCE_DIR}/src
