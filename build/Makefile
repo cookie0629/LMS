@@ -266,6 +266,19 @@ test_database/fast:
 .PHONY : test_database/fast
 
 #=============================================================================
+# Target rules for targets named lmsauth
+
+# Build rule for target.
+lmsauth: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmsauth
+.PHONY : lmsauth
+
+# fast build rule for target.
+lmsauth/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/services/auth/CMakeFiles/lmsauth.dir/build.make src/libs/services/auth/CMakeFiles/lmsauth.dir/build
+.PHONY : lmsauth/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -291,6 +304,7 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... lms"
+	@echo "... lmsauth"
 	@echo "... lmscore"
 	@echo "... lmsdatabase"
 	@echo "... test_config"

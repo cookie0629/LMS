@@ -4,6 +4,7 @@
 # Core 库（基础工具库）
 add_subdirectory(core)
 add_subdirectory(database)
+add_subdirectory(services)
 
 # 示例：添加 audio 库（当创建后）
 # add_subdirectory(audio)
