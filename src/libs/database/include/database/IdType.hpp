@@ -3,6 +3,7 @@
 #include <cstdint>
 #include <string>
 #include <string_view>
+#include <type_traits>
 
 #include "core/TaggedType.hpp"
 
@@ -14,7 +15,13 @@ namespace lms::db
     class IdType : public core::TaggedType<std::int64_t, struct IdTypeTag>
     {
     public:
+        using ValueType = std::int64_t;
         using TaggedType::TaggedType;
+        
+        IdType() = default;
+        explicit IdType(ValueType id) : TaggedType(id) {}
+        
+        ValueType getValue() const { return TaggedType::getValue(); }
     };
 
     /**

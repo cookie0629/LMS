@@ -4,6 +4,8 @@ cmake_minimum_required(VERSION 3.20)
 add_library(lmsdatabase STATIC
     impl/Transaction.cpp
     impl/Object.cpp
+    impl/Db.cpp
+    impl/Session.cpp
 )
 
 target_include_directories(lmsdatabase INTERFACE

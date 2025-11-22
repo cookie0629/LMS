@@ -5,7 +5,7 @@
 namespace lms::db
 {
     WriteTransaction::WriteTransaction(Session& session)
-        : _transaction(*session.getDboSession(), true)  // true = write transaction
+        : _transaction(*session.getDboSession())
         , _committed(false)
     {
     }
@@ -37,7 +37,7 @@ namespace lms::db
     }
 
     ReadTransaction::ReadTransaction(Session& session)
-        : _transaction(*session.getDboSession(), false)  // false = read transaction
+        : _transaction(*session.getDboSession())
         , _committed(false)
     {
     }

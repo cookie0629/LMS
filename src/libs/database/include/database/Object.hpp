@@ -65,14 +65,14 @@ namespace lms::db
 
     public:
         using pointer = ObjectPtr<T>;
-        using IdType = ObjectIdType;
+        using ObjectId = ObjectIdType;
 
         /**
          * @brief 获取对象ID
          */
-        IdType getId() const 
+        ObjectId getId() const 
         { 
-            return IdType{ Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id() }; 
+            return ObjectId{ Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id() }; 
         }
 
         // 禁止直接使用 id()，必须使用 getId()
