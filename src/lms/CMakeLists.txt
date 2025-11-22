@@ -27,10 +27,15 @@ target_link_libraries(lms
     pthread
 )
 
-# 编译定义
-target_compile_definitions(lms PRIVATE
-    ${WT_CFLAGS_OTHER}
+# 编译选项（从 WT_CFLAGS_OTHER 中提取，但过滤掉无效的）
+target_compile_options(lms PRIVATE
+    -std=c++11
 )
+
+# 编译定义（移除可能导致问题的标志）
+# target_compile_definitions(lms PRIVATE
+#     ${WT_CFLAGS_OTHER}
+# )
 
 # 安装
 install(TARGETS lms RUNTIME DESTINATION bin)

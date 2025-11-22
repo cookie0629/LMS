@@ -1,0 +1,24 @@
+# LMS 配置文件示例
+# 复制此文件为 lms.conf 并修改配置
+
+# 服务器配置
+server-host = "0.0.0.0"
+server-port = 5082
+
+# 数据库配置
+database-path = "/var/lms/lms.db"
+
+# 日志配置
+log-file = "/var/lms/lms.log"
+log-min-severity = "info"
+
+# 媒体库配置
+media-library-path = "/path/to/your/music"
+
+# 转码配置
+transcoding-enabled = true
+transcoding-default-bitrate = 192
+
+# 用户认证
+auth-backend = "internal"
+
