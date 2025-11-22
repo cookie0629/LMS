@@ -3,8 +3,8 @@
 # 创建 Core 库
 add_library(lmscore
     impl/Path.cpp
+    impl/String.cpp
     # 后续会添加更多源文件
-    # impl/String.cpp
     # impl/UUID.cpp
 )
 
@@ -28,5 +28,9 @@ if(ENABLE_CORE_TESTS)
     add_executable(test_path test/test_path.cpp)
     target_link_libraries(test_path PRIVATE lmscore)
     target_include_directories(test_path PRIVATE include/)
+    
+    add_executable(test_string test/test_string.cpp)
+    target_link_libraries(test_string PRIVATE lmscore)
+    target_include_directories(test_string PRIVATE include/)
 endif()
 
