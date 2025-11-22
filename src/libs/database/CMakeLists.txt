@@ -6,6 +6,8 @@ add_library(lmsdatabase STATIC
     impl/Object.cpp
     impl/Db.cpp
     impl/Session.cpp
+    impl/Utils.cpp
+    impl/objects/User.cpp
 )
 
 target_include_directories(lmsdatabase INTERFACE

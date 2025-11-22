@@ -4,6 +4,7 @@
 #include "core/Service.hpp"
 #include "Db.hpp"
 #include "database/Transaction.hpp"
+#include "database/objects/User.hpp"
 
 namespace lms::db
 {
@@ -15,8 +16,7 @@ namespace lms::db
         _session.setConnectionPool(dbImpl.getConnectionPool());
 
         // 映射数据类到表
-        // 注意：目前还没有数据对象，所以暂时不映射
-        // 后续添加 User 等对象时，在这里添加 mapClass 调用
+        _session.mapClass<User>("user");
     }
 
     WriteTransaction Session::createWriteTransaction()

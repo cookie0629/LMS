@@ -30,5 +30,15 @@ namespace lms::db
         std::vector<T> results;
         bool moreResults{};
     };
+
+    /**
+     * @brief 用户类型枚举
+     */
+    enum class UserType
+    {
+        REGULAR,  // 普通用户
+        ADMIN,    // 管理员
+        DEMO,     // 演示用户
+    };
 } // namespace lms::db
 

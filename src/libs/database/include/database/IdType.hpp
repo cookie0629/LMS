@@ -24,18 +24,21 @@ namespace lms::db
         ValueType getValue() const { return TaggedType::getValue(); }
     };
 
-    /**
-     * @brief 声明ID类型宏
-     * 
-     * 使用示例：
-     * LMS_DECLARE_IDTYPE(UserId)
-     */
-#define LMS_DECLARE_IDTYPE(TypeName) \
-    class TypeName : public IdType \
-    { \
-    public: \
-        using IdType::IdType; \
-    }
-
 } // namespace lms::db
+
+/**
+ * @brief 声明ID类型宏
+ * 
+ * 使用示例：
+ * LMS_DECLARE_IDTYPE(UserId)
+ */
+#define LMS_DECLARE_IDTYPE(TypeName) \
+    namespace lms::db \
+    { \
+        class TypeName : public IdType \
+        { \
+        public: \
+            using IdType::IdType; \
+        }; \
+    }
 
