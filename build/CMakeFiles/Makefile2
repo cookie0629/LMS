@@ -96,16 +96,33 @@ src/clean: src/lms/clean
 # Directory level rules for directory src/libs
 
 # Recursive "all" directory target.
-src/libs/all:
+src/libs/all: src/libs/core/all
 .PHONY : src/libs/all
 
 # Recursive "preinstall" directory target.
-src/libs/preinstall:
+src/libs/preinstall: src/libs/core/preinstall
 .PHONY : src/libs/preinstall
 
 # Recursive "clean" directory target.
-src/libs/clean:
+src/libs/clean: src/libs/core/clean
 .PHONY : src/libs/clean
+
+#=============================================================================
+# Directory level rules for directory src/libs/core
+
+# Recursive "all" directory target.
+src/libs/core/all: src/libs/core/CMakeFiles/lmscore.dir/all
+src/libs/core/all: src/libs/core/CMakeFiles/test_path.dir/all
+.PHONY : src/libs/core/all
+
+# Recursive "preinstall" directory target.
+src/libs/core/preinstall:
+.PHONY : src/libs/core/preinstall
+
+# Recursive "clean" directory target.
+src/libs/core/clean: src/libs/core/CMakeFiles/lmscore.dir/clean
+src/libs/core/clean: src/libs/core/CMakeFiles/test_path.dir/clean
+.PHONY : src/libs/core/clean
 
 #=============================================================================
 # Directory level rules for directory src/lms
@@ -121,6 +138,58 @@ src/lms/preinstall:
 # Recursive "clean" directory target.
 src/lms/clean: src/lms/CMakeFiles/lms.dir/clean
 .PHONY : src/lms/clean
+
+#=============================================================================
+# Target rules for target src/libs/core/CMakeFiles/lmscore.dir
+
+# All Build rule for target.
+src/libs/core/CMakeFiles/lmscore.dir/all:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=3,4 "Built target lmscore"
+.PHONY : src/libs/core/CMakeFiles/lmscore.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/core/CMakeFiles/lmscore.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 2
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/lmscore.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/core/CMakeFiles/lmscore.dir/rule
+
+# Convenience name for target.
+lmscore: src/libs/core/CMakeFiles/lmscore.dir/rule
+.PHONY : lmscore
+
+# clean rule for target.
+src/libs/core/CMakeFiles/lmscore.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/clean
+.PHONY : src/libs/core/CMakeFiles/lmscore.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/core/CMakeFiles/test_path.dir
+
+# All Build rule for target.
+src/libs/core/CMakeFiles/test_path.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=5,6 "Built target test_path"
+.PHONY : src/libs/core/CMakeFiles/test_path.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/core/CMakeFiles/test_path.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 4
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_path.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/core/CMakeFiles/test_path.dir/rule
+
+# Convenience name for target.
+test_path: src/libs/core/CMakeFiles/test_path.dir/rule
+.PHONY : test_path
+
+# clean rule for target.
+src/libs/core/CMakeFiles/test_path.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/clean
+.PHONY : src/libs/core/CMakeFiles/test_path.dir/clean
 
 #=============================================================================
 # Target rules for target src/lms/CMakeFiles/lms.dir

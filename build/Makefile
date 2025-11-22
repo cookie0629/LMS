@@ -162,6 +162,32 @@ depend:
 .PHONY : depend
 
 #=============================================================================
+# Target rules for targets named lmscore
+
+# Build rule for target.
+lmscore: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmscore
+.PHONY : lmscore
+
+# fast build rule for target.
+lmscore/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/build
+.PHONY : lmscore/fast
+
+#=============================================================================
+# Target rules for targets named test_path
+
+# Build rule for target.
+test_path: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_path
+.PHONY : test_path
+
+# fast build rule for target.
+test_path/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/build
+.PHONY : test_path/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -187,6 +213,8 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... lms"
+	@echo "... lmscore"
+	@echo "... test_path"
 .PHONY : help
 
 
