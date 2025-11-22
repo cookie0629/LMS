@@ -77,5 +77,6 @@ set(CMAKE_MAKEFILE_PRODUCTS
 set(CMAKE_DEPEND_INFO_FILES
   "src/libs/core/CMakeFiles/lmscore.dir/DependInfo.cmake"
   "src/libs/core/CMakeFiles/test_path.dir/DependInfo.cmake"
+  "src/libs/core/CMakeFiles/test_string.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )

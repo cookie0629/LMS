@@ -188,6 +188,19 @@ test_path/fast:
 .PHONY : test_path/fast
 
 #=============================================================================
+# Target rules for targets named test_string
+
+# Build rule for target.
+test_string: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_string
+.PHONY : test_string
+
+# fast build rule for target.
+test_string/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/build
+.PHONY : test_string/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -215,6 +228,7 @@ help:
 	@echo "... lms"
 	@echo "... lmscore"
 	@echo "... test_path"
+	@echo "... test_string"
 .PHONY : help
 
 
