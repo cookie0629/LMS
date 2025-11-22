@@ -12,6 +12,11 @@ add_library(lmsauth STATIC
     impl/AuthService.cpp
 )
 
+# 添加 AuthTokenService.hpp 到包含目录
+target_include_directories(lmsauth PRIVATE
+    impl
+)
+
 target_include_directories(lmsauth PUBLIC
     include
 )

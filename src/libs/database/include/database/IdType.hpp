@@ -16,10 +16,13 @@ namespace lms::db
     {
     public:
         using ValueType = std::int64_t;
-        using TaggedType::TaggedType;
         
         IdType() = default;
         explicit IdType(ValueType id) : TaggedType(id) {}
+        
+        // 显式禁用 TaggedType 的构造函数，避免歧义
+        IdType(const TaggedType&) = delete;
+        IdType(TaggedType&&) = delete;
         
         ValueType getValue() const { return TaggedType::getValue(); }
     };

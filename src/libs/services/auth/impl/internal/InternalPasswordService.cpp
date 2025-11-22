@@ -17,11 +17,11 @@ namespace lms::auth
         , _hashFunc{ static_cast<int>(_bcryptRoundCount) }
     {
         // 可以从配置读取 bcrypt 轮数
-        if (auto* config = lms::core::Service<lms::core::IConfig>::get())
-        {
-            // 暂时使用默认值，后续可以从配置读取
-            // _bcryptRoundCount = static_cast<unsigned>(config->getULong("internal-password-bcrypt-round", 12));
-        }
+        // 暂时使用默认值，后续可以从配置读取
+        // if (auto* config = lms::core::Service<lms::core::IConfig>::get())
+        // {
+        //     _bcryptRoundCount = static_cast<unsigned>(config->getULong("internal-password-bcrypt-round", 12));
+        // }
 
         if (_bcryptRoundCount < 7 || _bcryptRoundCount > 31)
         {

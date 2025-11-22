@@ -72,16 +72,14 @@ namespace lms::db
          */
         ObjectId getId() const 
         { 
+            // 直接返回 Wt::Dbo 的 id()，它应该返回与 ObjectId 兼容的类型
+            // 注意：Wt::Dbo::Dbo<T>::id() 返回的是 dbo_traits<T>::IdType
+            // 在我们的实现中，这应该是 long long 或 int64_t
             auto idValue = Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id();
-            // 使用显式构造避免歧义：先转换为值类型，再显式构造
+            // 直接使用值构造，通过显式指定类型避免歧义
             typename ObjectId::ValueType value = static_cast<typename ObjectId::ValueType>(idValue);
-            // 直接使用值构造 ObjectId
-            // 由于 ObjectId 继承自 IdType，而 IdType 有 explicit IdType(ValueType) 构造函数
-            // 我们通过显式调用 IdType 的构造函数来避免歧义
-            // 注意：这里使用临时变量来避免列表初始化的歧义
-            typename ObjectId::ValueType tempValue = value;
-            // 使用显式构造函数调用，避免歧义
-            return ObjectId(IdType::ValueType(tempValue));
+            // 使用 IdType 的显式构造函数
+            return ObjectId(static_cast<typename ObjectId::ValueType>(value));
         }
 
         // 禁止直接使用 id()，必须使用 getId()
