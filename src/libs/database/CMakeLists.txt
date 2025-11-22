@@ -36,3 +36,13 @@ set_target_properties(lmsdatabase PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# 添加测试程序（简化版，直接编译）
+add_executable(test_database test/test_database.cpp)
+target_link_libraries(test_database PRIVATE 
+    lmsdatabase
+    lmscore
+)
+target_include_directories(test_database PRIVATE
+    include
+)
+

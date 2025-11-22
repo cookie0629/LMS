@@ -27,7 +27,7 @@ namespace lms::db
         ObjectPtr(Wt::Dbo::ptr<T>&& obj) : _obj{ std::move(obj) } {}
 
         const T* operator->() const { return _obj.get(); }
-        T* operator->() { return _obj.get(); }
+        T* operator->() { return const_cast<T*>(_obj.get()); }
         operator bool() const { return _obj.get(); }
         bool operator!() const { return !_obj.get(); }
         bool operator==(const ObjectPtr& other) const { return _obj == other._obj; }
@@ -72,7 +72,11 @@ namespace lms::db
          */
         ObjectId getId() const 
         { 
-            return ObjectId{ Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id() }; 
+            auto idValue = Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id();
+            // 使用显式构造避免歧义
+            typename ObjectId::ValueType value = static_cast<typename ObjectId::ValueType>(idValue);
+            // 直接使用值构造，通过显式指定类型
+            return ObjectId(typename ObjectId::ValueType(value));
         }
 
         // 禁止直接使用 id()，必须使用 getId()

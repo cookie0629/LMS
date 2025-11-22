@@ -106,17 +106,35 @@ namespace lms::db::Migration
 
             try
             {
-                // 获取或创建版本信息
-                auto versionInfo = VersionInfo::getOrCreate(session);
-                currentVersion = versionInfo->getVersion();
+                // 尝试获取版本信息
+                auto versionInfo = VersionInfo::get(session);
+                if (versionInfo)
+                {
+                    currentVersion = versionInfo->getVersion();
+                }
+                else
+                {
+                    // 如果版本信息不存在，说明是全新数据库，版本为 0
+                    currentVersion = 0;
+                }
 
                 LMS_LOG(DB, INFO, "Database version = " << currentVersion 
                     << ", LMS binary version = " << LMS_DATABASE_VERSION);
             }
             catch (const std::exception& e)
             {
-                LMS_LOG(DB, ERROR, "Cannot get database version info: " << e.what());
-                throw;
+                // 如果表不存在，说明是全新数据库，版本为 0
+                std::string errorMsg = e.what();
+                if (errorMsg.find("no such table") != std::string::npos)
+                {
+                    currentVersion = 0;
+                    LMS_LOG(DB, INFO, "VersionInfo table not found, assuming version 0");
+                }
+                else
+                {
+                    LMS_LOG(DB, ERROR, "Cannot get database version info: " << e.what());
+                    throw;
+                }
             }
 
             // 检查版本兼容性
@@ -139,8 +157,15 @@ namespace lms::db::Migration
                     << " to " << LMS_DATABASE_VERSION << "...");
 
                 // 对于版本 0 -> 1 的迁移，表结构会在 prepareTablesIfNeeded 中创建
-                // 这里只需要更新版本号
-                auto versionInfo = VersionInfo::getOrCreate(session);
+                // 这里需要创建版本信息并设置版本号
+                // 先尝试获取，如果不存在则创建
+                auto versionInfo = VersionInfo::get(session);
+                if (!versionInfo)
+                {
+                    // 如果不存在，创建新的版本信息
+                    versionInfo = session.getDboSession()->add(std::make_unique<VersionInfo>());
+                }
+                
                 versionInfo.modify()->setVersion(LMS_DATABASE_VERSION);
 
                 LMS_LOG(DB, INFO, "Migration complete to version " << LMS_DATABASE_VERSION);

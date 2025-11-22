@@ -59,6 +59,7 @@ namespace lms::db
         try
         {
             // 创建表（如果不存在）
+            // 注意：createTables() 需要在事务外执行
             _session.createTables();
             
             if (auto* logger = lms::core::Service<lms::core::logging::ILogger>::get())
