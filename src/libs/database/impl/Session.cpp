@@ -4,6 +4,7 @@
 #include "core/Service.hpp"
 #include "Db.hpp"
 #include "database/Transaction.hpp"
+#include "database/Migration.hpp"
 #include "database/objects/User.hpp"
 
 namespace lms::db
@@ -17,6 +18,7 @@ namespace lms::db
 
         // 映射数据类到表
         _session.mapClass<User>("user");
+        _session.mapClass<VersionInfo>("version_info");
     }
 
     WriteTransaction Session::createWriteTransaction()
@@ -76,9 +78,7 @@ namespace lms::db
 
     bool Session::migrateSchemaIfNeeded()
     {
-        // 简化版本：暂时不实现迁移
-        // 实际项目中需要实现版本管理和迁移脚本
-        return false;
+        return Migration::doDbMigration(*this);
     }
 } // namespace lms::db
 

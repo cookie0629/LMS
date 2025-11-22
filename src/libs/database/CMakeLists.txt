@@ -7,6 +7,7 @@ add_library(lmsdatabase STATIC
     impl/Db.cpp
     impl/Session.cpp
     impl/Utils.cpp
+    impl/Migration.cpp
     impl/objects/User.cpp
 )
 

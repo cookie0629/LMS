@@ -5,6 +5,7 @@
 #include <optional>
 
 #include <Wt/Dbo/Field.h>
+#include <Wt/Dbo/WtSqlTraits.h>
 #include <Wt/WDateTime.h>
 
 #include "core/UUID.hpp"
