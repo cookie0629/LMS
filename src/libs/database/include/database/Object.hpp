@@ -73,10 +73,15 @@ namespace lms::db
         ObjectId getId() const 
         { 
             auto idValue = Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id();
-            // 使用显式构造避免歧义
+            // 使用显式构造避免歧义：先转换为值类型，再显式构造
             typename ObjectId::ValueType value = static_cast<typename ObjectId::ValueType>(idValue);
-            // 直接使用值构造，通过显式指定类型
-            return ObjectId(typename ObjectId::ValueType(value));
+            // 直接使用值构造 ObjectId
+            // 由于 ObjectId 继承自 IdType，而 IdType 有 explicit IdType(ValueType) 构造函数
+            // 我们通过显式调用 IdType 的构造函数来避免歧义
+            // 注意：这里使用临时变量来避免列表初始化的歧义
+            typename ObjectId::ValueType tempValue = value;
+            // 使用显式构造函数调用，避免歧义
+            return ObjectId(IdType::ValueType(tempValue));
         }
 
         // 禁止直接使用 id()，必须使用 getId()

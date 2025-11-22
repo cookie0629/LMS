@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 3.20)
 # Auth Service 库
 
 # 创建 Auth Service 库
-# 注意：目前只创建库结构，实现文件待添加
 add_library(lmsauth STATIC
+    impl/AuthServiceBase.cpp
+    impl/LoginThrottler.cpp
+    impl/internal/InternalPasswordService.cpp
     impl/AuthTokenService.cpp
     impl/PasswordService.cpp
     impl/AuthService.cpp

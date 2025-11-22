@@ -1,9 +1,9 @@
 #pragma once
 
+#include <stdexcept>
 #include <string>
 #include <string_view>
 
-#include "core/Exception.hpp"
 #include "database/Types.hpp"
 
 namespace lms::auth
