@@ -173,4 +173,4 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 
-模板*
+模板*"build/" 
