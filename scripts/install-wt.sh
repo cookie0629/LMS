@@ -71,13 +71,14 @@ cd "${BUILD_SUBDIR}"
 
 # 配置 CMake
 echo "配置 CMake..."
+# 使用 STB 作为图像实现（不需要额外依赖）
 cmake .. \
     -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" \
     -DSHARED_LIBS=ON \
     -DWT_BUILD_EXAMPLES=OFF \
     -DWT_BUILD_TESTS=OFF \
-    -DWT_WRASTERIMAGE_IMPLEMENTATION=GraphicsMagick \
+    -DWT_WRASTERIMAGE_IMPLEMENTATION=Wt \
     -DWT_CPP_11_MODE=-std=c++11
 
 # 编译

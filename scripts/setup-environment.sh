@@ -84,7 +84,9 @@ sudo apt install -y \
     libssl-dev \
     libsqlite3-dev \
     zlib1g-dev \
-    libbz2-dev
+    libbz2-dev \
+    libgraphicsmagick++-dev \
+    libgraphicsmagick1-dev
 
 # 步骤 4: 安装 Wt 框架
 echo ""
