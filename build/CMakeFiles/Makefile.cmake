@@ -84,5 +84,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/libs/core/CMakeFiles/test_config.dir/DependInfo.cmake"
   "src/libs/core/CMakeFiles/test_logger.dir/DependInfo.cmake"
   "src/libs/database/CMakeFiles/lmsdatabase.dir/DependInfo.cmake"
+  "src/libs/database/CMakeFiles/test_database.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )

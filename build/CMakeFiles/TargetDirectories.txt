@@ -29,6 +29,7 @@
 /mnt/e/LightweightMusicServer/build/src/libs/core/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/core/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/lmsdatabase.dir
+/mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/test_database.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/rebuild_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/list_install_components.dir

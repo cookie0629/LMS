@@ -253,6 +253,19 @@ lmsdatabase/fast:
 .PHONY : lmsdatabase/fast
 
 #=============================================================================
+# Target rules for targets named test_database
+
+# Build rule for target.
+test_database: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_database
+.PHONY : test_database
+
+# fast build rule for target.
+test_database/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/database/CMakeFiles/test_database.dir/build.make src/libs/database/CMakeFiles/test_database.dir/build
+.PHONY : test_database/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -281,6 +294,7 @@ help:
 	@echo "... lmscore"
 	@echo "... lmsdatabase"
 	@echo "... test_config"
+	@echo "... test_database"
 	@echo "... test_logger"
 	@echo "... test_path"
 	@echo "... test_string"
