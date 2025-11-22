@@ -4,8 +4,8 @@
 add_library(lmscore
     impl/Path.cpp
     impl/String.cpp
-    # 后续会添加更多源文件
-    # impl/UUID.cpp
+    impl/Random.cpp
+    impl/UUID.cpp
 )
 
 # 设置包含目录
@@ -32,5 +32,9 @@ if(ENABLE_CORE_TESTS)
     add_executable(test_string test/test_string.cpp)
     target_link_libraries(test_string PRIVATE lmscore)
     target_include_directories(test_string PRIVATE include/)
+    
+    add_executable(test_uuid test/test_uuid.cpp)
+    target_link_libraries(test_uuid PRIVATE lmscore)
+    target_include_directories(test_uuid PRIVATE include/)
 endif()
 
