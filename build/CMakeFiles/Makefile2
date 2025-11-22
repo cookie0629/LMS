@@ -97,14 +97,17 @@ src/clean: src/lms/clean
 
 # Recursive "all" directory target.
 src/libs/all: src/libs/core/all
+src/libs/all: src/libs/database/all
 .PHONY : src/libs/all
 
 # Recursive "preinstall" directory target.
 src/libs/preinstall: src/libs/core/preinstall
+src/libs/preinstall: src/libs/database/preinstall
 .PHONY : src/libs/preinstall
 
 # Recursive "clean" directory target.
 src/libs/clean: src/libs/core/clean
+src/libs/clean: src/libs/database/clean
 .PHONY : src/libs/clean
 
 #=============================================================================
@@ -114,6 +117,9 @@ src/libs/clean: src/libs/core/clean
 src/libs/core/all: src/libs/core/CMakeFiles/lmscore.dir/all
 src/libs/core/all: src/libs/core/CMakeFiles/test_path.dir/all
 src/libs/core/all: src/libs/core/CMakeFiles/test_string.dir/all
+src/libs/core/all: src/libs/core/CMakeFiles/test_uuid.dir/all
+src/libs/core/all: src/libs/core/CMakeFiles/test_config.dir/all
+src/libs/core/all: src/libs/core/CMakeFiles/test_logger.dir/all
 .PHONY : src/libs/core/all
 
 # Recursive "preinstall" directory target.
@@ -124,7 +130,25 @@ src/libs/core/preinstall:
 src/libs/core/clean: src/libs/core/CMakeFiles/lmscore.dir/clean
 src/libs/core/clean: src/libs/core/CMakeFiles/test_path.dir/clean
 src/libs/core/clean: src/libs/core/CMakeFiles/test_string.dir/clean
+src/libs/core/clean: src/libs/core/CMakeFiles/test_uuid.dir/clean
+src/libs/core/clean: src/libs/core/CMakeFiles/test_config.dir/clean
+src/libs/core/clean: src/libs/core/CMakeFiles/test_logger.dir/clean
 .PHONY : src/libs/core/clean
+
+#=============================================================================
+# Directory level rules for directory src/libs/database
+
+# Recursive "all" directory target.
+src/libs/database/all: src/libs/database/CMakeFiles/lmsdatabase.dir/all
+.PHONY : src/libs/database/all
+
+# Recursive "preinstall" directory target.
+src/libs/database/preinstall:
+.PHONY : src/libs/database/preinstall
+
+# Recursive "clean" directory target.
+src/libs/database/clean: src/libs/database/CMakeFiles/lmsdatabase.dir/clean
+.PHONY : src/libs/database/clean
 
 #=============================================================================
 # Directory level rules for directory src/lms
@@ -148,12 +172,12 @@ src/lms/clean: src/lms/CMakeFiles/lms.dir/clean
 src/libs/core/CMakeFiles/lmscore.dir/all:
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/lmscore.dir/build.make src/libs/core/CMakeFiles/lmscore.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=3,4,5 "Built target lmscore"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=3,4,5,6,7,8,9 "Built target lmscore"
 .PHONY : src/libs/core/CMakeFiles/lmscore.dir/all
 
 # Build rule for subdir invocation for target.
 src/libs/core/CMakeFiles/lmscore.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 3
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 7
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/lmscore.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
 .PHONY : src/libs/core/CMakeFiles/lmscore.dir/rule
@@ -174,12 +198,12 @@ src/libs/core/CMakeFiles/lmscore.dir/clean:
 src/libs/core/CMakeFiles/test_path.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_path.dir/build.make src/libs/core/CMakeFiles/test_path.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=6,7 "Built target test_path"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=17,18 "Built target test_path"
 .PHONY : src/libs/core/CMakeFiles/test_path.dir/all
 
 # Build rule for subdir invocation for target.
 src/libs/core/CMakeFiles/test_path.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_path.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
 .PHONY : src/libs/core/CMakeFiles/test_path.dir/rule
@@ -200,12 +224,12 @@ src/libs/core/CMakeFiles/test_path.dir/clean:
 src/libs/core/CMakeFiles/test_string.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=8,9 "Built target test_string"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=19,20 "Built target test_string"
 .PHONY : src/libs/core/CMakeFiles/test_string.dir/all
 
 # Build rule for subdir invocation for target.
 src/libs/core/CMakeFiles/test_string.dir/rule: cmake_check_build_system
-	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 5
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 9
 	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_string.dir/all
 	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
 .PHONY : src/libs/core/CMakeFiles/test_string.dir/rule
@@ -218,6 +242,110 @@ test_string: src/libs/core/CMakeFiles/test_string.dir/rule
 src/libs/core/CMakeFiles/test_string.dir/clean:
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/clean
 .PHONY : src/libs/core/CMakeFiles/test_string.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/core/CMakeFiles/test_uuid.dir
+
+# All Build rule for target.
+src/libs/core/CMakeFiles/test_uuid.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=21,22 "Built target test_uuid"
+.PHONY : src/libs/core/CMakeFiles/test_uuid.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/core/CMakeFiles/test_uuid.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 9
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_uuid.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/core/CMakeFiles/test_uuid.dir/rule
+
+# Convenience name for target.
+test_uuid: src/libs/core/CMakeFiles/test_uuid.dir/rule
+.PHONY : test_uuid
+
+# clean rule for target.
+src/libs/core/CMakeFiles/test_uuid.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/clean
+.PHONY : src/libs/core/CMakeFiles/test_uuid.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/core/CMakeFiles/test_config.dir
+
+# All Build rule for target.
+src/libs/core/CMakeFiles/test_config.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_config.dir/build.make src/libs/core/CMakeFiles/test_config.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_config.dir/build.make src/libs/core/CMakeFiles/test_config.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=13,14 "Built target test_config"
+.PHONY : src/libs/core/CMakeFiles/test_config.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/core/CMakeFiles/test_config.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 9
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_config.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/core/CMakeFiles/test_config.dir/rule
+
+# Convenience name for target.
+test_config: src/libs/core/CMakeFiles/test_config.dir/rule
+.PHONY : test_config
+
+# clean rule for target.
+src/libs/core/CMakeFiles/test_config.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_config.dir/build.make src/libs/core/CMakeFiles/test_config.dir/clean
+.PHONY : src/libs/core/CMakeFiles/test_config.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/core/CMakeFiles/test_logger.dir
+
+# All Build rule for target.
+src/libs/core/CMakeFiles/test_logger.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_logger.dir/build.make src/libs/core/CMakeFiles/test_logger.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_logger.dir/build.make src/libs/core/CMakeFiles/test_logger.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=15,16 "Built target test_logger"
+.PHONY : src/libs/core/CMakeFiles/test_logger.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/core/CMakeFiles/test_logger.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 9
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/core/CMakeFiles/test_logger.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/core/CMakeFiles/test_logger.dir/rule
+
+# Convenience name for target.
+test_logger: src/libs/core/CMakeFiles/test_logger.dir/rule
+.PHONY : test_logger
+
+# clean rule for target.
+src/libs/core/CMakeFiles/test_logger.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_logger.dir/build.make src/libs/core/CMakeFiles/test_logger.dir/clean
+.PHONY : src/libs/core/CMakeFiles/test_logger.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/database/CMakeFiles/lmsdatabase.dir
+
+# All Build rule for target.
+src/libs/database/CMakeFiles/lmsdatabase.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/database/CMakeFiles/lmsdatabase.dir/build.make src/libs/database/CMakeFiles/lmsdatabase.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/database/CMakeFiles/lmsdatabase.dir/build.make src/libs/database/CMakeFiles/lmsdatabase.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=10,11,12 "Built target lmsdatabase"
+.PHONY : src/libs/database/CMakeFiles/lmsdatabase.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/database/CMakeFiles/lmsdatabase.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 10
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/database/CMakeFiles/lmsdatabase.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/database/CMakeFiles/lmsdatabase.dir/rule
+
+# Convenience name for target.
+lmsdatabase: src/libs/database/CMakeFiles/lmsdatabase.dir/rule
+.PHONY : lmsdatabase
+
+# clean rule for target.
+src/libs/database/CMakeFiles/lmsdatabase.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/database/CMakeFiles/lmsdatabase.dir/build.make src/libs/database/CMakeFiles/lmsdatabase.dir/clean
+.PHONY : src/libs/database/CMakeFiles/lmsdatabase.dir/clean
 
 #=============================================================================
 # Target rules for target src/lms/CMakeFiles/lms.dir

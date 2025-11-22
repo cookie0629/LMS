@@ -13,6 +13,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/mnt/e/LightweightMusicServer/src/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/core/CMakeLists.txt"
+  "/mnt/e/LightweightMusicServer/src/libs/database/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/lms/CMakeLists.txt"
   "/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfigVersion.cmake"
@@ -70,6 +71,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "src/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/core/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "src/libs/database/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/lms/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
@@ -78,5 +80,9 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/libs/core/CMakeFiles/lmscore.dir/DependInfo.cmake"
   "src/libs/core/CMakeFiles/test_path.dir/DependInfo.cmake"
   "src/libs/core/CMakeFiles/test_string.dir/DependInfo.cmake"
+  "src/libs/core/CMakeFiles/test_uuid.dir/DependInfo.cmake"
+  "src/libs/core/CMakeFiles/test_config.dir/DependInfo.cmake"
+  "src/libs/core/CMakeFiles/test_logger.dir/DependInfo.cmake"
+  "src/libs/database/CMakeFiles/lmsdatabase.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )

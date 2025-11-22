@@ -201,6 +201,58 @@ test_string/fast:
 .PHONY : test_string/fast
 
 #=============================================================================
+# Target rules for targets named test_uuid
+
+# Build rule for target.
+test_uuid: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_uuid
+.PHONY : test_uuid
+
+# fast build rule for target.
+test_uuid/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/build
+.PHONY : test_uuid/fast
+
+#=============================================================================
+# Target rules for targets named test_config
+
+# Build rule for target.
+test_config: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_config
+.PHONY : test_config
+
+# fast build rule for target.
+test_config/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_config.dir/build.make src/libs/core/CMakeFiles/test_config.dir/build
+.PHONY : test_config/fast
+
+#=============================================================================
+# Target rules for targets named test_logger
+
+# Build rule for target.
+test_logger: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_logger
+.PHONY : test_logger
+
+# fast build rule for target.
+test_logger/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_logger.dir/build.make src/libs/core/CMakeFiles/test_logger.dir/build
+.PHONY : test_logger/fast
+
+#=============================================================================
+# Target rules for targets named lmsdatabase
+
+# Build rule for target.
+lmsdatabase: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmsdatabase
+.PHONY : lmsdatabase
+
+# fast build rule for target.
+lmsdatabase/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/database/CMakeFiles/lmsdatabase.dir/build.make src/libs/database/CMakeFiles/lmsdatabase.dir/build
+.PHONY : lmsdatabase/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -227,8 +279,12 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... lms"
 	@echo "... lmscore"
+	@echo "... lmsdatabase"
+	@echo "... test_config"
+	@echo "... test_logger"
 	@echo "... test_path"
 	@echo "... test_string"
+	@echo "... test_uuid"
 .PHONY : help
 
 
