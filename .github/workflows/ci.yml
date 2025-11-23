@@ -1,0 +1,181 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest]
+        build-type: [Debug, Release]
+        include:
+          - os: ubuntu-latest
+            build-type: Debug
+          - os: ubuntu-latest
+            build-type: Release
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            build-essential \
+            cmake \
+            pkg-config \
+            libboost-all-dev \
+            libavcodec-dev \
+            libavformat-dev \
+            libavutil-dev \
+            libtag1-dev \
+            libsqlite3-dev \
+            libssl-dev \
+            libpugixml-dev \
+            libconfig++-dev \
+            git \
+            wget \
+            curl
+
+      - name: Install Wt framework
+        timeout-minutes: 30
+        run: |
+          # 检查 Wt 是否已安装
+          if pkg-config --exists wt; then
+            echo "Wt is already installed"
+            pkg-config --modversion wt
+          else
+            echo "Wt not found, installing from source..."
+            WT_VERSION="4.12.1"
+            WT_URL="https://github.com/emweb/wt/archive/refs/tags/${WT_VERSION}.tar.gz"
+            INSTALL_PREFIX="/usr/local"
+            BUILD_DIR="$HOME/wt-build"
+            
+            # 安装 Wt 的依赖
+            sudo apt-get install -y \
+              libgraphicsmagick++-dev \
+              libharu-dev \
+              libpango1.0-dev \
+              libssl-dev \
+              zlib1g-dev
+            
+            # 创建构建目录
+            mkdir -p "${BUILD_DIR}"
+            cd "${BUILD_DIR}"
+            
+            # 下载源码
+            if [ ! -f "${WT_VERSION}.tar.gz" ]; then
+              echo "Downloading Wt ${WT_VERSION}..."
+              wget "${WT_URL}" -O "${WT_VERSION}.tar.gz"
+            fi
+            
+            # 解压
+            if [ ! -d "wt-${WT_VERSION}" ]; then
+              echo "Extracting source..."
+              tar -xzf "${WT_VERSION}.tar.gz"
+            fi
+            
+            cd "wt-${WT_VERSION}"
+            
+            # 创建构建目录
+            mkdir -p build
+            cd build
+            
+            # 配置 CMake
+            echo "Configuring Wt..."
+            cmake .. \
+              -DCMAKE_BUILD_TYPE=Release \
+              -DCMAKE_INSTALL_PREFIX="${INSTALL_PREFIX}" \
+              -DSHARED_LIBS=ON \
+              -DWT_BUILD_EXAMPLES=OFF \
+              -DWT_BUILD_TESTS=OFF \
+              -DWT_WRASTERIMAGE_IMPLEMENTATION=Wt
+            
+            # 编译（使用所有可用核心）
+            echo "Building Wt (this may take 10-20 minutes)..."
+            cmake --build . --parallel $(nproc)
+            
+            # 安装
+            echo "Installing Wt..."
+            sudo cmake --install .
+            
+            # 更新库缓存
+            sudo ldconfig
+            
+            # 设置 PKG_CONFIG_PATH
+            export PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig:$PKG_CONFIG_PATH"
+            echo "PKG_CONFIG_PATH=${PKG_CONFIG_PATH}" >> $GITHUB_ENV
+            
+            # 验证安装
+            if pkg-config --exists wt; then
+              echo "Wt installed successfully: $(pkg-config --modversion wt)"
+            else
+              echo "Warning: pkg-config cannot find Wt, but installation may have succeeded"
+            fi
+          fi
+
+      - name: Configure CMake
+        run: |
+          export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          mkdir -p build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=${{ matrix.build-type }} \
+            -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+            -DCMAKE_CXX_COMPILER=g++
+
+      - name: Build
+        run: |
+          export PKG_CONFIG_PATH="/usr/local/lib/pkgconfig:${PKG_CONFIG_PATH:-}"
+          cd build
+          cmake --build . --config ${{ matrix.build-type }} --parallel $(nproc)
+
+      - name: Run tests
+        run: |
+          cd build
+          # 运行所有测试程序
+          TEST_FAILED=0
+          for test in bin/test_*; do
+            if [ -f "$test" ] && [ -x "$test" ]; then
+              echo "=========================================="
+              echo "Running $test..."
+              echo "=========================================="
+              if "$test"; then
+                echo "✓ $test passed"
+              else
+                echo "✗ $test failed"
+                TEST_FAILED=1
+              fi
+            fi
+          done
+          if [ $TEST_FAILED -eq 1 ]; then
+            echo "Some tests failed"
+            exit 1
+          fi
+
+      - name: Upload build artifacts
+        uses: actions/upload-artifact@v4
+        if: matrix.build-type == 'Release'
+        with:
+          name: build-artifacts-${{ matrix.os }}-${{ matrix.build-type }}
+          path: |
+            build/bin/*
+            build/lib/*
+          retention-days: 7
+
+      - name: Upload compile commands
+        uses: actions/upload-artifact@v4
+        with:
+          name: compile-commands-${{ matrix.os }}-${{ matrix.build-type }}
+          path: build/compile_commands.json
+          retention-days: 7
+          if-no-files-found: ignore
+
