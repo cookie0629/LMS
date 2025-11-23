@@ -11,6 +11,8 @@
 #include "database/objects/Release.hpp"
 #include "database/objects/Medium.hpp"
 #include "database/objects/Track.hpp"
+#include "database/objects/MediaLibrary.hpp"
+#include "database/objects/Directory.hpp"
 
 namespace lms::db
 {
@@ -29,6 +31,8 @@ namespace lms::db
         _session.mapClass<Release>("release");
         _session.mapClass<Medium>("medium");
         _session.mapClass<Track>("track");
+        _session.mapClass<MediaLibrary>("media_library");
+        _session.mapClass<Directory>("directory");
     }
 
     WriteTransaction Session::createWriteTransaction()
