@@ -6,6 +6,7 @@
 #include "core/Path.hpp"
 #include "../IFileScanOperation.hpp"
 #include "../FileScanOperationBase.hpp"
+#include "AudioFileScanOperation.hpp"
 
 namespace lms::scanner
 {
@@ -54,10 +55,10 @@ namespace lms::scanner
 
     std::unique_ptr<IFileScanOperation> AudioFileScanner::createScanOperation(FileToScan&& fileToScan) const
     {
-        // 简化版：暂时返回 nullptr
-        // 实际实现需要创建 AudioFileScanOperation
-        (void)fileToScan;
-        return nullptr;
+        return std::make_unique<AudioFileScanOperation>(
+            std::move(fileToScan),
+            _db,
+            _settings);
     }
 } // namespace lms::scanner
 
