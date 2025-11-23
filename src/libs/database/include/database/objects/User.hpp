@@ -8,6 +8,8 @@
 #include <Wt/Dbo/WtSqlTraits.h>
 #include <Wt/WDateTime.h>
 
+#include <Wt/Dbo/collection.h>
+
 #include "core/UUID.hpp"
 #include "database/Object.hpp"
 #include "database/Types.hpp"
@@ -16,6 +18,7 @@
 namespace lms::db
 {
     class Session;
+    class AuthToken;
 
     /**
      * @brief 用户数据对象
@@ -83,6 +86,11 @@ namespace lms::db
         UserType getType() const { return _type; }
 
         /**
+         * @brief 获取认证令牌数量
+         */
+        std::size_t getAuthTokensCount() const { return _authTokens.size(); }
+
+        /**
          * @brief 持久化方法（Wt::Dbo 要求）
          */
         template<class Action>
@@ -94,6 +102,7 @@ namespace lms::db
             Wt::Dbo::field(a, _passwordSalt, "password_salt");
             Wt::Dbo::field(a, _passwordHash, "password_hash");
             Wt::Dbo::field(a, _lastLogin, "last_login");
+            Wt::Dbo::hasMany(a, _authTokens, Wt::Dbo::ManyToOne, "user");
         }
 
     private:
@@ -115,6 +124,7 @@ namespace lms::db
         std::string _passwordHash;
         Wt::WDateTime _lastLogin;
         UserType _type{ UserType::REGULAR };
+        Wt::Dbo::collection<Wt::Dbo::ptr<AuthToken>> _authTokens;
     };
 } // namespace lms::db
 

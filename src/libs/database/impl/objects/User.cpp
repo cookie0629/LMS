@@ -5,6 +5,7 @@
 
 #include "database/Session.hpp"
 #include "database/Utils.hpp"
+#include "database/objects/AuthToken.hpp"
 
 DBO_INSTANTIATE_TEMPLATES(lms::db::User)
 

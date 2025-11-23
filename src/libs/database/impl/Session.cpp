@@ -6,6 +6,7 @@
 #include "database/Transaction.hpp"
 #include "database/Migration.hpp"
 #include "database/objects/User.hpp"
+#include "database/objects/AuthToken.hpp"
 
 namespace lms::db
 {
@@ -18,6 +19,7 @@ namespace lms::db
 
         // 映射数据类到表
         _session.mapClass<User>("user");
+        _session.mapClass<AuthToken>("auth_token");
         _session.mapClass<VersionInfo>("version_info");
     }
 
