@@ -8,6 +8,9 @@
 #include "database/objects/User.hpp"
 #include "database/objects/AuthToken.hpp"
 #include "database/objects/Artist.hpp"
+#include "database/objects/Release.hpp"
+#include "database/objects/Medium.hpp"
+#include "database/objects/Track.hpp"
 
 namespace lms::db
 {
@@ -23,6 +26,9 @@ namespace lms::db
         _session.mapClass<AuthToken>("auth_token");
         _session.mapClass<VersionInfo>("version_info");
         _session.mapClass<Artist>("artist");
+        _session.mapClass<Release>("release");
+        _session.mapClass<Medium>("medium");
+        _session.mapClass<Track>("track");
     }
 
     WriteTransaction Session::createWriteTransaction()

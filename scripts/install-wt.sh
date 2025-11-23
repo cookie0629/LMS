@@ -99,7 +99,7 @@ sudo ldconfig
 echo "验证安装..."
 if pkg-config --exists wt; then
     INSTALLED_VERSION=$(pkg-config --modversion wt)
-    echo "✅ Wt ${INSTALLED_VERSION} 安装成功！"
+    echo " Wt ${INSTALLED_VERSION} 安装成功！"
     
     # 检查库文件
     echo "检查库文件..."
@@ -107,10 +107,10 @@ if pkg-config --exists wt; then
     
     # 检查头文件
     echo "检查头文件..."
-    ls -d "${INSTALL_PREFIX}/include/Wt" 2>/dev/null && echo "✅ 头文件已安装"
+    ls -d "${INSTALL_PREFIX}/include/Wt" 2>/dev/null && echo " 头文件已安装"
     
 else
-    echo "⚠️  警告: pkg-config 找不到 Wt，可能需要设置 PKG_CONFIG_PATH"
+    echo "  警告: pkg-config 找不到 Wt，可能需要设置 PKG_CONFIG_PATH"
     echo "尝试设置: export PKG_CONFIG_PATH=${INSTALL_PREFIX}/lib/pkgconfig:\$PKG_CONFIG_PATH"
 fi
 

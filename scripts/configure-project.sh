@@ -19,9 +19,9 @@ echo "步骤 1/4: 配置 PKG_CONFIG_PATH..."
 WT_PKG_CONFIG_PATH="${INSTALL_PREFIX}/lib/pkgconfig"
 if [ -d "${WT_PKG_CONFIG_PATH}" ]; then
     export PKG_CONFIG_PATH="${WT_PKG_CONFIG_PATH}:${PKG_CONFIG_PATH}"
-    echo "✅ 已设置 PKG_CONFIG_PATH"
+    echo " 已设置 PKG_CONFIG_PATH"
 else
-    echo "⚠️  警告: ${WT_PKG_CONFIG_PATH} 不存在"
+    echo " 警告: ${WT_PKG_CONFIG_PATH} 不存在"
 fi
 
 # 2. 验证 Wt 安装
@@ -29,7 +29,7 @@ echo ""
 echo "步骤 2/4: 验证 Wt 安装..."
 if pkg-config --exists wt 2>/dev/null; then
     WT_VERSION=$(pkg-config --modversion wt)
-    echo "✅ Wt ${WT_VERSION} 已安装"
+    echo " Wt ${WT_VERSION} 已安装"
     
     # 显示 Wt 配置信息
     echo ""
@@ -37,7 +37,7 @@ if pkg-config --exists wt 2>/dev/null; then
     pkg-config --cflags wt
     pkg-config --libs wt
 else
-    echo "❌ Wt 未找到"
+    echo " Wt 未找到"
     echo ""
     echo "请先运行:"
     echo "  bash scripts/complete-wt-setup.sh"
@@ -52,10 +52,10 @@ MISSING_DEPS=0
 check_dep() {
     if pkg-config --exists "$1" 2>/dev/null || \
        ldconfig -p | grep -q "$1" 2>/dev/null; then
-        echo "✅ $1"
+        echo " $1"
         return 0
     else
-        echo "❌ $1"
+        echo " $1"
         ((MISSING_DEPS++))
         return 1
     fi
@@ -69,7 +69,7 @@ check_dep "libsqlite3"
 
 if [ $MISSING_DEPS -gt 0 ]; then
     echo ""
-    echo "⚠️  有 $MISSING_DEPS 个依赖缺失，但可以继续"
+    echo "  有 $MISSING_DEPS 个依赖缺失，但可以继续"
 fi
 
 # 4. 创建环境配置文件
@@ -93,7 +93,7 @@ echo "LD_LIBRARY_PATH: \${LD_LIBRARY_PATH}"
 EOF
 
 chmod +x "${ENV_FILE}"
-echo "✅ 已创建 ${ENV_FILE}"
+echo " 已创建 ${ENV_FILE}"
 
 # 5. 创建构建脚本
 echo ""
@@ -131,15 +131,15 @@ cmake .. \
 echo "编译项目..."
 make -j$(nproc)
 
-echo "✅ 构建完成！"
+echo " 构建完成！"
 BUILD_EOF
 
 chmod +x "${BUILD_SCRIPT}"
-echo "✅ 已创建 ${BUILD_SCRIPT}"
+echo " 已创建 ${BUILD_SCRIPT}"
 
 echo ""
 echo "=========================================="
-echo "✅ 项目配置完成！"
+echo " 项目配置完成！"
 echo "=========================================="
 echo ""
 echo "下一步："

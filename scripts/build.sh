@@ -28,4 +28,4 @@ cmake .. \
 echo "编译项目..."
 make -j$(nproc)
 
-echo "✅ 构建完成！"
+echo "构建完成！"

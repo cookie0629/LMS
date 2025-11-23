@@ -78,15 +78,15 @@ echo ""
 echo "验证安装..."
 if pkg-config --exists wt 2>/dev/null; then
     VERSION=$(pkg-config --modversion wt)
-    echo "✅ Wt ${VERSION} 已正确配置！"
+    echo " Wt ${VERSION} 已正确配置！"
     echo ""
     echo "库文件位置:"
     ls -lh "${INSTALL_PREFIX}/lib/libwt"* 2>/dev/null | head -3 || echo "未找到库文件"
     echo ""
     echo "头文件位置:"
-    ls -d "${INSTALL_PREFIX}/include/Wt" 2>/dev/null && echo "✅ 头文件存在" || echo "未找到头文件"
+    ls -d "${INSTALL_PREFIX}/include/Wt" 2>/dev/null && echo " 头文件存在" || echo "未找到头文件"
 else
-    echo "⚠️  pkg-config 仍无法找到 Wt"
+    echo "  pkg-config 仍无法找到 Wt"
     echo ""
     echo "请手动设置:"
     echo "  export PKG_CONFIG_PATH=\"${WT_PKG_CONFIG_PATH}:\${PKG_CONFIG_PATH}\""

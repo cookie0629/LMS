@@ -11,6 +11,9 @@ add_library(lmsdatabase STATIC
 	impl/objects/User.cpp
 	impl/objects/AuthToken.cpp
 	impl/objects/Artist.cpp
+	impl/objects/Release.cpp
+	impl/objects/Medium.cpp
+	impl/objects/Track.cpp
 )
 
 target_include_directories(lmsdatabase INTERFACE
