@@ -16,6 +16,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/mnt/e/LightweightMusicServer/src/libs/database/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/services/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/services/auth/CMakeLists.txt"
+  "/mnt/e/LightweightMusicServer/src/libs/services/scanner/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/lms/CMakeLists.txt"
   "/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake"
   "/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfigVersion.cmake"
@@ -76,6 +77,7 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "src/libs/database/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/services/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/services/auth/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "src/libs/services/scanner/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/lms/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
@@ -91,5 +93,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/libs/database/CMakeFiles/test_database.dir/DependInfo.cmake"
   "src/libs/services/auth/CMakeFiles/lmsauth.dir/DependInfo.cmake"
   "src/libs/services/auth/CMakeFiles/test_auth.dir/DependInfo.cmake"
+  "src/libs/services/scanner/CMakeFiles/lmsscanner.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )

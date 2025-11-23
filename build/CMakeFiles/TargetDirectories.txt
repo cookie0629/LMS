@@ -50,6 +50,13 @@
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/install.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/install/strip.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/lmsscanner.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/edit_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/rebuild_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/list_install_components.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install/local.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/lms.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/rebuild_cache.dir

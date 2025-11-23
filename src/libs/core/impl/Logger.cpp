@@ -45,6 +45,8 @@ namespace lms::core::logging
             return "PODCAST";
         case Module::REMOTE:
             return "REMOTE";
+        case Module::SCANNER:
+            return "SCANNER";
         case Module::SCROBBLING:
             return "SCROBBLING";
         case Module::SERVICE:

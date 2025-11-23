@@ -4,4 +4,5 @@ cmake_minimum_required(VERSION 3.20)
 # 目前只包含 auth 服务
 
 add_subdirectory(auth)
+add_subdirectory(scanner)
 

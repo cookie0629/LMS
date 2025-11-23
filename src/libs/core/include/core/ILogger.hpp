@@ -41,6 +41,7 @@ namespace lms::core::logging
         METADATA,
         PODCAST,
         REMOTE,
+        SCANNER,
         SCROBBLING,
         SERVICE,
         RECOMMENDATION,
