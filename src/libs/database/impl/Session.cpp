@@ -7,6 +7,7 @@
 #include "database/Migration.hpp"
 #include "database/objects/User.hpp"
 #include "database/objects/AuthToken.hpp"
+#include "database/objects/Artist.hpp"
 
 namespace lms::db
 {
@@ -21,6 +22,7 @@ namespace lms::db
         _session.mapClass<User>("user");
         _session.mapClass<AuthToken>("auth_token");
         _session.mapClass<VersionInfo>("version_info");
+        _session.mapClass<Artist>("artist");
     }
 
     WriteTransaction Session::createWriteTransaction()

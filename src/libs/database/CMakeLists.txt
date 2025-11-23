@@ -8,8 +8,9 @@ add_library(lmsdatabase STATIC
     impl/Session.cpp
     impl/Utils.cpp
     impl/Migration.cpp
-    impl/objects/User.cpp
-    impl/objects/AuthToken.cpp
+	impl/objects/User.cpp
+	impl/objects/AuthToken.cpp
+	impl/objects/Artist.cpp
 )
 
 target_include_directories(lmsdatabase INTERFACE
