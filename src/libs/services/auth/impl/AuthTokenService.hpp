@@ -1,6 +1,7 @@
 #pragma once
 
 #include <map>
+#include <optional>
 #include <shared_mutex>
 #include <string_view>
 
@@ -17,7 +18,6 @@ namespace lms::auth
 {
     /**
      * @brief 认证令牌服务实现
-     * 注意：这是简化版本，暂时不依赖 AuthToken 数据对象
      */
     class AuthTokenService : public IAuthTokenService, public AuthServiceBase
     {
@@ -45,6 +45,10 @@ namespace lms::auth
             db::UserId userId,
             std::string_view token) override;
         void clearAuthTokens(std::string_view domain, db::UserId userId) override;
+
+        // 内部辅助方法
+        std::optional<AuthTokenInfo> processAuthToken(std::string_view domain, std::string_view tokenValue);
+        const DomainParameters& getDomainParameters(std::string_view domain) const;
 
         std::shared_mutex _mutex;
         std::map<std::string, DomainParameters> _domainParameters;
