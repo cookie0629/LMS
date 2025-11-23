@@ -60,12 +60,16 @@ jobs:
             BUILD_DIR="$HOME/wt-build"
             
             # 安装 Wt 的依赖
+            # 注意：libharu-dev 可能不在默认仓库中，Wt 可以不需要它
             sudo apt-get install -y \
               libgraphicsmagick++-dev \
-              libharu-dev \
               libpango1.0-dev \
               libssl-dev \
-              zlib1g-dev
+              zlib1g-dev \
+              libboost-dev \
+              libboost-system-dev \
+              libboost-filesystem-dev \
+              libboost-program-options-dev
             
             # 创建构建目录
             mkdir -p "${BUILD_DIR}"
@@ -97,7 +101,10 @@ jobs:
               -DSHARED_LIBS=ON \
               -DWT_BUILD_EXAMPLES=OFF \
               -DWT_BUILD_TESTS=OFF \
-              -DWT_WRASTERIMAGE_IMPLEMENTATION=Wt
+              -DWT_WRASTERIMAGE_IMPLEMENTATION=Wt \
+              -DWT_CPP_11_MODE=-std=c++11 \
+              -DENABLE_SSL=ON \
+              -DENABLE_HARU=OFF
             
             # 编译（使用所有可用核心）
             echo "Building Wt (this may take 10-20 minutes)..."
