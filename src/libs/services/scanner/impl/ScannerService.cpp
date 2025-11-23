@@ -5,6 +5,8 @@
 #include "core/ILogger.hpp"
 #include "core/Service.hpp"
 #include "database/Session.hpp"
+#include "scanners/FileScanOperationBase.hpp"
+#include "steps/ScanStepScanFiles.hpp"
 
 namespace lms::scanner
 {
@@ -155,7 +157,14 @@ namespace lms::scanner
             }
         }
 
-        // TODO: 实现实际的扫描逻辑
+        // 执行扫描步骤
+        ScannerSettings settings;
+        ScanStepScanFiles scanFilesStep(_db, settings);
+        
+        if (!scanFilesStep.execute(stats))
+        {
+            LMS_LOG(SCANNER, ERROR, "File scan step failed");
+        }
 
         stats.stopTime = Wt::WDateTime::currentDateTime();
 

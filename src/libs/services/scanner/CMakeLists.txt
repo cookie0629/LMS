@@ -6,6 +6,9 @@ cmake_minimum_required(VERSION 3.20)
 add_library(lmsscanner STATIC
     impl/ScannerService.cpp
     impl/ScannerStats.cpp
+    impl/scanners/FileScanOperationBase.cpp
+    impl/steps/ScanStepBase.cpp
+    impl/steps/ScanStepScanFiles.cpp
 )
 
 target_include_directories(lmsscanner INTERFACE
