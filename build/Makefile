@@ -266,6 +266,19 @@ test_database/fast:
 .PHONY : test_database/fast
 
 #=============================================================================
+# Target rules for targets named lmsaudio
+
+# Build rule for target.
+lmsaudio: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmsaudio
+.PHONY : lmsaudio
+
+# fast build rule for target.
+lmsaudio/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/audio/CMakeFiles/lmsaudio.dir/build.make src/libs/audio/CMakeFiles/lmsaudio.dir/build
+.PHONY : lmsaudio/fast
+
+#=============================================================================
 # Target rules for targets named lmsauth
 
 # Build rule for target.
@@ -330,6 +343,7 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... lms"
+	@echo "... lmsaudio"
 	@echo "... lmsauth"
 	@echo "... lmscore"
 	@echo "... lmsdatabase"

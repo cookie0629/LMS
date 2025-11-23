@@ -1,7 +1,9 @@
 #pragma once
 
+#include <memory>
 #include <optional>
 
+#include "audio/IAudioFileInfo.hpp"
 #include "../FileScanOperationBase.hpp"
 
 namespace lms::scanner
@@ -27,6 +29,7 @@ namespace lms::scanner
         // 简化版：暂时不存储元数据
         // 完整版本需要存储：音频属性、轨道信息、图像等
         bool _scanSuccess{ false };
+        std::unique_ptr<audio::IAudioFileInfo> _audioFileInfo; // 音频文件信息（如果解析成功）
     };
 } // namespace lms::scanner
 

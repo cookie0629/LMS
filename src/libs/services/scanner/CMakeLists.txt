@@ -27,6 +27,7 @@ target_include_directories(lmsscanner PRIVATE
 target_link_libraries(lmsscanner PUBLIC
     lmscore
     lmsdatabase
+    lmsaudio
     ${Boost_LIBRARIES}
 )
 

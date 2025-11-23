@@ -2,6 +2,7 @@
 
 #include <filesystem>
 
+#include "audio/IAudioFileInfo.hpp"
 #include "core/ILogger.hpp"
 #include "core/Path.hpp"
 #include "core/Service.hpp"
@@ -28,14 +29,6 @@ namespace lms::scanner
 
         try
         {
-            // 简化版：只检查文件是否存在
-            // 完整版本需要：
-            // 1. 使用音频处理库（如 TagLib）读取文件
-            // 2. 提取元数据（标题、艺术家、专辑等）
-            // 3. 提取音频属性（时长、比特率、采样率等）
-            // 4. 提取嵌入图像
-            // 5. 计算文件哈希值
-
             if (!std::filesystem::exists(filePath))
             {
                 addError<FileScanError>(filePath, "File does not exist");
@@ -43,10 +36,27 @@ namespace lms::scanner
                 return;
             }
 
-            // TODO: 实际的文件扫描逻辑
-            // 这里应该使用音频处理库读取文件元数据
+            // 尝试解析音频文件
+            // 简化版：只检查文件是否存在，不实际解析
+            // 完整版本需要：
+            // 1. 使用音频处理库（如 TagLib）读取文件
+            // 2. 提取元数据（标题、艺术家、专辑等）
+            // 3. 提取音频属性（时长、比特率、采样率等）
+            // 4. 提取嵌入图像
+            // 5. 计算文件哈希值
+
+            audio::ParserOptions parserOptions;
+            _audioFileInfo = audio::parseAudioFile(filePath, parserOptions);
+
+            // 简化版：即使解析失败也继续（返回空实现）
+            // 完整版本需要检查解析结果并提取元数据
 
             _scanSuccess = true;
+        }
+        catch (const audio::Exception& e)
+        {
+            addError<FileScanError>(filePath, std::string("Audio file parsing error: ") + e.what());
+            _scanSuccess = false;
         }
         catch (const std::exception& e)
         {

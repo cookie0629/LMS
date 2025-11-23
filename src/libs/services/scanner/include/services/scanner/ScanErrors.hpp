@@ -37,5 +37,17 @@ namespace lms::scanner
         std::filesystem::path _path;
         std::string _message;
     };
+
+    /**
+     * @brief 音频文件扫描错误
+     */
+    class AudioFileScanError : public FileScanError
+    {
+    public:
+        AudioFileScanError(std::filesystem::path path, std::string message)
+            : FileScanError{ std::move(path), std::move(message) }
+        {
+        }
+    };
 } // namespace lms::scanner
 

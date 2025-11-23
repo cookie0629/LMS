@@ -36,6 +36,13 @@
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/install.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/database/CMakeFiles/install/strip.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/lmsaudio.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/edit_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/rebuild_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/list_install_components.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install/local.dir
+/mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/rebuild_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/list_install_components.dir
