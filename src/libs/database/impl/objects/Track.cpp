@@ -5,6 +5,7 @@
 
 #include "core/Path.hpp"
 #include "database/Object.hpp"
+#include "database/objects/Directory.hpp"
 #include "database/objects/Medium.hpp"
 #include "database/objects/Release.hpp"
 #include "database/Session.hpp"
@@ -104,6 +105,18 @@ namespace lms::db
     void Track::setMedium(ObjectPtr<Medium> medium)
     {
         _medium = Object<Track, TrackId>::getDboPtr(medium);
+    }
+
+    DirectoryId Track::getDirectoryId() const
+    {
+        if (!_directory)
+            return DirectoryId{};
+        return DirectoryId{ static_cast<DirectoryId::ValueType>(_directory.id()) };
+    }
+
+    void Track::setDirectory(ObjectPtr<Directory> directory)
+    {
+        _directory = Object<Track, TrackId>::getDboPtr(directory);
     }
 } // namespace lms::db
 

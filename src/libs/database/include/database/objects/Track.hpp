@@ -65,6 +65,9 @@ namespace lms::db
         MediumId getMediumId() const;
         void setMedium(ObjectPtr<Medium> medium);
 
+        DirectoryId getDirectoryId() const;
+        void setDirectory(ObjectPtr<Directory> directory);
+
         template<class Action>
         void persist(Action& a)
         {
@@ -76,6 +79,7 @@ namespace lms::db
             Wt::Dbo::field(a, _trackNumber, "track_number");
             Wt::Dbo::belongsTo(a, _release, "release_id");
             Wt::Dbo::belongsTo(a, _medium, "medium_id");
+            Wt::Dbo::belongsTo(a, _directory, "directory_id");
         }
 
     private:
@@ -91,6 +95,7 @@ namespace lms::db
         std::optional<int> _trackNumber;
         Wt::Dbo::ptr<Release> _release;
         Wt::Dbo::ptr<Medium> _medium;
+        Wt::Dbo::ptr<Directory> _directory;
     };
 } // namespace lms::db
 

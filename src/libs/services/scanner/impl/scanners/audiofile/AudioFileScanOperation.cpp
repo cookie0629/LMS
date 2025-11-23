@@ -3,8 +3,14 @@
 #include <filesystem>
 
 #include "core/ILogger.hpp"
+#include "core/Path.hpp"
 #include "core/Service.hpp"
 #include "database/IDb.hpp"
+#include "database/objects/Artist.hpp"
+#include "database/objects/Directory.hpp"
+#include "database/objects/MediaLibrary.hpp"
+#include "database/objects/Release.hpp"
+#include "database/objects/Track.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
 #include "services/scanner/ScanErrors.hpp"
@@ -56,31 +62,96 @@ namespace lms::scanner
             return OperationResult::Skipped;
         }
 
-        // 简化版：暂时返回 Skipped
-        // 完整版本需要：
-        // 1. 检查数据库中是否已存在该文件
-        // 2. 如果不存在，创建 Track 对象并添加到数据库
-        // 3. 如果存在但已更改，更新 Track 对象
-        // 4. 创建/更新相关的 Artist, Release, Medium 等对象
-        // 5. 返回 Added, Updated 或 Skipped
-
         try
         {
             auto& session = getDb().getTLSSession();
-            auto transaction = session.createReadTransaction();
+            auto transaction = session.createWriteTransaction();
 
-            // TODO: 实现数据库更新逻辑
-            // 需要 Track, Artist, Release 等数据库对象
+            const auto& filePath = getFilePath();
+            const auto& mediaLibrary = getMediaLibrary();
 
-            transaction.commit();
+            // 1. 获取或创建 MediaLibrary 对象
+            db::MediaLibrary::pointer library;
+            if (mediaLibrary.id.getValue() != 0)
+            {
+                library = db::MediaLibrary::find(session, mediaLibrary.id);
+            }
+            if (!library)
+            {
+                library = db::MediaLibrary::getOrCreate(session, core::pathUtils::getFilename(mediaLibrary.rootPath), mediaLibrary.rootPath);
+            }
+
+            // 2. 获取或创建 Directory 对象
+            auto dirPath = filePath.parent_path();
+            db::Directory::pointer directory;
+            
+            // 递归创建父目录
+            std::vector<std::filesystem::path> dirsToCreate;
+            auto currentPath = dirPath;
+            while (!currentPath.empty() && currentPath != mediaLibrary.rootPath && currentPath != currentPath.root_path())
+            {
+                dirsToCreate.push_back(currentPath);
+                currentPath = currentPath.parent_path();
+            }
+            
+            // 从根目录开始创建
+            db::Directory::pointer parentDir;
+            for (auto it = dirsToCreate.rbegin(); it != dirsToCreate.rend(); ++it)
+            {
+                directory = db::Directory::getOrCreate(session, *it, library, parentDir);
+                parentDir = directory;
+            }
+            
+            if (!directory)
+            {
+                // 如果文件就在根目录下，创建根目录
+                directory = db::Directory::getOrCreate(session, mediaLibrary.rootPath, library, {});
+            }
+
+            // 3. 检查 Track 是否已存在
+            auto existingTrack = db::Track::findByPath(session, filePath);
+            
+            // 4. 获取文件信息
+            std::filesystem::path path = filePath;
+            auto fileSize = static_cast<long long>(getFileSize());
+            auto lastWriteTime = getLastWriteTime();
+
+            if (existingTrack)
+            {
+                // 更新现有 Track
+                existingTrack.modify()->setFileSize(fileSize);
+                existingTrack.modify()->setLastWriteTime(lastWriteTime);
+                existingTrack.modify()->setDirectory(directory);
+                
+                // 如果文件名已更改，更新名称
+                auto currentName = existingTrack->getName();
+                auto newName = core::pathUtils::getFilename(filePath);
+                if (currentName != newName)
+                {
+                    existingTrack.modify()->setName(newName);
+                }
+
+                transaction.commit();
+                return OperationResult::Updated;
+            }
+            else
+            {
+                // 创建新 Track
+                auto track = db::Track::getOrCreate(session, filePath);
+                track.modify()->setFileSize(fileSize);
+                track.modify()->setLastWriteTime(lastWriteTime);
+                track.modify()->setDirectory(directory);
+                track.modify()->setName(core::pathUtils::getFilename(filePath));
+
+                transaction.commit();
+                return OperationResult::Added;
+            }
         }
         catch (const std::exception& e)
         {
             addError<FileScanError>(getFilePath(), std::string("Database error: ") + e.what());
             return OperationResult::Skipped;
         }
-
-        return OperationResult::Skipped; // 简化版：暂时跳过
     }
 } // namespace lms::scanner
 
