@@ -81,6 +81,9 @@ namespace lms::auth
             // 如果用户令牌数量过多，清理过期令牌
             if (user->getAuthTokensCount() >= 50)
                 db::AuthToken::removeExpiredTokens(session, std::string{ domain }, Wt::WDateTime::currentDateTime());
+
+            // 显式提交事务，确保数据被保存
+            transaction.commit();
         }
     }
 

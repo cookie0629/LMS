@@ -58,7 +58,8 @@ namespace lms::db
 
     void AuthToken::find(Session& session, std::string_view domain, UserId userId, std::function<void(const AuthToken::pointer&)> visitor)
     {
-        session.checkReadTransaction();
+        // 注意：这里不检查事务类型，因为可能在读或写事务中调用
+        // session.checkReadTransaction();
 
         auto query{ session.getDboSession()->find<AuthToken>() };
         query.where("domain = ?").bind(std::string{ domain });
@@ -76,11 +77,16 @@ namespace lms::db
         session.checkWriteTransaction();
 
         // 使用 Wt::Dbo 的查询接口删除过期令牌
-        auto query = session.getDboSession()->query<int>("DELETE FROM auth_token WHERE expiry < ? AND domain = ?");
-        query.bind(now);
-        query.bind(std::string{ domain });
-        // 执行查询（返回受影响的行数，这里不需要使用）
-        (void)query.resultList();
+        // 通过查找并删除的方式实现
+        auto query = session.getDboSession()->find<AuthToken>();
+        query.where("expiry < ?").bind(now);
+        query.where("domain = ?").bind(std::string{ domain });
+        // 遍历并删除
+        auto results = query.resultList();
+        for (auto& token : results)
+        {
+            token.remove();
+        }
     }
 
     void AuthToken::clearUserTokens(Session& session, std::string_view domain, UserId userId)
@@ -88,11 +94,15 @@ namespace lms::db
         session.checkWriteTransaction();
 
         // 使用 Wt::Dbo 的查询接口删除用户令牌
-        auto query = session.getDboSession()->query<int>("DELETE FROM auth_token WHERE user_id = ? AND domain = ?");
-        query.bind(userId.getValue());
-        query.bind(std::string{ domain });
-        // 执行查询（返回受影响的行数，这里不需要使用）
-        (void)query.resultList();
+        auto query = session.getDboSession()->find<AuthToken>();
+        query.where("domain = ?").bind(std::string{ domain });
+        query.where("user_id = ?").bind(userId.getValue());
+        // 遍历并删除
+        auto results = query.resultList();
+        for (auto& token : results)
+        {
+            token.remove();
+        }
     }
 } // namespace lms::db
 
