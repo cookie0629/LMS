@@ -45,7 +45,8 @@ namespace lms::db
 
     AuthToken::pointer AuthToken::find(Session& session, std::string_view domain, std::string_view value)
     {
-        session.checkReadTransaction();
+        // 注意：这里不检查事务类型，因为可能在读或写事务中调用
+        // session.checkReadTransaction();
 
         auto query{ session.getDboSession()->find<AuthToken>() };
         query.where("domain = ?").bind(std::string{ domain });

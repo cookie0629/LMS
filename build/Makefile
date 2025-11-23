@@ -279,6 +279,19 @@ lmsauth/fast:
 .PHONY : lmsauth/fast
 
 #=============================================================================
+# Target rules for targets named test_auth
+
+# Build rule for target.
+test_auth: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_auth
+.PHONY : test_auth
+
+# fast build rule for target.
+test_auth/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/services/auth/CMakeFiles/test_auth.dir/build.make src/libs/services/auth/CMakeFiles/test_auth.dir/build
+.PHONY : test_auth/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -307,6 +320,7 @@ help:
 	@echo "... lmsauth"
 	@echo "... lmscore"
 	@echo "... lmsdatabase"
+	@echo "... test_auth"
 	@echo "... test_config"
 	@echo "... test_database"
 	@echo "... test_logger"

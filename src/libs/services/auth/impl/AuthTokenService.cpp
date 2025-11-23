@@ -91,7 +91,10 @@ namespace lms::auth
 
         db::AuthToken::pointer authToken{ db::AuthToken::find(session, std::string{ domain }, std::string{ tokenValue }) };
         if (!authToken)
+        {
+            LMS_LOG(UI, DEBUG, "Auth token not found for domain '" << domain << "', token '" << tokenValue << "'");
             return std::nullopt;
+        }
 
         if (authToken->getExpiry().isValid() && authToken->getExpiry() < Wt::WDateTime::currentDateTime())
         {

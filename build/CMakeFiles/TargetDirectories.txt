@@ -43,6 +43,7 @@
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/lmsauth.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/test_auth.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/rebuild_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/auth/CMakeFiles/list_install_components.dir

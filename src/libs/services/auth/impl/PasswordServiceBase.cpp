@@ -2,6 +2,10 @@
 
 #include <boost/asio/ip/address.hpp>
 
+#include "database/Session.hpp"
+#include "database/Transaction.hpp"
+#include "database/objects/User.hpp"
+
 namespace lms::auth
 {
     PasswordServiceBase::PasswordServiceBase(db::IDb& db, std::size_t maxThrottlerEntries)
