@@ -10,6 +10,7 @@ add_library(lmsscanner STATIC
     impl/scanners/Utils.cpp
     impl/scanners/audiofile/AudioFileScanner.cpp
     impl/scanners/audiofile/AudioFileScanOperation.cpp
+    impl/scanners/audiofile/TrackMetadataParser.cpp
     impl/steps/ScanStepBase.cpp
     impl/steps/ScanStepScanFiles.cpp
 )

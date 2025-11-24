@@ -10,11 +10,13 @@
 #include "database/objects/Artist.hpp"
 #include "database/objects/Directory.hpp"
 #include "database/objects/MediaLibrary.hpp"
+#include "database/objects/Medium.hpp"
 #include "database/objects/Release.hpp"
 #include "database/objects/Track.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
 #include "services/scanner/ScanErrors.hpp"
+#include "TrackMetadataParser.hpp"
 
 namespace lms::scanner
 {
@@ -118,10 +120,50 @@ namespace lms::scanner
                 directory = db::Directory::getOrCreate(session, mediaLibrary.rootPath, library, {});
             }
 
-            // 3. 检查 Track 是否已存在
+            // 3. 解析元数据（如果可用）
+            TrackMetadata metadata;
+            if (_audioFileInfo)
+            {
+                TrackMetadataParser parser;
+                metadata = parser.parseTrackMetadata(_audioFileInfo->getTagReader());
+
+                // 提取音频属性
+                const auto& audioProps = _audioFileInfo->getAudioProperties();
+                if (audioProps.getDurationMs() > 0)
+                {
+                    // 时长已从元数据中提取
+                }
+            }
+
+            // 4. 创建或获取 Artist（如果元数据中有艺术家信息）
+            db::Artist::pointer artist;
+            if (metadata.artist && !metadata.artist->empty())
+            {
+                artist = db::Artist::getOrCreate(session, *metadata.artist);
+            }
+
+            // 5. 创建或获取 Release（如果元数据中有专辑信息）
+            db::Release::pointer release;
+            if (metadata.album && !metadata.album->empty())
+            {
+                release = db::Release::getOrCreate(session, *metadata.album);
+            }
+
+            // 6. 创建或获取 Medium（如果元数据中有专辑信息）
+            db::Medium::pointer medium;
+            if (release)
+            {
+                medium = db::Medium::getOrCreate(session, release->getId(), metadata.discNumber);
+                if (metadata.discNumber)
+                {
+                    medium.modify()->setPosition(*metadata.discNumber);
+                }
+            }
+
+            // 7. 检查 Track 是否已存在
             auto existingTrack = db::Track::findByPath(session, filePath);
             
-            // 4. 获取文件信息
+            // 8. 获取文件信息
             std::filesystem::path path = filePath;
             auto fileSize = static_cast<long long>(getFileSize());
             auto lastWriteTime = getLastWriteTime();
@@ -141,6 +183,24 @@ namespace lms::scanner
                     existingTrack.modify()->setName(newName);
                 }
 
+                // 更新元数据（如果可用）
+                if (metadata.title && !metadata.title->empty())
+                {
+                    existingTrack.modify()->setName(*metadata.title);
+                }
+                if (metadata.trackNumber)
+                {
+                    existingTrack.modify()->setTrackNumber(*metadata.trackNumber);
+                }
+                if (release)
+                {
+                    existingTrack.modify()->setRelease(release);
+                }
+                if (medium)
+                {
+                    existingTrack.modify()->setMedium(medium);
+                }
+
                 transaction.commit();
                 return OperationResult::Updated;
             }
@@ -151,7 +211,40 @@ namespace lms::scanner
                 track.modify()->setFileSize(fileSize);
                 track.modify()->setLastWriteTime(lastWriteTime);
                 track.modify()->setDirectory(directory);
-                track.modify()->setName(core::pathUtils::getFilename(filePath));
+                
+                // 设置名称（优先使用元数据中的标题，否则使用文件名）
+                if (metadata.title && !metadata.title->empty())
+                {
+                    track.modify()->setName(*metadata.title);
+                }
+                else
+                {
+                    track.modify()->setName(core::pathUtils::getFilename(filePath));
+                }
+
+                // 设置元数据
+                if (metadata.trackNumber)
+                {
+                    track.modify()->setTrackNumber(*metadata.trackNumber);
+                }
+                if (release)
+                {
+                    track.modify()->setRelease(release);
+                }
+                if (medium)
+                {
+                    track.modify()->setMedium(medium);
+                }
+
+                // 设置音频属性
+                if (_audioFileInfo)
+                {
+                    const auto& audioProps = _audioFileInfo->getAudioProperties();
+                    if (audioProps.getDurationMs() > 0)
+                    {
+                        track.modify()->setDuration(std::chrono::milliseconds(audioProps.getDurationMs()));
+                    }
+                }
 
                 transaction.commit();
                 return OperationResult::Added;
