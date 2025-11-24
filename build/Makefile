@@ -318,6 +318,19 @@ lmsscanner/fast:
 .PHONY : lmsscanner/fast
 
 #=============================================================================
+# Target rules for targets named test_scanner
+
+# Build rule for target.
+test_scanner: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 test_scanner
+.PHONY : test_scanner
+
+# fast build rule for target.
+test_scanner/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/services/scanner/CMakeFiles/test_scanner.dir/build.make src/libs/services/scanner/CMakeFiles/test_scanner.dir/build
+.PHONY : test_scanner/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -353,6 +366,7 @@ help:
 	@echo "... test_database"
 	@echo "... test_logger"
 	@echo "... test_path"
+	@echo "... test_scanner"
 	@echo "... test_string"
 	@echo "... test_uuid"
 .PHONY : help

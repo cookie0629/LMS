@@ -42,3 +42,22 @@ set_target_properties(lmsscanner PROPERTIES
     CXX_STANDARD_REQUIRED ON
 )
 
+# 测试程序
+add_executable(test_scanner
+    test/test_scanner.cpp
+)
+
+target_link_libraries(test_scanner PRIVATE
+    lmsscanner
+    lmscore
+    lmsdatabase
+    lmsaudio
+    ${Boost_LIBRARIES}
+    ${SQLite3_LIBRARIES}
+)
+
+# 设置输出目录
+set_target_properties(test_scanner PROPERTIES
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
+)
+

@@ -213,6 +213,7 @@ src/libs/services/auth/clean: src/libs/services/auth/CMakeFiles/test_auth.dir/cl
 
 # Recursive "all" directory target.
 src/libs/services/scanner/all: src/libs/services/scanner/CMakeFiles/lmsscanner.dir/all
+src/libs/services/scanner/all: src/libs/services/scanner/CMakeFiles/test_scanner.dir/all
 .PHONY : src/libs/services/scanner/all
 
 # Recursive "preinstall" directory target.
@@ -221,6 +222,7 @@ src/libs/services/scanner/preinstall:
 
 # Recursive "clean" directory target.
 src/libs/services/scanner/clean: src/libs/services/scanner/CMakeFiles/lmsscanner.dir/clean
+src/libs/services/scanner/clean: src/libs/services/scanner/CMakeFiles/test_scanner.dir/clean
 .PHONY : src/libs/services/scanner/clean
 
 #=============================================================================
@@ -297,7 +299,7 @@ src/libs/core/CMakeFiles/test_path.dir/clean:
 src/libs/core/CMakeFiles/test_string.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_string.dir/build.make src/libs/core/CMakeFiles/test_string.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=55,56 "Built target test_string"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=57,58 "Built target test_string"
 .PHONY : src/libs/core/CMakeFiles/test_string.dir/all
 
 # Build rule for subdir invocation for target.
@@ -323,7 +325,7 @@ src/libs/core/CMakeFiles/test_string.dir/clean:
 src/libs/core/CMakeFiles/test_uuid.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/depend
 	$(MAKE) $(MAKESILENT) -f src/libs/core/CMakeFiles/test_uuid.dir/build.make src/libs/core/CMakeFiles/test_uuid.dir/build
-	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=57,58 "Built target test_uuid"
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=59,60 "Built target test_uuid"
 .PHONY : src/libs/core/CMakeFiles/test_uuid.dir/all
 
 # Build rule for subdir invocation for target.
@@ -555,6 +557,35 @@ lmsscanner: src/libs/services/scanner/CMakeFiles/lmsscanner.dir/rule
 src/libs/services/scanner/CMakeFiles/lmsscanner.dir/clean:
 	$(MAKE) $(MAKESILENT) -f src/libs/services/scanner/CMakeFiles/lmsscanner.dir/build.make src/libs/services/scanner/CMakeFiles/lmsscanner.dir/clean
 .PHONY : src/libs/services/scanner/CMakeFiles/lmsscanner.dir/clean
+
+#=============================================================================
+# Target rules for target src/libs/services/scanner/CMakeFiles/test_scanner.dir
+
+# All Build rule for target.
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/all: src/libs/core/CMakeFiles/lmscore.dir/all
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/all: src/libs/database/CMakeFiles/lmsdatabase.dir/all
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/all: src/libs/audio/CMakeFiles/lmsaudio.dir/all
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/all: src/libs/services/scanner/CMakeFiles/lmsscanner.dir/all
+	$(MAKE) $(MAKESILENT) -f src/libs/services/scanner/CMakeFiles/test_scanner.dir/build.make src/libs/services/scanner/CMakeFiles/test_scanner.dir/depend
+	$(MAKE) $(MAKESILENT) -f src/libs/services/scanner/CMakeFiles/test_scanner.dir/build.make src/libs/services/scanner/CMakeFiles/test_scanner.dir/build
+	@$(CMAKE_COMMAND) -E cmake_echo_color "--switch=$(COLOR)" --progress-dir=/mnt/e/LightweightMusicServer/build/CMakeFiles --progress-num=55,56 "Built target test_scanner"
+.PHONY : src/libs/services/scanner/CMakeFiles/test_scanner.dir/all
+
+# Build rule for subdir invocation for target.
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/rule: cmake_check_build_system
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 36
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 src/libs/services/scanner/CMakeFiles/test_scanner.dir/all
+	$(CMAKE_COMMAND) -E cmake_progress_start /mnt/e/LightweightMusicServer/build/CMakeFiles 0
+.PHONY : src/libs/services/scanner/CMakeFiles/test_scanner.dir/rule
+
+# Convenience name for target.
+test_scanner: src/libs/services/scanner/CMakeFiles/test_scanner.dir/rule
+.PHONY : test_scanner
+
+# clean rule for target.
+src/libs/services/scanner/CMakeFiles/test_scanner.dir/clean:
+	$(MAKE) $(MAKESILENT) -f src/libs/services/scanner/CMakeFiles/test_scanner.dir/build.make src/libs/services/scanner/CMakeFiles/test_scanner.dir/clean
+.PHONY : src/libs/services/scanner/CMakeFiles/test_scanner.dir/clean
 
 #=============================================================================
 # Target rules for target src/lms/CMakeFiles/lms.dir

@@ -97,5 +97,6 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/libs/services/auth/CMakeFiles/lmsauth.dir/DependInfo.cmake"
   "src/libs/services/auth/CMakeFiles/test_auth.dir/DependInfo.cmake"
   "src/libs/services/scanner/CMakeFiles/lmsscanner.dir/DependInfo.cmake"
+  "src/libs/services/scanner/CMakeFiles/test_scanner.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )
