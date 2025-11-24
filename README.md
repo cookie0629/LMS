@@ -1,39 +1,41 @@
-LMS is a self-hosted music streaming software: access your music collection from anywhere using a web interface!
-LMS 是一款自托管的音乐流媒体软件：通过网页界面随时访问您的音乐收藏！
+# Lightweight Music Server (LMS)
 
-## 📊 项目状态
+LMS 是一款自托管的音乐流媒体服务器，通过 Web 界面访问和管理音乐收藏。
 
-**当前阶段**：阶段 3 - 数据库基础 ✅ 已完成
+## 项目状态
+
+**当前阶段**：阶段 5 - Scanner Service（99% 完成）
 
 **已完成功能**：
-- ✅ Core 库基础（Path, String, Random, UUID, Config, Logger）
-- ✅ 数据库基础架构（IDb, Session, Transaction）
-- ✅ 数据库对象系统（Object, IdType, User）
-- ✅ 数据库迁移系统（VersionInfo, Migration）
+- ✅ Core 库（工具类、配置、日志）
+- ✅ 数据库基础架构（ORM、事务、迁移）
+- ✅ Auth Service（认证服务、密码管理、令牌管理）
+- ✅ Scanner Service（文件扫描、元数据提取、数据库更新）
 
-**开发模式**：参考模板项目，完全手写实现，渐进式 Git 提交
+## 技术栈
 
-## 🚀 快速开始
+- **语言**: C++20
+- **Web 框架**: Wt 4.12.1+ (Wt::Dbo ORM)
+- **数据库**: SQLite3
+- **配置解析**: libconfig++
+- **构建系统**: CMake 3.20+
 
-### 环境搭建
+## 快速开始
 
-1. **Windows 用户**：使用 WSL2（推荐）
-   ```powershell
-   wsl
-   cd /mnt/e/LightweightMusicServer
-   bash scripts/setup-environment.sh
-   ```
+### 环境要求
 
-2. **Linux 用户**：直接运行安装脚本
-   ```bash
-   bash scripts/setup-environment.sh
-   ```
+- WSL2 (Windows) 或 Linux
+- CMake 3.20+
+- C++20 编译器 (GCC 10+ 或 Clang 12+)
+- Wt 框架 4.12.1+
 
 ### 构建项目
 
 ```bash
+# 创建构建目录
+mkdir build && cd build
+
 # 配置项目
-cd build
 cmake .. -DCMAKE_BUILD_TYPE=Debug
 
 # 编译
@@ -41,97 +43,52 @@ make -j4
 
 # 运行测试
 ./bin/test_database
-./bin/test_path
-./bin/test_string
-./bin/test_uuid
-./bin/test_config
-./bin/test_logger
+./bin/test_auth
 ```
 
-### 学习资源
-
-- 📖 [开发日志.md](开发日志.md) - 详细的开发过程记录
-- 📖 [学习进度跟踪.md](学习进度跟踪.md) - 当前开发进度和任务
-- 📚 [开发快速参考.md](开发快速参考.md) - 常用命令和代码模板
-- 📚 [模板项目架构分析.md](模板项目架构分析.md) - 项目架构和技术栈分析
-
-## 📋 项目结构
+## 项目结构
 
 ```
-lms/
-├── approot/          # Web UI 模板和资源
-├── cmake/            # CMake 模块
-├── conf/             # 配置文件
-├── docroot/          # 静态 Web 资源
-├── scripts/          # 构建和安装脚本
-└── src/              # 源代码
-    ├── libs/         # 核心库
-    │   ├── core/     # Core 库（工具类、配置、日志）
-    │   │   ├── include/core/    # 头文件
-    │   │   ├── impl/            # 实现文件
-    │   │   └── test/             # 测试程序
-    │   └── database/ # Database 库（数据库抽象层）
-    │       ├── include/database/ # 头文件
-    │       ├── impl/             # 实现文件
-    │       ├── impl/objects/     # 数据对象
-    │       └── test/             # 测试程序
-    ├── lms/          # 主程序
-    └── tools/        # 工具程序
+src/libs/
+├── core/          # 核心工具库（Path, String, Random, UUID, Config, Logger）
+├── database/      # 数据库抽象层（IDb, Session, Transaction, ORM）
+├── audio/         # 音频处理接口（IAudioFileInfo, ITagReader）
+└── services/      # 服务层
+    ├── auth/      # 认证服务（密码管理、令牌管理）
+    └── scanner/   # 扫描服务（文件扫描、元数据提取）
 ```
 
-## 🛠️ 技术栈
+## 核心功能
 
-- **语言**: C++20
-- **Web 框架**: Wt 4.12.1+ (Wt::Dbo ORM)
-- **数据库**: SQLite3
-- **配置解析**: libconfig++
-- **音频处理**: FFmpeg 4.0+, TagLib 2.1.1+ (计划中)
-- **构建系统**: CMake 3.12+
+### Core 库
+- 路径操作、字符串处理、随机数生成
+- UUID v4 生成和解析
+- 配置文件解析（libconfig++）
+- 日志系统（多级别、多模块）
 
-## 📝 开发进度
+### 数据库层
+- Wt::Dbo ORM 封装
+- 事务管理（读写事务）
+- 数据库迁移系统
+- 数据对象：User, Track, Artist, Release, Medium, Directory, MediaLibrary
 
-### ✅ 已完成
+### Auth Service
+- 密码哈希和验证（bcrypt）
+- 认证令牌管理
+- 登录限流
+- 多种认证后端支持（Internal, PAM, HTTP Headers）
 
-**阶段 1：Core 库基础**
-- Path 工具类（路径操作）
-- String 工具类（字符串处理）
-- Random 工具类（随机数生成）
-- UUID 工具类（UUID v4 生成和解析）
-- Config 配置系统（基于 libconfig++）
-- Logger 日志系统（支持多级别、多模块）
+### Scanner Service
+- 文件系统扫描（递归目录遍历）
+- 音频文件元数据提取
+- 自动创建和关联 Artist、Release、Medium 对象
+- 数据库更新和同步
 
-**阶段 2：数据库基础**
-- IDb 接口和 Db 实现（连接池、TLS 会话）
-- Session 类（数据库会话管理）
-- Transaction 类（读写事务）
-- Object 基类（ORM 对象基类）
-- IdType 强类型 ID 系统
-- User 数据对象（简化版）
-- 数据库迁移系统（版本管理）
+## 开发文档
 
-### 🚧 进行中
+- [开发日志.md](开发日志.md) - 详细的开发过程记录
+- [学习进度跟踪.md](学习进度跟踪.md) - 当前开发进度
 
-- 测试程序完善
-- 数据库迁移流程优化
-
-### 📋 计划中
-
-- 服务层实现
-- 业务逻辑模块
-- Web UI 开发
-- 音频处理集成
-
-## 📚 文档
-
-- [开发日志.md](开发日志.md) - 详细的开发过程、问题和解决方案
-- [学习进度跟踪.md](学习进度跟踪.md) - 当前任务和进度跟踪
-- [开发快速参考.md](开发快速参考.md) - 常用命令、代码模板和最佳实践
-- [Git提交指南.md](Git提交指南.md) - Git 提交规范和流程
-
-## 🤝 贡献
-
-本项目采用渐进式开发模式，每个功能独立提交，提交信息遵循规范格式。
-
-## 📄 许可证
+## 许可证
 
 本项目参考原始 LMS 项目的 GPL-3.0 许可证。
