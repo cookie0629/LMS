@@ -3,10 +3,15 @@
 #include <algorithm>
 #include <filesystem>
 
+#include "core/ILogger.hpp"
 #include "core/Path.hpp"
 #include "../IFileScanOperation.hpp"
 #include "../FileScanOperationBase.hpp"
 #include "AudioFileScanOperation.hpp"
+#include "database/IDb.hpp"
+#include "database/Session.hpp"
+#include "database/Transaction.hpp"
+#include "database/objects/Track.hpp"
 
 namespace lms::scanner
 {
@@ -47,10 +52,41 @@ namespace lms::scanner
 
     bool AudioFileScanner::needsScan(const FileToScan& file) const
     {
-        // 简化版：总是需要扫描
-        // 实际实现需要检查文件是否已更改
-        (void)file;
-        return true;
+        try
+        {
+            auto& session = _db.getTLSSession();
+            auto readTransaction = session.createReadTransaction();
+            auto existingTrack = db::Track::findByPath(session, file.filePath);
+            readTransaction.commit();
+
+            if (!existingTrack)
+            {
+                return true;
+            }
+
+            if (existingTrack->getFileSize() != static_cast<long long>(file.fileSize))
+            {
+                return true;
+            }
+
+            const auto storedWriteTime = existingTrack->getLastWriteTime();
+            if (!storedWriteTime.isValid() || !file.lastWriteTime.isValid())
+            {
+                return true;
+            }
+
+            if (storedWriteTime != file.lastWriteTime)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        catch (const std::exception& e)
+        {
+            LMS_LOG(SCANNER, WARNING, "Failed to determine if file needs scan (" << file.filePath << "): " << e.what());
+            return true;
+        }
     }
 
     std::unique_ptr<IFileScanOperation> AudioFileScanner::createScanOperation(FileToScan&& fileToScan) const
