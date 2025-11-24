@@ -249,6 +249,9 @@ SQLite3_INCLUDE_DIR:PATH=/usr/include
 //Path to a library.
 SQLite3_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libsqlite3.so
 
+//The directory containing a CMake configuration file for TagLib.
+TagLib_DIR:PATH=TagLib_DIR-NOTFOUND
+
 //The directory containing a CMake configuration file for boost_atomic.
 boost_atomic_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_atomic-1.83.0
 

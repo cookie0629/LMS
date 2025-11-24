@@ -10,6 +10,9 @@ target_link_libraries(lmsaudio PUBLIC
     lmscore
 )
 
-# 注意：完整版本需要链接音频处理库（如 TagLib）
-# target_link_libraries(lmsaudio PUBLIC TagLib::TagLib)
+find_package(TagLib QUIET)
+if (TagLib_FOUND)
+    target_link_libraries(lmsaudio PUBLIC TagLib::TagLib)
+    target_compile_definitions(lmsaudio PRIVATE LMS_AUDIO_HAS_TAGLIB=1)
+endif()
 
