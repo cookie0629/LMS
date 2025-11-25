@@ -2,6 +2,7 @@
 
 #include <chrono>
 #include <filesystem>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
@@ -37,6 +38,7 @@ namespace lms::db
         static std::size_t getCount(Session& session);
         static pointer find(Session& session, TrackId id);
         static pointer findByPath(Session& session, const std::filesystem::path& path);
+        static void find(Session& session, std::function<void(const pointer&)> func);
         static pointer getOrCreate(Session& session, const std::filesystem::path& path);
 
         // 访问器

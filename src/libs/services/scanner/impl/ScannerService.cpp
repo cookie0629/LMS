@@ -7,6 +7,7 @@
 #include "database/Session.hpp"
 #include "scanners/FileScanOperationBase.hpp"
 #include "steps/ScanStepScanFiles.hpp"
+#include "steps/ScanStepCheckForRemovedFiles.hpp"
 
 namespace lms::scanner
 {
@@ -159,11 +160,34 @@ namespace lms::scanner
 
         // 执行扫描步骤
         ScannerSettings settings;
-        ScanStepScanFiles scanFilesStep(_db, settings);
         
-        if (!scanFilesStep.execute(stats))
+        // 步骤 1: 扫描文件
         {
-            LMS_LOG(SCANNER, ERROR, "File scan step failed");
+            ScanStepScanFiles scanFilesStep(_db, settings);
+            if (!scanFilesStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "File scan step failed");
+            }
+        }
+
+        // 检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 2: 检查已删除的文件
+        {
+            ScanStepCheckForRemovedFiles checkRemovedStep(_db, settings);
+            if (!checkRemovedStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Check for removed files step failed");
+            }
         }
 
         stats.stopTime = Wt::WDateTime::currentDateTime();

@@ -13,6 +13,7 @@ add_library(lmsscanner STATIC
     impl/scanners/audiofile/TrackMetadataParser.cpp
     impl/steps/ScanStepBase.cpp
     impl/steps/ScanStepScanFiles.cpp
+    impl/steps/ScanStepCheckForRemovedFiles.cpp
 )
 
 target_include_directories(lmsscanner INTERFACE

@@ -54,6 +54,16 @@ namespace lms::db
         return ptr ? Track::pointer(ptr) : Track::pointer();
     }
 
+    void Track::find(Session& session, std::function<void(const Track::pointer&)> func)
+    {
+        session.checkReadTransaction();
+        auto results = session.getDboSession()->find<Track>().resultList();
+        for (const auto& ptr : results)
+        {
+            func(Track::pointer(ptr));
+        }
+    }
+
     Track::pointer Track::getOrCreate(Session& session, const std::filesystem::path& path)
     {
         session.checkWriteTransaction();
