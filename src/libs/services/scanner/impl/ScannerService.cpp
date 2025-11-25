@@ -10,6 +10,7 @@
 #include "steps/ScanStepCheckForRemovedFiles.hpp"
 #include "steps/ScanStepCheckForDuplicatedFiles.hpp"
 #include "steps/ScanStepUpdateLibraryFields.hpp"
+#include "steps/ScanStepRemoveOrphanedDbEntries.hpp"
 
 namespace lms::scanner
 {
@@ -229,6 +230,15 @@ namespace lms::scanner
             if (!updateLibraryStep.execute(stats))
             {
                 LMS_LOG(SCANNER, ERROR, "Update library fields step failed");
+            }
+        }
+
+        // 步骤 5: 删除孤立数据库条目
+        {
+            ScanStepRemoveOrphanedDbEntries removeOrphanedStep(_db, settings);
+            if (!removeOrphanedStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Remove orphaned DB entries step failed");
             }
         }
 
