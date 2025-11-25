@@ -80,9 +80,29 @@ src/libs/
 
 ### Scanner Service
 - 文件系统扫描（递归目录遍历）
-- 音频文件元数据提取
-- 自动创建和关联 Artist、Release、Medium 对象
-- 数据库更新和同步
+- 音频文件元数据提取与 TrackMetadataParser
+- 自动创建并关联 Artist / Release / Medium / Directory
+- 扫描步骤：删除缺失文件、检测重复文件、同步媒体库字段、清理孤立条目
+- 数据库增量更新、错误收集与统计
+
+## 在 Windows WSL 中运行与测试
+
+1. **准备 WSL 环境**
+   ```powershell
+   wsl --install
+   ```
+2. **在 WSL 中构建项目**
+   ```powershell
+   wsl bash -c "cd /mnt/e/LightweightMusicServer && mkdir -p build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Release && make -j$(nproc)"
+   ```
+3. **运行核心测试**
+   ```powershell
+   wsl bash -c "cd /mnt/e/LightweightMusicServer/build && ./bin/test_database && ./bin/test_auth && ./bin/test_scanner"
+   ```
+4. **（可选）调试版构建**
+   ```powershell
+   wsl bash -c "cd /mnt/e/LightweightMusicServer && rm -rf build && mkdir build && cd build && cmake .. -DCMAKE_BUILD_TYPE=Debug && make -j$(nproc)"
+   ```
 
 ## 开发文档
 
