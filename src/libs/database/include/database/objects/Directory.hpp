@@ -1,6 +1,7 @@
 #pragma once
 
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <string_view>
 
@@ -28,6 +29,7 @@ namespace lms::db
         static std::size_t getCount(Session& session);
         static pointer find(Session& session, DirectoryId id);
         static pointer find(Session& session, const std::filesystem::path& path);
+        static void find(Session& session, std::function<void(const pointer&)> func);
         static pointer getOrCreate(Session& session, const std::filesystem::path& path, ObjectPtr<MediaLibrary> mediaLibrary, ObjectPtr<Directory> parent = {});
 
         // 访问器

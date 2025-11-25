@@ -9,6 +9,7 @@
 #include "steps/ScanStepScanFiles.hpp"
 #include "steps/ScanStepCheckForRemovedFiles.hpp"
 #include "steps/ScanStepCheckForDuplicatedFiles.hpp"
+#include "steps/ScanStepUpdateLibraryFields.hpp"
 
 namespace lms::scanner
 {
@@ -208,6 +209,26 @@ namespace lms::scanner
             if (!checkDuplicatedStep.execute(stats))
             {
                 LMS_LOG(SCANNER, ERROR, "Check for duplicated files step failed");
+            }
+        }
+
+        // 检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 4: 更新媒体库字段
+        {
+            ScanStepUpdateLibraryFields updateLibraryStep(_db, settings);
+            if (!updateLibraryStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Update library fields step failed");
             }
         }
 

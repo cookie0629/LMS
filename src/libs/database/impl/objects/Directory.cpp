@@ -54,6 +54,16 @@ namespace lms::db
         return ptr ? Directory::pointer(ptr) : Directory::pointer();
     }
 
+    void Directory::find(Session& session, std::function<void(const Directory::pointer&)> func)
+    {
+        session.checkReadTransaction();
+        auto results = session.getDboSession()->find<Directory>().resultList();
+        for (const auto& ptr : results)
+        {
+            func(Directory::pointer(ptr));
+        }
+    }
+
     Directory::pointer Directory::getOrCreate(Session& session, const std::filesystem::path& path, ObjectPtr<MediaLibrary> mediaLibrary, ObjectPtr<Directory> parent)
     {
         session.checkWriteTransaction();
