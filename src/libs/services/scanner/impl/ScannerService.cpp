@@ -8,6 +8,7 @@
 #include "scanners/FileScanOperationBase.hpp"
 #include "steps/ScanStepScanFiles.hpp"
 #include "steps/ScanStepCheckForRemovedFiles.hpp"
+#include "steps/ScanStepCheckForDuplicatedFiles.hpp"
 
 namespace lms::scanner
 {
@@ -187,6 +188,26 @@ namespace lms::scanner
             if (!checkRemovedStep.execute(stats))
             {
                 LMS_LOG(SCANNER, ERROR, "Check for removed files step failed");
+            }
+        }
+
+        // 再次检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 3: 检查重复文件
+        {
+            ScanStepCheckForDuplicatedFiles checkDuplicatedStep(_db, settings);
+            if (!checkDuplicatedStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Check for duplicated files step failed");
             }
         }
 

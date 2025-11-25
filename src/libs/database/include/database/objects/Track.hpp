@@ -3,6 +3,7 @@
 #include <chrono>
 #include <filesystem>
 #include <functional>
+#include <functional>
 #include <optional>
 #include <string>
 #include <string_view>
