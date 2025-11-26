@@ -15,9 +15,12 @@ namespace lms::scanner
     {
         std::optional<std::string> title;
         std::optional<std::string> artist;
+        std::vector<std::string> artists;
         std::optional<std::string> album;
         std::optional<std::string> albumArtist;
+        std::vector<std::string> albumArtists;
         std::optional<std::string> genre;
+        std::vector<std::string> genres;
         std::optional<std::string> date;
         std::optional<int> trackNumber;
         std::optional<int> discNumber;
@@ -66,16 +69,12 @@ namespace lms::scanner
          * @brief 处理标签并填充元数据
          */
         void processTags(const audio::ITagReader& reader, TrackMetadata& metadata) const;
-
-        /**
-         * @brief 获取标签值（第一个匹配）
-         */
+        std::vector<std::string> extractValues(const audio::ITagReader& reader, audio::TagType tagType, const std::vector<std::string>& delimiters) const;
+        std::vector<std::string> splitAndNormalizeValue(std::string value, const std::vector<std::string>& delimiters) const;
         std::optional<std::string> getTagValue(const audio::ITagReader& reader, audio::TagType tagType) const;
-
-        /**
-         * @brief 获取整数标签值
-         */
         std::optional<int> getTagValueAsInt(const audio::ITagReader& reader, audio::TagType tagType) const;
+        std::optional<int> parseNumberValue(const std::optional<std::string>& value) const;
+        std::optional<std::string> normalizeDate(const std::optional<std::string>& value) const;
 
         const Parameters _params;
     };
