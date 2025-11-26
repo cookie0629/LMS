@@ -124,10 +124,21 @@ namespace lms::scanner
             TrackMetadata metadata;
             if (_audioFileInfo)
             {
-                TrackMetadataParser parser;
+                TrackMetadataParser parser{ getScannerSettings().metadataParserParameters };
                 metadata = parser.parseTrackMetadata(_audioFileInfo->getTagReader());
 
-                // 提取音频属性
+                if (getScannerSettings().preferAlbumArtistFallback)
+                {
+                    if (!metadata.artist && metadata.albumArtist)
+                    {
+                        metadata.artist = metadata.albumArtist;
+                    }
+                    if (metadata.artists.empty() && !metadata.albumArtists.empty())
+                    {
+                        metadata.artists = metadata.albumArtists;
+                    }
+                }
+
                 const auto& audioProps = _audioFileInfo->getAudioProperties();
                 if (audioProps.getDurationMs() > 0)
                 {
