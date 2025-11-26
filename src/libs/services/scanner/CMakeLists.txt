@@ -17,6 +17,8 @@ add_library(lmsscanner STATIC
     impl/steps/ScanStepCheckForDuplicatedFiles.cpp
     impl/steps/ScanStepUpdateLibraryFields.cpp
     impl/steps/ScanStepRemoveOrphanedDbEntries.cpp
+    impl/steps/ScanStepOptimize.cpp
+    impl/steps/ScanStepCompact.cpp
 )
 
 target_include_directories(lmsscanner INTERFACE

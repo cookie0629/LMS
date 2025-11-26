@@ -11,6 +11,8 @@
 #include "steps/ScanStepCheckForDuplicatedFiles.hpp"
 #include "steps/ScanStepUpdateLibraryFields.hpp"
 #include "steps/ScanStepRemoveOrphanedDbEntries.hpp"
+#include "steps/ScanStepOptimize.hpp"
+#include "steps/ScanStepCompact.hpp"
 
 namespace lms::scanner
 {
@@ -163,6 +165,8 @@ namespace lms::scanner
 
         // 执行扫描步骤
         ScannerSettings settings;
+        settings.enableOptimize = true;
+        settings.enableCompact = options.compact;
         
         // 步骤 1: 扫描文件
         {
@@ -233,12 +237,63 @@ namespace lms::scanner
             }
         }
 
+        // 检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
         // 步骤 5: 删除孤立数据库条目
         {
             ScanStepRemoveOrphanedDbEntries removeOrphanedStep(_db, settings);
             if (!removeOrphanedStep.execute(stats))
             {
                 LMS_LOG(SCANNER, ERROR, "Remove orphaned DB entries step failed");
+            }
+        }
+
+        // 检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 6: 数据库优化
+        {
+            ScanStepOptimize optimizeStep(_db, settings);
+            if (!optimizeStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Optimize database step failed");
+            }
+        }
+
+        // 检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 7: 数据库压缩
+        {
+            ScanStepCompact compactStep(_db, settings);
+            if (!compactStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Compact database step failed");
             }
         }
 

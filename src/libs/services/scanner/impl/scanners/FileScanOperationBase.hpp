@@ -4,6 +4,7 @@
 #include <vector>
 
 #include "FileToScan.hpp"
+#include "../ScannerSettings.hpp"
 #include "IFileScanOperation.hpp"
 
 namespace lms::db
@@ -13,14 +14,6 @@ namespace lms::db
 
 namespace lms::scanner
 {
-    /**
-     * @brief 扫描器设置（简化版）
-     */
-    struct ScannerSettings
-    {
-        // 暂时留空，后续可以添加配置项
-    };
-
     /**
      * @brief 文件扫描操作基类
      */

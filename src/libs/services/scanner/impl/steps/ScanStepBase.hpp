@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "services/scanner/ScannerStats.hpp"
+#include "../ScannerSettings.hpp"
 
 namespace lms::db
 {
@@ -12,8 +13,6 @@ namespace lms::db
 
 namespace lms::scanner
 {
-    struct ScannerSettings;
-
     /**
      * @brief 扫描步骤基类
      */
