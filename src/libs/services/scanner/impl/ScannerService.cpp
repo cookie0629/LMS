@@ -1,9 +1,12 @@
 #include "ScannerService.hpp"
 
 #include <thread>
+#include <string_view>
 
+#include "core/IConfig.hpp"
 #include "core/ILogger.hpp"
 #include "core/Service.hpp"
+#include "core/String.hpp"
 #include "database/Session.hpp"
 #include "scanners/FileScanOperationBase.hpp"
 #include "steps/ScanStepScanFiles.hpp"
@@ -163,10 +166,56 @@ namespace lms::scanner
             }
         }
 
-        // 执行扫描步骤
+        auto buildScannerSettings = [&](ScannerSettings& settings) {
+            settings.enableCompact = options.compact;
+            settings.enableOptimize = true;
+            settings.preferAlbumArtistFallback = true;
+
+            if (auto* config = lms::core::Service<lms::core::IConfig>::get())
+            {
+                settings.enableOptimize = config->getBool("scanner.optimize-enabled", settings.enableOptimize);
+                settings.enableCompact = settings.enableCompact || config->getBool("scanner.compact-enabled", false);
+                settings.preferAlbumArtistFallback = config->getBool("scanner.metadata.prefer-album-artist-fallback", true);
+
+                const auto loadDelimiters = [&](std::string_view key, std::vector<std::string>& target, const std::vector<std::string>& defaults) {
+                    std::vector<std::string> values;
+                    config->visitStrings(key, [&](std::string_view value) {
+                        auto trimmed = std::string{ lms::core::stringUtils::stringTrim(value) };
+                        if (!trimmed.empty())
+                        {
+                            values.emplace_back(std::move(trimmed));
+                        }
+                    }, {});
+
+                    if (!values.empty())
+                    {
+                        target = std::move(values);
+                    }
+                    else if (target.empty())
+                    {
+                        target = defaults;
+                    }
+                };
+
+                const auto artistDefaults = settings.metadataParserParameters.artistTagDelimiters;
+                loadDelimiters("scanner.metadata.artist-delimiters", settings.metadataParserParameters.artistTagDelimiters, artistDefaults);
+
+                const auto defaultDefaults = settings.metadataParserParameters.defaultTagDelimiters;
+                loadDelimiters("scanner.metadata.default-delimiters", settings.metadataParserParameters.defaultTagDelimiters, defaultDefaults);
+            }
+
+            if (options.forceOptimize)
+            {
+                settings.enableOptimize = true;
+            }
+            if (options.compact)
+            {
+                settings.enableCompact = true;
+            }
+        };
+
         ScannerSettings settings;
-        settings.enableOptimize = true;
-        settings.enableCompact = options.compact;
+        buildScannerSettings(settings);
         
         // 步骤 1: 扫描文件
         {
