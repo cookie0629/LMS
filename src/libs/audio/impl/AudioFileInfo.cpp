@@ -1,6 +1,7 @@
 #include "audio/IAudioFileInfo.hpp"
 
 #include <array>
+#include <cstring>
 #include <filesystem>
 #include <map>
 #include <memory>
@@ -13,8 +14,17 @@
 
 #if defined(LMS_AUDIO_HAS_TAGLIB)
 #include <taglib/audioproperties.h>
+#include <taglib/attachedpictureframe.h>
 #include <taglib/fileref.h>
+#include <taglib/flacfile.h>
+#include <taglib/flacpicture.h>
+#include <taglib/id3v2tag.h>
+#include <taglib/mpegfile.h>
+#include <taglib/mp4coverart.h>
+#include <taglib/mp4file.h>
+#include <taglib/mp4tag.h>
 #include <taglib/tag.h>
+#include <taglib/tbytevector.h>
 #include <taglib/tpropertymap.h>
 #endif
 
@@ -212,6 +222,167 @@ namespace lms::audio
             }
         }
 
+        struct EmbeddedImageData
+        {
+            std::vector<std::byte> bytes;
+            std::string mimeType{ "application/octet-stream" };
+        };
+
+        std::vector<std::byte> toByteVector(const TagLib::ByteVector& byteVector)
+        {
+            if (byteVector.isEmpty())
+            {
+                return {};
+            }
+
+            std::vector<std::byte> buffer(byteVector.size());
+            std::memcpy(buffer.data(), byteVector.data(), byteVector.size());
+            return buffer;
+        }
+
+        EmbeddedImageData buildEmbeddedImageData(const TagLib::ByteVector& byteVector, std::string mimeType)
+        {
+            EmbeddedImageData data;
+            data.bytes = toByteVector(byteVector);
+            data.mimeType = mimeType.empty() ? "application/octet-stream" : std::move(mimeType);
+            return data;
+        }
+
+        std::optional<EmbeddedImageData> extractFromId3v2(const TagLib::ID3v2::Tag& tag)
+        {
+            const auto& frames = tag.frameListMap();
+            auto it = frames.find("APIC");
+            if (it == frames.end())
+            {
+                return std::nullopt;
+            }
+
+            for (const auto* frame : it->second)
+            {
+                const auto* pictureFrame = dynamic_cast<const TagLib::ID3v2::AttachedPictureFrame*>(frame);
+                if (!pictureFrame)
+                {
+                    continue;
+                }
+
+                const auto picture = pictureFrame->picture();
+                if (picture.isEmpty())
+                {
+                    continue;
+                }
+
+                return buildEmbeddedImageData(picture, pictureFrame->mimeType().toCString(true));
+            }
+
+            return std::nullopt;
+        }
+
+        std::optional<EmbeddedImageData> extractFromFlacPictures(const TagLib::List<TagLib::FLAC::Picture*>& pictures)
+        {
+            for (const auto* flacPicture : pictures)
+            {
+                if (!flacPicture)
+                {
+                    continue;
+                }
+
+                const auto picture = flacPicture->data();
+                if (picture.isEmpty())
+                {
+                    continue;
+                }
+
+                return buildEmbeddedImageData(picture, flacPicture->mimeType().toCString(true));
+            }
+
+            return std::nullopt;
+        }
+
+        const char* mp4ImageFormatToMimeType(TagLib::MP4::CoverArt::Format format)
+        {
+            switch (format)
+            {
+            case TagLib::MP4::CoverArt::Format::BMP:
+                return "image/bmp";
+            case TagLib::MP4::CoverArt::Format::GIF:
+                return "image/gif";
+            case TagLib::MP4::CoverArt::Format::JPEG:
+                return "image/jpeg";
+            case TagLib::MP4::CoverArt::Format::PNG:
+                return "image/png";
+            case TagLib::MP4::CoverArt::Format::Unknown:
+            default:
+                return "application/octet-stream";
+            }
+        }
+
+        std::optional<EmbeddedImageData> extractFromMp4(const TagLib::MP4::File& mp4File)
+        {
+            const auto* tag = mp4File.tag();
+            if (!tag)
+            {
+                return std::nullopt;
+            }
+
+            const auto item = tag->item("covr");
+            if (!item.isValid())
+            {
+                return std::nullopt;
+            }
+
+            const auto coverList = item.toCoverArtList();
+            for (const auto& cover : coverList)
+            {
+                const auto picture = cover.data();
+                if (picture.isEmpty())
+                {
+                    continue;
+                }
+
+                return buildEmbeddedImageData(picture, mp4ImageFormatToMimeType(cover.format()));
+            }
+
+            return std::nullopt;
+        }
+
+        std::optional<EmbeddedImageData> extractEmbeddedImage(TagLib::File& file)
+        {
+            if (auto* mpegFile = dynamic_cast<TagLib::MPEG::File*>(&file))
+            {
+                if (mpegFile->hasID3v2Tag())
+                {
+                    if (auto image = extractFromId3v2(*mpegFile->ID3v2Tag()))
+                    {
+                        return image;
+                    }
+                }
+            }
+            else if (auto* flacFile = dynamic_cast<TagLib::FLAC::File*>(&file))
+            {
+                if (auto image = extractFromFlacPictures(flacFile->pictureList()))
+                {
+                    return image;
+                }
+
+                if (flacFile->hasID3v2Tag())
+                {
+                    if (auto image = extractFromId3v2(*flacFile->ID3v2Tag()))
+                    {
+                        return image;
+                    }
+                }
+            }
+            else if (auto* mp4File = dynamic_cast<TagLib::MP4::File*>(&file))
+            {
+                if (auto image = extractFromMp4(*mp4File))
+                {
+                    return image;
+                }
+            }
+
+            return std::nullopt;
+        }
+
         AudioProperties buildAudioProperties(const TagLib::AudioProperties* props)
         {
             if (!props)
@@ -257,9 +428,18 @@ namespace lms::audio
 
         auto audioProps = buildAudioProperties(fileRef.audioProperties());
 
+        auto imageReader = std::make_unique<ImageReader>();
+        if (auto* file = fileRef.file())
+        {
+            if (auto image = extractEmbeddedImage(*file))
+            {
+                imageReader->setImage(std::move(image->bytes), std::move(image->mimeType));
+            }
+        }
+
         return std::make_unique<AudioFileInfo>(
             std::move(audioProps),
-            std::make_unique<ImageReader>(),
+            std::move(imageReader),
             std::move(tagReader));
 #else
         (void)p;

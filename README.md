@@ -83,6 +83,7 @@ src/libs/
 - 音频文件元数据提取与 TrackMetadataParser
 - 自动创建并关联 Artist / Release / Medium / Directory
 - 元数据解析增强：多艺术家拆分、日期/编号容错，可通过 `scanner.metadata.*` 配置自定义分隔符与回退策略
+- 嵌入式封面提取：支持 MP3 (ID3v2 APIC)、FLAC Picture、MP4 covr
 - 扫描步骤：删除缺失文件、检测重复文件、同步媒体库字段、清理孤立条目、数据库优化/压缩
 - 数据库增量更新、错误收集与统计
 

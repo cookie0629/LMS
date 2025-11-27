@@ -2,6 +2,8 @@
 
 #include <cstddef>
 #include <span>
+#include <string>
+#include <string_view>
 #include <vector>
 
 namespace lms::audio
@@ -24,6 +26,11 @@ namespace lms::audio
          * @brief 检查是否有嵌入图像
          */
         virtual bool hasImage() const = 0;
+
+        /**
+         * @brief 返回图像的 MIME 类型
+         */
+        virtual std::string_view getMimeType() const = 0;
     };
 
     /**
@@ -32,16 +39,36 @@ namespace lms::audio
     class ImageReader : public IImageReader
     {
     public:
+        void setImage(std::vector<std::byte> data, std::string mimeType = "application/octet-stream")
+        {
+            _data = std::move(data);
+            _mimeType = mimeType.empty() ? "application/octet-stream" : std::move(mimeType);
+        }
+
+        void clear()
+        {
+            _data.clear();
+            _mimeType = "application/octet-stream";
+        }
+
         std::span<const std::byte> getImageData() const override
         {
-            static const std::vector<std::byte> empty;
-            return empty;
+            return _data;
         }
 
         bool hasImage() const override
         {
-            return false;
+            return !_data.empty();
         }
+
+        std::string_view getMimeType() const override
+        {
+            return _mimeType;
+        }
+
+    private:
+        std::vector<std::byte> _data;
+        std::string _mimeType{ "application/octet-stream" };
     };
 } // namespace lms::audio
 
