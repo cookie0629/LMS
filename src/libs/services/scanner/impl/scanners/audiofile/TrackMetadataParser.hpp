@@ -42,6 +42,7 @@ namespace lms::scanner
         {
             std::vector<std::string> artistTagDelimiters; // 艺术家标签分隔符
             std::vector<std::string> defaultTagDelimiters;  // 默认标签分隔符
+            std::vector<std::string> artistsToNotSplit; // 不进行拆分的艺术家列表
 
             Parameters()
                 : artistTagDelimiters{ ";", ",", "/" }
@@ -50,10 +51,7 @@ namespace lms::scanner
             }
         };
 
-        TrackMetadataParser(const Parameters& params = Parameters{})
-            : _params{ params }
-        {
-        }
+        TrackMetadataParser(const Parameters& params = Parameters{});
 
         ~TrackMetadataParser() = default;
         TrackMetadataParser(const TrackMetadataParser&) = delete;
@@ -69,8 +67,13 @@ namespace lms::scanner
          * @brief 处理标签并填充元数据
          */
         void processTags(const audio::ITagReader& reader, TrackMetadata& metadata) const;
-        std::vector<std::string> extractValues(const audio::ITagReader& reader, audio::TagType tagType, const std::vector<std::string>& delimiters) const;
-        std::vector<std::string> splitAndNormalizeValue(std::string value, const std::vector<std::string>& delimiters) const;
+        std::vector<std::string> extractValues(const audio::ITagReader& reader,
+                                               audio::TagType tagType,
+                                               const std::vector<std::string>& delimiters,
+                                               const std::vector<std::string>* whitelist = nullptr) const;
+        std::vector<std::string> splitAndNormalizeValue(std::string value,
+                                                        const std::vector<std::string>& delimiters,
+                                                        const std::vector<std::string>* whitelist = nullptr) const;
         std::optional<std::string> getTagValue(const audio::ITagReader& reader, audio::TagType tagType) const;
         std::optional<int> getTagValueAsInt(const audio::ITagReader& reader, audio::TagType tagType) const;
         std::optional<int> parseNumberValue(const std::optional<std::string>& value) const;

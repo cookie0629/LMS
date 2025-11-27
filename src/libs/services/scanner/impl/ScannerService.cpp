@@ -202,6 +202,24 @@ namespace lms::scanner
 
                 const auto defaultDefaults = settings.metadataParserParameters.defaultTagDelimiters;
                 loadDelimiters("scanner.metadata.default-delimiters", settings.metadataParserParameters.defaultTagDelimiters, defaultDefaults);
+
+                const auto loadList = [&](std::string_view key, std::vector<std::string>& target) {
+                    std::vector<std::string> values;
+                    config->visitStrings(key, [&](std::string_view value) {
+                        auto trimmed = std::string{ lms::core::stringUtils::stringTrim(value) };
+                        if (!trimmed.empty())
+                        {
+                            values.emplace_back(std::move(trimmed));
+                        }
+                    }, {});
+
+                    if (!values.empty())
+                    {
+                        target = std::move(values);
+                    }
+                };
+
+                loadList("scanner.metadata.artists-to-not-split", settings.metadataParserParameters.artistsToNotSplit);
             }
 
             if (options.forceOptimize)

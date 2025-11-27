@@ -5,12 +5,118 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <utility>
 
 #include "audio/ITagReader.hpp"
 #include "core/String.hpp"
 
+namespace
+{
+    using lms::scanner::TrackMetadataParser;
+
+    using ReplacementPair = std::pair<std::string, std::string>;
+
+    TrackMetadataParser::Parameters normalizeParameters(TrackMetadataParser::Parameters params)
+    {
+        const auto normalizeDelimiterList = [](std::vector<std::string>& list) {
+            std::vector<std::string> normalized;
+            normalized.reserve(list.size());
+
+            for (const auto& entry : list)
+            {
+                auto trimmed = lms::core::stringUtils::stringTrim(entry);
+                if (!trimmed.empty())
+                {
+                    normalized.emplace_back(trimmed);
+                }
+            }
+
+            std::vector<std::string> deduped;
+            deduped.reserve(normalized.size());
+            for (auto& value : normalized)
+            {
+                if (std::find(deduped.begin(), deduped.end(), value) == deduped.end())
+                {
+                    deduped.push_back(std::move(value));
+                }
+            }
+
+            list = std::move(deduped);
+        };
+
+        normalizeDelimiterList(params.artistTagDelimiters);
+        normalizeDelimiterList(params.defaultTagDelimiters);
+
+        std::vector<std::string> whitelist;
+        whitelist.reserve(params.artistsToNotSplit.size());
+        for (const auto& entry : params.artistsToNotSplit)
+        {
+            auto trimmed = lms::core::stringUtils::stringTrim(entry);
+            if (!trimmed.empty())
+            {
+                whitelist.emplace_back(trimmed);
+            }
+        }
+
+        std::sort(whitelist.begin(), whitelist.end(), [](const std::string& lhs, const std::string& rhs) {
+            if (lhs.size() != rhs.size())
+            {
+                return lhs.size() > rhs.size();
+            }
+            return lhs < rhs;
+        });
+        whitelist.erase(std::unique(whitelist.begin(), whitelist.end()), whitelist.end());
+
+        params.artistsToNotSplit = std::move(whitelist);
+        return params;
+    }
+
+    void applyWhitelistPlaceholders(std::string& value,
+                                    const std::vector<std::string>& whitelist,
+                                    std::vector<ReplacementPair>& replacements)
+    {
+        if (whitelist.empty())
+        {
+            return;
+        }
+
+        constexpr std::string_view prefix{ "__LMS_PRESERVE__" };
+        std::size_t counter{};
+
+        for (const auto& entry : whitelist)
+        {
+            std::size_t pos = 0;
+            while ((pos = value.find(entry, pos)) != std::string::npos)
+            {
+                std::string marker = std::string(prefix) + std::to_string(counter++);
+                value.replace(pos, entry.size(), marker);
+                replacements.emplace_back(marker, entry);
+                pos += marker.size();
+            }
+        }
+    }
+
+    void restoreWhitelistPlaceholders(std::string& value, const std::vector<ReplacementPair>& replacements)
+    {
+        for (const auto& replacement : replacements)
+        {
+            std::size_t pos = 0;
+            while ((pos = value.find(replacement.first, pos)) != std::string::npos)
+            {
+                value.replace(pos, replacement.first.size(), replacement.second);
+                pos += replacement.second.size();
+            }
+        }
+    }
+} // namespace
+
 namespace lms::scanner
 {
+    TrackMetadataParser::TrackMetadataParser(const Parameters& params)
+        : _params{ normalizeParameters(params) }
+    {
+    }
+
     TrackMetadata TrackMetadataParser::parseTrackMetadata(const audio::ITagReader& reader) const
     {
         TrackMetadata metadata;
@@ -22,7 +128,7 @@ namespace lms::scanner
     {
         metadata.title = getTagValue(reader, audio::TagType::Title);
 
-        metadata.artists = extractValues(reader, audio::TagType::Artist, _params.artistTagDelimiters);
+        metadata.artists = extractValues(reader, audio::TagType::Artist, _params.artistTagDelimiters, &_params.artistsToNotSplit);
         if (!metadata.artists.empty())
         {
             metadata.artist = metadata.artists.front();
@@ -34,7 +140,7 @@ namespace lms::scanner
 
         metadata.album = getTagValue(reader, audio::TagType::Album);
 
-        metadata.albumArtists = extractValues(reader, audio::TagType::AlbumArtist, _params.artistTagDelimiters);
+        metadata.albumArtists = extractValues(reader, audio::TagType::AlbumArtist, _params.artistTagDelimiters, &_params.artistsToNotSplit);
         if (!metadata.albumArtists.empty())
         {
             metadata.albumArtist = metadata.albumArtists.front();
@@ -60,7 +166,10 @@ namespace lms::scanner
         metadata.comment = getTagValue(reader, audio::TagType::Comment);
     }
 
-    std::vector<std::string> TrackMetadataParser::extractValues(const audio::ITagReader& reader, audio::TagType tagType, const std::vector<std::string>& delimiters) const
+    std::vector<std::string> TrackMetadataParser::extractValues(const audio::ITagReader& reader,
+                                                               audio::TagType tagType,
+                                                               const std::vector<std::string>& delimiters,
+                                                               const std::vector<std::string>* whitelist) const
     {
         std::vector<std::string> rawValues = reader.getMultiTag(tagType);
         if (rawValues.empty())
@@ -74,7 +183,7 @@ namespace lms::scanner
         std::vector<std::string> result;
         for (auto& raw : rawValues)
         {
-            auto splitted = splitAndNormalizeValue(raw, delimiters);
+            auto splitted = splitAndNormalizeValue(raw, delimiters, whitelist);
             for (auto& value : splitted)
             {
                 if (std::find(result.begin(), result.end(), value) == result.end())
@@ -86,11 +195,19 @@ namespace lms::scanner
         return result;
     }
 
-    std::vector<std::string> TrackMetadataParser::splitAndNormalizeValue(std::string value, const std::vector<std::string>& delimiters) const
+    std::vector<std::string> TrackMetadataParser::splitAndNormalizeValue(std::string value,
+                                                                         const std::vector<std::string>& delimiters,
+                                                                         const std::vector<std::string>* whitelist) const
     {
         if (value.empty())
         {
             return {};
+        }
+
+        std::vector<ReplacementPair> replacements;
+        if (whitelist && !whitelist->empty())
+        {
+            applyWhitelistPlaceholders(value, *whitelist, replacements);
         }
 
         std::vector<std::string> segments{ std::move(value) };
@@ -123,7 +240,13 @@ namespace lms::scanner
         normalized.reserve(segments.size());
         for (const auto& segment : segments)
         {
-            auto trimmed = core::stringUtils::stringTrim(segment);
+            std::string restoredSegment{ segment };
+            if (!replacements.empty())
+            {
+                restoreWhitelistPlaceholders(restoredSegment, replacements);
+            }
+
+            auto trimmed = core::stringUtils::stringTrim(restoredSegment);
             if (!trimmed.empty())
             {
                 normalized.emplace_back(trimmed);
