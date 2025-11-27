@@ -13,7 +13,8 @@ namespace lms::scanner::utils
      */
     std::vector<std::filesystem::path> discoverFiles(
         const std::filesystem::path& rootPath,
-        const std::vector<std::string>& extensions);
+        const std::vector<std::string>& extensions,
+        const std::filesystem::path* excludeDirFileName = nullptr);
 
     /**
      * @brief 检查文件扩展名是否在支持列表中

@@ -2,15 +2,32 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <system_error>
 
 #include "core/Path.hpp"
 #include "core/String.hpp"
 
 namespace lms::scanner::utils
 {
+    namespace
+    {
+        bool shouldSkipDirectory(const std::filesystem::path& directory, const std::filesystem::path* excludeDirFileName)
+        {
+            if (!excludeDirFileName || excludeDirFileName->empty())
+            {
+                return false;
+            }
+
+            std::error_code ec;
+            const auto marker = directory / *excludeDirFileName;
+            return std::filesystem::exists(marker, ec) && std::filesystem::is_regular_file(marker, ec);
+        }
+    } // namespace
+
     std::vector<std::filesystem::path> discoverFiles(
         const std::filesystem::path& rootPath,
-        const std::vector<std::string>& extensions)
+        const std::vector<std::string>& extensions,
+        const std::filesystem::path* excludeDirFileName)
     {
         std::vector<std::filesystem::path> files;
 
@@ -21,9 +38,33 @@ namespace lms::scanner::utils
 
         try
         {
-            for (const auto& entry : std::filesystem::recursive_directory_iterator(rootPath))
+            std::error_code ec;
+            std::filesystem::recursive_directory_iterator it(
+                rootPath,
+                std::filesystem::directory_options::skip_permission_denied,
+                ec);
+
+            if (ec)
             {
-                if (entry.is_regular_file())
+                return files;
+            }
+
+            const std::filesystem::recursive_directory_iterator end;
+            for (; it != end; ++it)
+            {
+                const auto& entry = *it;
+                ec.clear();
+                if (entry.is_directory(ec))
+                {
+                    if (shouldSkipDirectory(entry.path(), excludeDirFileName))
+                    {
+                        it.disable_recursion_pending();
+                    }
+                    continue;
+                }
+
+                ec.clear();
+                if (entry.is_regular_file(ec))
                 {
                     const auto& path = entry.path();
                     if (hasSupportedExtension(path, extensions))

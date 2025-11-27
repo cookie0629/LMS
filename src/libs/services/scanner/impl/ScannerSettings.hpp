@@ -1,9 +1,13 @@
 #pragma once
 
+#include <filesystem>
+
 #include "scanners/audiofile/TrackMetadataParser.hpp"
 
 namespace lms::scanner
 {
+    inline const std::filesystem::path kExcludeDirFileName{ ".lmsignore" };
+
     /**
      * @brief 扫描运行时设置
      */

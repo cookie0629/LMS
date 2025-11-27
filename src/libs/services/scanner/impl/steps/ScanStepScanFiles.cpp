@@ -136,7 +136,7 @@ namespace lms::scanner
             }
 
             LMS_LOG(SCANNER, INFO, "Discovering files in: " << mediaLibraryPath);
-            auto files = utils::discoverFiles(mediaLibraryPath, extensions);
+            auto files = utils::discoverFiles(mediaLibraryPath, extensions, &kExcludeDirFileName);
             stats.totalFileCount = files.size();
             LMS_LOG(SCANNER, INFO, "Found " << files.size() << " candidate audio files");
 
