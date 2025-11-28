@@ -15,6 +15,7 @@ add_library(lmsdatabase STATIC
 	impl/objects/Medium.cpp
 	impl/objects/Track.cpp
 	impl/objects/TrackEmbeddedImage.cpp
+	impl/objects/TrackEmbeddedImageLink.cpp
 	impl/objects/MediaLibrary.cpp
 	impl/objects/Directory.cpp
 )

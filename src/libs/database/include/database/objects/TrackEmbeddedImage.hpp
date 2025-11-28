@@ -9,6 +9,7 @@
 #include <Wt/WDateTime.h>
 
 #include "database/Object.hpp"
+#include "database/Types.hpp"
 #include "database/objects/TrackEmbeddedImageId.hpp"
 #include "database/objects/TrackId.hpp"
 
@@ -33,7 +34,10 @@ namespace lms::db
                               std::span<const std::byte> data,
                               std::string_view mimeType,
                               std::size_t width,
-                              std::size_t height);
+                              std::size_t height,
+                              ImageType type = ImageType::Unknown,
+                              std::string_view description = {},
+                              std::size_t index = 0);
 
         const std::string& getData() const { return _data; }
         std::string_view getMimeType() const { return _mimeType; }

@@ -12,6 +12,7 @@
 #include "database/objects/Medium.hpp"
 #include "database/objects/Track.hpp"
 #include "database/objects/TrackEmbeddedImage.hpp"
+#include "database/objects/TrackEmbeddedImageLink.hpp"
 #include "database/objects/MediaLibrary.hpp"
 #include "database/objects/Directory.hpp"
 
@@ -33,6 +34,7 @@ namespace lms::db
         _session.mapClass<Medium>("medium");
         _session.mapClass<Track>("track");
         _session.mapClass<TrackEmbeddedImage>("track_embedded_image");
+        _session.mapClass<TrackEmbeddedImageLink>("track_embedded_image_link");
         _session.mapClass<MediaLibrary>("media_library");
         _session.mapClass<Directory>("directory");
     }

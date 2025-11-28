@@ -9,6 +9,7 @@
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
 #include "database/objects/Track.hpp"
+#include "database/objects/TrackEmbeddedImageLink.hpp"
 
 DBO_INSTANTIATE_TEMPLATES(lms::db::TrackEmbeddedImage)
 
@@ -69,7 +70,10 @@ namespace lms::db
                                                            std::span<const std::byte> data,
                                                            std::string_view mimeType,
                                                            std::size_t width,
-                                                           std::size_t height)
+                                                           std::size_t height,
+                                                           ImageType type,
+                                                           std::string_view description,
+                                                           std::size_t index)
     {
         session.checkWriteTransaction();
         auto existing = findByTrack(session, track->getId());
@@ -83,6 +87,7 @@ namespace lms::db
         updater->setMimeType(mimeType);
         updater->setSize(width, height);
         updater->touch();
+        TrackEmbeddedImageLink::replace(session, track, existing, index, type, description);
         return existing;
     }
 

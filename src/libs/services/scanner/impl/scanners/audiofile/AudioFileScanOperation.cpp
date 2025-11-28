@@ -15,6 +15,7 @@
 #include "database/objects/Release.hpp"
 #include "database/objects/Track.hpp"
 #include "database/objects/TrackEmbeddedImage.hpp"
+#include "database/Types.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
 #include "services/scanner/ScanErrors.hpp"
@@ -272,7 +273,8 @@ namespace lms::scanner
                             imageData,
                             imageReader.getMimeType(),
                             0,
-                            0);
+                            0,
+                            db::ImageType::Front);
                     }
                     else
                     {

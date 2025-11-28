@@ -40,5 +40,13 @@ namespace lms::db
         ADMIN,    // 管理员
         DEMO,     // 演示用户
     };
+
+    enum class ImageType
+    {
+        Unknown,
+        Front,
+        Back,
+        Artist,
+    };
 } // namespace lms::db
 
