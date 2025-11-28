@@ -1,6 +1,7 @@
 #include "AudioFileScanOperation.hpp"
 
 #include <filesystem>
+#include <span>
 
 #include "audio/IAudioFileInfo.hpp"
 #include "core/ILogger.hpp"
@@ -13,6 +14,7 @@
 #include "database/objects/Medium.hpp"
 #include "database/objects/Release.hpp"
 #include "database/objects/Track.hpp"
+#include "database/objects/TrackEmbeddedImage.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
 #include "services/scanner/ScanErrors.hpp"
@@ -179,51 +181,51 @@ namespace lms::scanner
             auto fileSize = static_cast<long long>(getFileSize());
             auto lastWriteTime = getLastWriteTime();
 
+            db::Track::pointer track;
+            OperationResult result{ OperationResult::Skipped };
+
             if (existingTrack)
             {
-                // 更新现有 Track
-                existingTrack.modify()->setFileSize(fileSize);
-                existingTrack.modify()->setLastWriteTime(lastWriteTime);
-                existingTrack.modify()->setDirectory(directory);
-                
-                // 如果文件名已更改，更新名称
-                auto currentName = existingTrack->getName();
-                auto newName = core::pathUtils::getFilename(filePath);
-                if (currentName != newName)
-                {
-                    existingTrack.modify()->setName(newName);
-                }
+                track = existingTrack;
+                result = OperationResult::Updated;
 
-                // 更新元数据（如果可用）
-                if (metadata.title && !metadata.title->empty())
-                {
-                    existingTrack.modify()->setName(*metadata.title);
-                }
-                if (metadata.trackNumber)
-                {
-                    existingTrack.modify()->setTrackNumber(*metadata.trackNumber);
-                }
-                if (release)
-                {
-                    existingTrack.modify()->setRelease(release);
-                }
-                if (medium)
-                {
-                    existingTrack.modify()->setMedium(medium);
-                }
-
-                transaction.commit();
-                return OperationResult::Updated;
-            }
-            else
-            {
-                // 创建新 Track
-                auto track = db::Track::getOrCreate(session, filePath);
                 track.modify()->setFileSize(fileSize);
                 track.modify()->setLastWriteTime(lastWriteTime);
                 track.modify()->setDirectory(directory);
-                
-                // 设置名称（优先使用元数据中的标题，否则使用文件名）
+
+                auto currentName = track->getName();
+                auto newName = core::pathUtils::getFilename(filePath);
+                if (currentName != newName)
+                {
+                    track.modify()->setName(newName);
+                }
+
+                if (metadata.title && !metadata.title->empty())
+                {
+                    track.modify()->setName(*metadata.title);
+                }
+                if (metadata.trackNumber)
+                {
+                    track.modify()->setTrackNumber(*metadata.trackNumber);
+                }
+                if (release)
+                {
+                    track.modify()->setRelease(release);
+                }
+                if (medium)
+                {
+                    track.modify()->setMedium(medium);
+                }
+            }
+            else
+            {
+                track = db::Track::getOrCreate(session, filePath);
+                result = OperationResult::Added;
+
+                track.modify()->setFileSize(fileSize);
+                track.modify()->setLastWriteTime(lastWriteTime);
+                track.modify()->setDirectory(directory);
+
                 if (metadata.title && !metadata.title->empty())
                 {
                     track.modify()->setName(*metadata.title);
@@ -233,7 +235,6 @@ namespace lms::scanner
                     track.modify()->setName(core::pathUtils::getFilename(filePath));
                 }
 
-                // 设置元数据
                 if (metadata.trackNumber)
                 {
                     track.modify()->setTrackNumber(*metadata.trackNumber);
@@ -247,7 +248,6 @@ namespace lms::scanner
                     track.modify()->setMedium(medium);
                 }
 
-                // 设置音频属性
                 if (_audioFileInfo)
                 {
                     const auto& audioProps = _audioFileInfo->getAudioProperties();
@@ -256,10 +256,37 @@ namespace lms::scanner
                         track.modify()->setDuration(std::chrono::milliseconds(audioProps.getDurationMs()));
                     }
                 }
-
-                transaction.commit();
-                return OperationResult::Added;
             }
+
+            if (track)
+            {
+                if (_audioFileInfo)
+                {
+                    const auto& imageReader = _audioFileInfo->getImageReader();
+                    const auto imageData = imageReader.getImageData();
+                    if (imageReader.hasImage() && !imageData.empty())
+                    {
+                        db::TrackEmbeddedImage::upsert(
+                            session,
+                            track,
+                            imageData,
+                            imageReader.getMimeType(),
+                            0,
+                            0);
+                    }
+                    else
+                    {
+                        db::TrackEmbeddedImage::removeForTrack(session, track->getId());
+                    }
+                }
+                else
+                {
+                    db::TrackEmbeddedImage::removeForTrack(session, track->getId());
+                }
+            }
+
+            transaction.commit();
+            return result;
         }
         catch (const std::exception& e)
         {
