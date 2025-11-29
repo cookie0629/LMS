@@ -48,5 +48,23 @@ namespace lms::db
         Back,
         Artist,
     };
+
+    /**
+     * @brief Track 和 Artist 之间的关联类型
+     */
+    enum class TrackArtistLinkType
+    {
+        Artist = 0,      // 常规轨道艺术家
+        Arranger = 1,    // 编曲者
+        Composer = 2,    // 作曲者
+        Conductor = 3,   // 指挥
+        Lyricist = 4,    // 作词者
+        Mixer = 5,       // 混音师
+        Performer = 6,   // 表演者
+        Producer = 7,    // 制作人
+        ReleaseArtist = 8, // 专辑艺术家
+        Remixer = 9,     // 混音者
+        Writer = 10,     // 作者
+    };
 } // namespace lms::db
 

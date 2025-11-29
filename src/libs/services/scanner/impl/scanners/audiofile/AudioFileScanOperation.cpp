@@ -15,6 +15,7 @@
 #include "database/objects/Release.hpp"
 #include "database/objects/Track.hpp"
 #include "database/objects/TrackEmbeddedImage.hpp"
+#include "database/objects/TrackArtistLink.hpp"
 #include "database/Types.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
@@ -150,11 +151,7 @@ namespace lms::scanner
             }
 
             // 4. 创建或获取 Artist（如果元数据中有艺术家信息）
-            db::Artist::pointer artist;
-            if (metadata.artist && !metadata.artist->empty())
-            {
-                artist = db::Artist::getOrCreate(session, *metadata.artist);
-            }
+            // 注意：这里保留单个 artist 用于向后兼容，但实际使用 TrackArtistLink
 
             // 5. 创建或获取 Release（如果元数据中有专辑信息）
             db::Release::pointer release;
@@ -261,6 +258,49 @@ namespace lms::scanner
 
             if (track)
             {
+                // 9. 创建 TrackArtistLink 关联
+                // 先删除旧的关联（如果存在）
+                db::TrackArtistLink::removeForTrack(session, track->getId());
+
+                // 创建 artists 关联（TrackArtistLinkType::Artist）
+                if (!metadata.artists.empty())
+                {
+                    for (const auto& artistName : metadata.artists)
+                    {
+                        if (!artistName.empty())
+                        {
+                            auto artist = db::Artist::getOrCreate(session, artistName);
+                            db::TrackArtistLink::create(session, track, artist, db::TrackArtistLinkType::Artist);
+                        }
+                    }
+                }
+                // 如果没有 artists，但有一个 artist，也创建关联
+                else if (metadata.artist && !metadata.artist->empty())
+                {
+                    auto artist = db::Artist::getOrCreate(session, *metadata.artist);
+                    db::TrackArtistLink::create(session, track, artist, db::TrackArtistLinkType::Artist);
+                }
+
+                // 创建 albumArtists 关联（TrackArtistLinkType::ReleaseArtist）
+                if (!metadata.albumArtists.empty())
+                {
+                    for (const auto& artistName : metadata.albumArtists)
+                    {
+                        if (!artistName.empty())
+                        {
+                            auto artist = db::Artist::getOrCreate(session, artistName);
+                            db::TrackArtistLink::create(session, track, artist, db::TrackArtistLinkType::ReleaseArtist);
+                        }
+                    }
+                }
+                // 如果没有 albumArtists，但有一个 albumArtist，也创建关联
+                else if (metadata.albumArtist && !metadata.albumArtist->empty())
+                {
+                    auto artist = db::Artist::getOrCreate(session, *metadata.albumArtist);
+                    db::TrackArtistLink::create(session, track, artist, db::TrackArtistLinkType::ReleaseArtist);
+                }
+
+                // 10. 处理嵌入式图像
                 if (_audioFileInfo)
                 {
                     const auto& imageReader = _audioFileInfo->getImageReader();
