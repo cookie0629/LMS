@@ -24,6 +24,7 @@ namespace lms::artwork
                                    const std::filesystem::path& defaultReleaseCoverSvgPath,
                                    const std::filesystem::path& defaultArtistImageSvgPath)
         : _db{ db }
+        , _cache{ 50 * 1024 * 1024 } // 50MB 缓存大小
     {
         if (auto* logger = lms::core::Service<lms::core::logging::ILogger>::get())
         {
@@ -69,6 +70,13 @@ namespace lms::artwork
             return nullptr;
         }
 
+        // 先尝试从缓存获取
+        ImageCache::EntryDesc cacheKey{ artworkId, std::nullopt };
+        if (auto cachedImage = _cache.getImage(cacheKey))
+        {
+            return cachedImage;
+        }
+
         db::Artwork::UnderlyingId underlyingArtworkId;
 
         {
@@ -84,12 +92,19 @@ namespace lms::artwork
             underlyingArtworkId = artwork->getUnderlyingId();
         }
 
+        std::shared_ptr<image::IEncodedImage> image;
         if (const auto* trackEmbeddedImageId = std::get_if<db::TrackEmbeddedImageId>(&underlyingArtworkId))
         {
-            return getTrackEmbeddedImage(*trackEmbeddedImageId);
+            image = getTrackEmbeddedImage(*trackEmbeddedImageId);
         }
 
-        return nullptr;
+        // 如果获取到图像，添加到缓存
+        if (image)
+        {
+            _cache.addImage(cacheKey, image);
+        }
+
+        return image;
     }
 
     std::shared_ptr<image::IEncodedImage> ArtworkService::getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId)
@@ -133,7 +148,7 @@ namespace lms::artwork
 
     void ArtworkService::flushCache()
     {
-        // 简化版：暂无缓存实现
+        _cache.flush();
     }
 } // namespace lms::artwork
 

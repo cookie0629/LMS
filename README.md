@@ -92,7 +92,8 @@ src/libs/
 ### Artwork Service
 - 图像库（Image Library）：提供 `IEncodedImage` 接口和 `EncodedImage` 实现
 - Artwork 数据库对象：支持从 `TrackEmbeddedImage` 获取封面图像
-- Artwork Service：简化版实现，支持从数据库读取嵌入式封面图像
+- Artwork Service：支持从数据库读取嵌入式封面图像，集成图像缓存
+- ImageCache：图像缓存系统，支持 LRU 风格的缓存管理，提高图像加载性能
 - 默认图像支持：支持默认专辑封面和艺术家图像（SVG 格式）
 
 ## 在 Windows WSL 中运行与测试

@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 3.20)
 # 创建 Artwork Service 库
 add_library(lmsartwork STATIC
     impl/ArtworkService.cpp
+    impl/ImageCache.cpp
 )
 
 target_include_directories(lmsartwork INTERFACE

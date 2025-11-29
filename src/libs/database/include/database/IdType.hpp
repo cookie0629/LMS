@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cstdint>
+#include <functional>
 #include <string>
 #include <string_view>
 #include <type_traits>
@@ -42,6 +43,17 @@ namespace lms::db
         { \
         public: \
             using IdType::IdType; \
+        }; \
+    } \
+    namespace std \
+    { \
+        template<> \
+        struct hash<lms::db::TypeName> \
+        { \
+            size_t operator()(lms::db::TypeName id) const \
+            { \
+                return std::hash<lms::db::IdType::ValueType>{}(id.getValue()); \
+            } \
         }; \
     }
 

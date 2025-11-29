@@ -5,6 +5,7 @@
 
 #include "database/objects/TrackEmbeddedImageId.hpp"
 #include "services/artwork/IArtworkService.hpp"
+#include "ImageCache.hpp"
 
 namespace lms::db
 {
@@ -35,6 +36,7 @@ namespace lms::artwork
         std::shared_ptr<image::IEncodedImage> getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId);
 
         db::IDb& _db;
+        ImageCache _cache;
         std::shared_ptr<image::IEncodedImage> _defaultReleaseCover;
         std::shared_ptr<image::IEncodedImage> _defaultArtistImage;
     };
