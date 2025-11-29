@@ -174,3 +174,8 @@ __pycache__/
 .mypy_cache/
 
 模板*"build/" 
+
+开发日志.md
+学习进度跟踪.md
+
+详细开发步骤指南.md
