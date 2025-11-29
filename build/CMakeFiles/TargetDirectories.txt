@@ -43,6 +43,13 @@
 /mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install.dir
 /mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/audio/CMakeFiles/install/strip.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/lmsimage.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/edit_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/rebuild_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/list_install_components.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/install.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/install/local.dir
+/mnt/e/LightweightMusicServer/build/src/libs/image/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/rebuild_cache.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/CMakeFiles/list_install_components.dir
@@ -65,6 +72,13 @@
 /mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install/local.dir
 /mnt/e/LightweightMusicServer/build/src/libs/services/scanner/CMakeFiles/install/strip.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/lmsartwork.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/edit_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/rebuild_cache.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/list_install_components.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/install.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/install/local.dir
+/mnt/e/LightweightMusicServer/build/src/libs/services/artwork/CMakeFiles/install/strip.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/lms.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/edit_cache.dir
 /mnt/e/LightweightMusicServer/build/src/lms/CMakeFiles/rebuild_cache.dir

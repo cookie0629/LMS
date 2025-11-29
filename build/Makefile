@@ -279,6 +279,19 @@ lmsaudio/fast:
 .PHONY : lmsaudio/fast
 
 #=============================================================================
+# Target rules for targets named lmsimage
+
+# Build rule for target.
+lmsimage: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmsimage
+.PHONY : lmsimage
+
+# fast build rule for target.
+lmsimage/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/image/CMakeFiles/lmsimage.dir/build.make src/libs/image/CMakeFiles/lmsimage.dir/build
+.PHONY : lmsimage/fast
+
+#=============================================================================
 # Target rules for targets named lmsauth
 
 # Build rule for target.
@@ -331,6 +344,19 @@ test_scanner/fast:
 .PHONY : test_scanner/fast
 
 #=============================================================================
+# Target rules for targets named lmsartwork
+
+# Build rule for target.
+lmsartwork: cmake_check_build_system
+	$(MAKE) $(MAKESILENT) -f CMakeFiles/Makefile2 lmsartwork
+.PHONY : lmsartwork
+
+# fast build rule for target.
+lmsartwork/fast:
+	$(MAKE) $(MAKESILENT) -f src/libs/services/artwork/CMakeFiles/lmsartwork.dir/build.make src/libs/services/artwork/CMakeFiles/lmsartwork.dir/build
+.PHONY : lmsartwork/fast
+
+#=============================================================================
 # Target rules for targets named lms
 
 # Build rule for target.
@@ -356,10 +382,12 @@ help:
 	@echo "... list_install_components"
 	@echo "... rebuild_cache"
 	@echo "... lms"
+	@echo "... lmsartwork"
 	@echo "... lmsaudio"
 	@echo "... lmsauth"
 	@echo "... lmscore"
 	@echo "... lmsdatabase"
+	@echo "... lmsimage"
 	@echo "... lmsscanner"
 	@echo "... test_auth"
 	@echo "... test_config"

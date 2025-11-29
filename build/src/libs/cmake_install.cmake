@@ -47,6 +47,7 @@ if(NOT CMAKE_INSTALL_LOCAL_ONLY)
   include("/mnt/e/LightweightMusicServer/build/src/libs/core/cmake_install.cmake")
   include("/mnt/e/LightweightMusicServer/build/src/libs/database/cmake_install.cmake")
   include("/mnt/e/LightweightMusicServer/build/src/libs/audio/cmake_install.cmake")
+  include("/mnt/e/LightweightMusicServer/build/src/libs/image/cmake_install.cmake")
   include("/mnt/e/LightweightMusicServer/build/src/libs/services/cmake_install.cmake")
 
 endif()

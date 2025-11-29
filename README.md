@@ -88,6 +88,12 @@ src/libs/
 - 扫描步骤：删除缺失文件、检测重复文件、同步媒体库字段、清理孤立条目、数据库优化/压缩
 - 数据库增量更新、错误收集与统计
 
+### Artwork Service
+- 图像库（Image Library）：提供 `IEncodedImage` 接口和 `EncodedImage` 实现
+- Artwork 数据库对象：支持从 `TrackEmbeddedImage` 获取封面图像
+- Artwork Service：简化版实现，支持从数据库读取嵌入式封面图像
+- 默认图像支持：支持默认专辑封面和艺术家图像（SVG 格式）
+
 ## 在 Windows WSL 中运行与测试
 
 1. **准备 WSL 环境**

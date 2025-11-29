@@ -15,7 +15,9 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/mnt/e/LightweightMusicServer/src/libs/audio/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/core/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/database/CMakeLists.txt"
+  "/mnt/e/LightweightMusicServer/src/libs/image/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/services/CMakeLists.txt"
+  "/mnt/e/LightweightMusicServer/src/libs/services/artwork/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/services/auth/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/libs/services/scanner/CMakeLists.txt"
   "/mnt/e/LightweightMusicServer/src/lms/CMakeLists.txt"
@@ -77,9 +79,11 @@ set(CMAKE_MAKEFILE_PRODUCTS
   "src/libs/core/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/database/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/audio/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "src/libs/image/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/services/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/services/auth/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/libs/services/scanner/CMakeFiles/CMakeDirectoryInformation.cmake"
+  "src/libs/services/artwork/CMakeFiles/CMakeDirectoryInformation.cmake"
   "src/lms/CMakeFiles/CMakeDirectoryInformation.cmake"
   )
 
@@ -94,9 +98,11 @@ set(CMAKE_DEPEND_INFO_FILES
   "src/libs/database/CMakeFiles/lmsdatabase.dir/DependInfo.cmake"
   "src/libs/database/CMakeFiles/test_database.dir/DependInfo.cmake"
   "src/libs/audio/CMakeFiles/lmsaudio.dir/DependInfo.cmake"
+  "src/libs/image/CMakeFiles/lmsimage.dir/DependInfo.cmake"
   "src/libs/services/auth/CMakeFiles/lmsauth.dir/DependInfo.cmake"
   "src/libs/services/auth/CMakeFiles/test_auth.dir/DependInfo.cmake"
   "src/libs/services/scanner/CMakeFiles/lmsscanner.dir/DependInfo.cmake"
   "src/libs/services/scanner/CMakeFiles/test_scanner.dir/DependInfo.cmake"
+  "src/libs/services/artwork/CMakeFiles/lmsartwork.dir/DependInfo.cmake"
   "src/lms/CMakeFiles/lms.dir/DependInfo.cmake"
   )
