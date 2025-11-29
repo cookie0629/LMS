@@ -66,5 +66,14 @@ namespace lms::db
         Remixer = 9,     // 混音者
         Writer = 10,     // 作者
     };
+
+    /**
+     * @brief 播放列表类型
+     */
+    enum class TrackListType
+    {
+        PlayList = 0,  // 用户控制的播放列表
+        Internal = 1,  // 内部使用（当前播放队列、历史记录等）
+    };
 } // namespace lms::db
 

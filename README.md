@@ -70,7 +70,7 @@ src/libs/
 - Wt::Dbo ORM 封装
 - 事务管理（读写事务）
 - 数据库迁移系统
-- 数据对象：User, Track, Artist, Release, Medium, Directory, MediaLibrary, TrackArtistLink, TrackEmbeddedImage, Artwork
+- 数据对象：User, Track, Artist, Release, Medium, Directory, MediaLibrary, TrackArtistLink, TrackEmbeddedImage, Artwork, TrackList, TrackListEntry
 
 ### Auth Service
 - 密码哈希和验证（bcrypt）

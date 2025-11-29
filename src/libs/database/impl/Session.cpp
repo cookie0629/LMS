@@ -14,6 +14,7 @@
 #include "database/objects/TrackEmbeddedImage.hpp"
 #include "database/objects/TrackEmbeddedImageLink.hpp"
 #include "database/objects/TrackArtistLink.hpp"
+#include "database/objects/TrackList.hpp"
 #include "database/objects/Artwork.hpp"
 #include "database/objects/MediaLibrary.hpp"
 #include "database/objects/Directory.hpp"
@@ -38,6 +39,8 @@ namespace lms::db
         _session.mapClass<TrackEmbeddedImage>("track_embedded_image");
         _session.mapClass<TrackEmbeddedImageLink>("track_embedded_image_link");
         _session.mapClass<TrackArtistLink>("track_artist_link");
+        _session.mapClass<TrackList>("tracklist");
+        _session.mapClass<TrackListEntry>("tracklist_entry");
         _session.mapClass<Artwork>("artwork");
         _session.mapClass<MediaLibrary>("media_library");
         _session.mapClass<Directory>("directory");
