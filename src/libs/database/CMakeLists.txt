@@ -18,6 +18,7 @@ add_library(lmsdatabase STATIC
 	impl/objects/TrackEmbeddedImageLink.cpp
 	impl/objects/TrackArtistLink.cpp
 	impl/objects/TrackList.cpp
+	impl/objects/TrackLyrics.cpp
 	impl/objects/Artwork.cpp
 	impl/objects/MediaLibrary.cpp
 	impl/objects/Directory.cpp

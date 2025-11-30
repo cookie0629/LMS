@@ -75,5 +75,15 @@ namespace lms::db
         PlayList = 0,  // 用户控制的播放列表
         Internal = 1,  // 内部使用（当前播放队列、历史记录等）
     };
+
+    /**
+     * @brief 歌词排序方法
+     */
+    enum class TrackLyricsSortMethod
+    {
+        None = 0,
+        ExternalFirst = 1,  // 外部文件优先
+        EmbeddedFirst = 2,  // 嵌入式歌词优先
+    };
 } // namespace lms::db
 
