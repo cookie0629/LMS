@@ -46,6 +46,21 @@ namespace lms::db
         return pointer(result);
     }
 
+    TrackLyrics::pointer TrackLyrics::find(Session& session, const std::filesystem::path& absolutePath)
+    {
+        session.checkReadTransaction();
+        auto result = session.getDboSession()
+                          ->find<TrackLyrics>()
+                          .where("absolute_file_path = ?")
+                          .bind(absolutePath.string())
+                          .resultValue();
+        if (!result)
+        {
+            return {};
+        }
+        return pointer(result);
+    }
+
     TrackLyrics::pointer TrackLyrics::find(Session& session, TrackId trackId)
     {
         session.checkReadTransaction();

@@ -66,6 +66,7 @@ namespace lms::db
         static std::size_t getCount(Session& session);
         static pointer find(Session& session, TrackLyricsId id);
         static pointer find(Session& session, TrackId trackId);
+        static pointer find(Session& session, const std::filesystem::path& absolutePath);
         static void find(Session& session, const FindParameters& params, const std::function<void(const pointer&)>& func);
 
         // accessors

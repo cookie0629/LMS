@@ -8,6 +8,8 @@ add_library(lmsscanner STATIC
     impl/ScannerStats.cpp
     impl/scanners/FileScanOperationBase.cpp
     impl/scanners/Utils.cpp
+    impl/scanners/lyrics/LyricsFileScanner.cpp
+    impl/scanners/lyrics/LyricsParser.cpp
     impl/scanners/audiofile/AudioFileScanner.cpp
     impl/scanners/audiofile/AudioFileScanOperation.cpp
     impl/scanners/audiofile/TrackMetadataParser.cpp
