@@ -5,7 +5,11 @@
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
 #include "database/Transaction.hpp"
+#include <fstream>
+
 #include "database/objects/Artwork.hpp"
+#include "database/objects/Image.hpp"
+#include "database/objects/ImageId.hpp"
 #include "database/objects/TrackEmbeddedImage.hpp"
 #include "database/objects/TrackEmbeddedImageId.hpp"
 #include "image/EncodedImage.hpp"
@@ -95,7 +99,11 @@ namespace lms::artwork
         std::shared_ptr<image::IEncodedImage> image;
         if (const auto* trackEmbeddedImageId = std::get_if<db::TrackEmbeddedImageId>(&underlyingArtworkId))
         {
-            image = getTrackEmbeddedImage(*trackEmbeddedImageId);
+            image = getTrackEmbeddedImage(*trackEmbeddedImageId, std::nullopt);
+        }
+        else if (const auto* imageId = std::get_if<db::ImageId>(&underlyingArtworkId))
+        {
+            image = getImageFile(*imageId, std::nullopt);
         }
 
         // 如果获取到图像，添加到缓存
@@ -107,7 +115,7 @@ namespace lms::artwork
         return image;
     }
 
-    std::shared_ptr<image::IEncodedImage> ArtworkService::getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId)
+    std::shared_ptr<image::IEncodedImage> ArtworkService::getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId, std::optional<image::ImageSize> width)
     {
         std::string imageData;
         std::string mimeType;
@@ -144,6 +152,62 @@ namespace lms::artwork
     std::shared_ptr<image::IEncodedImage> ArtworkService::getDefaultArtistArtwork()
     {
         return _defaultArtistImage;
+    }
+
+    std::shared_ptr<image::IEncodedImage> ArtworkService::getImageFile(db::ImageId imageId, std::optional<image::ImageSize> width)
+    {
+        if (imageId.getValue() == 0)
+        {
+            return nullptr;
+        }
+
+        std::filesystem::path imagePath;
+
+        {
+            db::Session& session = _db.getTLSSession();
+            auto transaction = session.createReadTransaction();
+
+            db::Image::pointer image = db::Image::find(session, imageId);
+            if (!image)
+            {
+                return nullptr;
+            }
+
+            imagePath = image->getAbsoluteFilePath();
+        }
+
+        if (imagePath.empty() || !std::filesystem::exists(imagePath))
+        {
+            return nullptr;
+        }
+
+        // For now, we just read the file. Resizing logic will be added later.
+        std::ifstream file(imagePath, std::ios::binary);
+        if (!file)
+        {
+            return nullptr;
+        }
+
+        std::vector<char> charData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
+        std::vector<std::byte> data;
+        data.reserve(charData.size());
+        for (char c : charData)
+        {
+            data.push_back(static_cast<std::byte>(c));
+        }
+        std::span<const std::byte> dataSpan{ data.data(), data.size() };
+
+        // Try to determine MIME type from file extension
+        std::string mimeType = "image/jpeg"; // default
+        std::string ext = imagePath.extension().string();
+        if (ext == ".png")
+            mimeType = "image/png";
+        else if (ext == ".gif")
+            mimeType = "image/gif";
+        else if (ext == ".webp")
+            mimeType = "image/webp";
+
+        return std::make_shared<image::EncodedImage>(dataSpan, mimeType);
     }
 
     void ArtworkService::flushCache()

@@ -1,0 +1,107 @@
+#pragma once
+
+#include <filesystem>
+#include <functional>
+#include <optional>
+#include <string>
+#include <string_view>
+
+#include <Wt/Dbo/Field.h>
+#include <Wt/WDateTime.h>
+
+#include "database/Object.hpp"
+#include "database/Types.hpp"
+#include "database/objects/DirectoryId.hpp"
+#include "database/objects/ImageId.hpp"
+
+namespace lms::db
+{
+    class Directory;
+    class Session;
+
+    /**
+     * @brief 图像文件对象（简化版）
+     */
+    class Image final : public Object<Image, ImageId>
+    {
+    public:
+        Image() = default;
+
+        struct FindParameters
+        {
+            std::optional<Range> range;
+            std::string fileStem;      // if set, images with this file stem
+            DirectoryId directory;     // if set, images in this directory
+
+            FindParameters& setRange(std::optional<Range> _range)
+            {
+                range = _range;
+                return *this;
+            }
+            FindParameters& setFileStem(std::string_view _fileStem)
+            {
+                fileStem = _fileStem;
+                return *this;
+            }
+            FindParameters& setDirectory(DirectoryId _directory)
+            {
+                directory = _directory;
+                return *this;
+            }
+        };
+
+        // find
+        static std::size_t getCount(Session& session);
+        static pointer find(Session& session, ImageId id);
+        static pointer find(Session& session, const std::filesystem::path& file);
+        static void find(Session& session, const FindParameters& params, const std::function<void(const pointer&)>& func);
+
+        // accessors
+        const std::filesystem::path& getAbsoluteFilePath() const { return _fileAbsolutePath; }
+        std::string_view getFileStem() const { return _fileStem; }
+        const Wt::WDateTime& getLastWriteTime() const { return _fileLastWrite; }
+        std::size_t getFileSize() const { return _fileSize; }
+        std::size_t getWidth() const { return _width; }
+        std::size_t getHeight() const { return _height; }
+        std::string_view getMimeType() const { return _mimeType; }
+        ObjectPtr<Directory> getDirectory() const;
+
+        // modifiers
+        void setAbsoluteFilePath(const std::filesystem::path& p);
+        void setLastWriteTime(Wt::WDateTime time) { _fileLastWrite = time; }
+        void setFileSize(std::size_t fileSize) { _fileSize = fileSize; }
+        void setWidth(std::size_t width) { _width = width; }
+        void setHeight(std::size_t height) { _height = height; }
+        void setMimeType(std::string_view mimeType) { _mimeType = mimeType; }
+        void setDirectory(ObjectPtr<Directory> directory);
+
+        template<class Action>
+        void persist(Action& a)
+        {
+            Wt::Dbo::field(a, _fileAbsolutePath, "absolute_file_path");
+            Wt::Dbo::field(a, _fileStem, "stem");
+            Wt::Dbo::field(a, _fileLastWrite, "file_last_write");
+            Wt::Dbo::field(a, _fileSize, "file_size");
+            Wt::Dbo::field(a, _width, "width");
+            Wt::Dbo::field(a, _height, "height");
+            Wt::Dbo::field(a, _mimeType, "mime_type");
+            Wt::Dbo::belongsTo(a, _directory, "directory", Wt::Dbo::OnDeleteCascade);
+        }
+
+    private:
+        friend class Session;
+        Image(const std::filesystem::path& p);
+        static pointer create(Session& session, const std::filesystem::path& p);
+
+        std::filesystem::path _fileAbsolutePath;
+        std::string _fileStem;
+        Wt::WDateTime _fileLastWrite;
+        int _fileSize{};
+        int _width{};
+        int _height{};
+        std::string _mimeType;
+
+        Wt::Dbo::ptr<Directory> _directory;
+    };
+} // namespace lms::db
+

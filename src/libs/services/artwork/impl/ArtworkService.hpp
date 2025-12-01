@@ -2,8 +2,11 @@
 
 #include <filesystem>
 #include <memory>
+#include <optional>
 
+#include "database/objects/ImageId.hpp"
 #include "database/objects/TrackEmbeddedImageId.hpp"
+#include "image/IEncodedImage.hpp"
 #include "services/artwork/IArtworkService.hpp"
 #include "ImageCache.hpp"
 
@@ -33,7 +36,8 @@ namespace lms::artwork
         void flushCache() override;
 
     private:
-        std::shared_ptr<image::IEncodedImage> getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId);
+        std::shared_ptr<image::IEncodedImage> getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId, std::optional<image::ImageSize> width);
+        std::shared_ptr<image::IEncodedImage> getImageFile(db::ImageId imageId, std::optional<image::ImageSize> width);
 
         db::IDb& _db;
         ImageCache _cache;

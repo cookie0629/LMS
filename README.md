@@ -70,7 +70,7 @@ src/libs/
 - Wt::Dbo ORM 封装
 - 事务管理（读写事务）
 - 数据库迁移系统
-- 数据对象：User, Track, Artist, Release, Medium, Directory, MediaLibrary, TrackArtistLink, TrackEmbeddedImage, Artwork, TrackList, TrackListEntry, TrackLyrics
+- 数据对象：User, Track, Artist, Release, Medium, Directory, MediaLibrary, TrackArtistLink, TrackEmbeddedImage, Artwork, Image, TrackList, TrackListEntry, TrackLyrics
 
 ### Auth Service
 - 密码哈希和验证（bcrypt）
@@ -91,8 +91,9 @@ src/libs/
 
 ### Artwork Service
 - 图像库（Image Library）：提供 `IEncodedImage` 接口和 `EncodedImage` 实现
-- Artwork 数据库对象：支持从 `TrackEmbeddedImage` 获取封面图像
-- Artwork Service：支持从数据库读取嵌入式封面图像，集成图像缓存
+- Artwork 数据库对象：支持从 `TrackEmbeddedImage` 和 `Image` 获取封面图像
+- Image 数据库对象：支持从文件系统读取图像文件（JPEG, PNG, GIF, WebP 等）
+- Artwork Service：支持从数据库读取嵌入式封面图像和文件系统图像文件，集成图像缓存
 - ImageCache：图像缓存系统，支持 LRU 风格的缓存管理，提高图像加载性能
 - 默认图像支持：支持默认专辑封面和艺术家图像（SVG 格式）
 
