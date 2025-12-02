@@ -8,5 +8,6 @@ add_subdirectory(audio)
 add_subdirectory(image)
 add_subdirectory(services)
 add_subdirectory(som)
+add_subdirectory(subsonic)
 
 
