@@ -7,10 +7,6 @@ add_subdirectory(database)
 add_subdirectory(audio)
 add_subdirectory(image)
 add_subdirectory(services)
+add_subdirectory(som)
 
-# 示例：添加 audio 库（当创建后）
-# add_subdirectory(audio)
-
-# 示例：添加 database 库（当创建后）
-# add_subdirectory(database)
 
