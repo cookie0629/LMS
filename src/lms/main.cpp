@@ -1,38 +1,50 @@
-#include <iostream>
-#include <string>
 
-/**
- * LMS (Lightweight Music Server) 主程序入口
- * 
- * 这是一个自托管的音乐流媒体服务器
+/*
+ * Minimal Wt-based LMS entry point: start an HTTP server and show a simple page.
+ * 后续可以逐步替换为完整的模板版 UI 和服务初始化逻辑。
  */
+
+#include <Wt/WApplication.h>
+#include <Wt/WEnvironment.h>
+#include <Wt/WText.h>
+#include <Wt/WContainerWidget.h>
+#include <Wt/WBootstrapTheme.h>
+#include <Wt/WCssDecorationStyle.h>
+#include <Wt/WColor.h>
+#include <Wt/WVBoxLayout.h>
+#include <Wt/WServer.h>
+
+class LmsMinimalApplication : public Wt::WApplication
+{
+public:
+    explicit LmsMinimalApplication(const Wt::WEnvironment& env)
+        : Wt::WApplication(env)
+    {
+        setTitle("LMS - Lightweight Music Server");
+
+        auto container = root()->addWidget(std::make_unique<Wt::WContainerWidget>());
+        container->setStyleClass("container");
+
+        auto layout = container->setLayout(std::make_unique<Wt::WVBoxLayout>());
+
+        auto title = std::make_unique<Wt::WText>("<h2>LMS 复刻版已启动</h2>");
+        title->setTextFormat(Wt::TextFormat::XHTML);
+        layout->addWidget(std::move(title));
+
+        auto info = std::make_unique<Wt::WText>(
+            "现在这是一个最小可用的 Web 界面。<br/>"
+            "接下来可以逐步接入数据库、扫描服务和完整的 UI。");
+        info->setTextFormat(Wt::TextFormat::XHTML);
+        layout->addWidget(std::move(info));
+    }
+};
+
+static std::unique_ptr<Wt::WApplication> createLmsApp(const Wt::WEnvironment& env)
+{
+    return std::make_unique<LmsMinimalApplication>(env);
+}
 
 int main(int argc, char* argv[])
 {
-    std::cout << "==========================================" << std::endl;
-    std::cout << "LMS - Lightweight Music Server" << std::endl;
-    std::cout << "==========================================" << std::endl;
-    std::cout << std::endl;
-    
-    if (argc < 2) {
-        std::cout << "用法: " << argv[0] << " <配置文件路径>" << std::endl;
-        std::cout << "示例: " << argv[0] << " conf/lms.conf" << std::endl;
-        return 1;
-    }
-    
-    std::string configFile = argv[1];
-    std::cout << "配置文件: " << configFile << std::endl;
-    std::cout << std::endl;
-    
-    // TODO: 加载配置文件
-    // TODO: 初始化日志系统
-    // TODO: 初始化数据库
-    // TODO: 初始化服务
-    // TODO: 启动 Web 服务器
-    
-    std::cout << "LMS 服务器启动中..." << std::endl;
-    std::cout << "（功能待实现）" << std::endl;
-    
-    return 0;
+    return Wt::WRun(argc, argv, &createLmsApp);
 }
-
