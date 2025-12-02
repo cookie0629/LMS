@@ -8,6 +8,7 @@ add_subdirectory(audio)
 add_subdirectory(image)
 add_subdirectory(services)
 add_subdirectory(som)
-add_subdirectory(subsonic)
+# TODO: Subsonic 模块尚未完整迁移，先暂时关闭，待源码补全后再启用
+# add_subdirectory(subsonic)
 
 
