@@ -41,7 +41,7 @@ namespace lms::scanner
             {
                 const std::error_code ec{ errno, std::generic_category() };
 
-                addError<IOScanError>(getFilePath(), ec);
+                addError<FileScanError>(getFilePath(), "Unable to open lyrics file: " + ec.message());
                 return;
             }
 
