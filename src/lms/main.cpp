@@ -4,6 +4,8 @@
  * 后续可以逐步替换为完整的模板版 UI 和服务初始化逻辑。
  */
 
+#include <memory>
+
 #include <Wt/WApplication.h>
 #include <Wt/WEnvironment.h>
 #include <Wt/WText.h>
