@@ -19,6 +19,7 @@
 #include <Wt/WPushButton.h>
 #include <Wt/WBreak.h>
 #include <Wt/WString.h>
+#include <Wt/WTimer.h>
 
 #include <Wt/Dbo/collection.h>
 
@@ -90,8 +91,21 @@ public:
         setTitle("LMS - Lightweight Music Server");
 
         setTheme(std::make_shared<Wt::WBootstrapTheme>());
+        
+        // 启用服务器推送更新（用于后台线程安全更新 UI）
+        enableUpdates(true);
 
-        showLogin();
+        // 检查 cookie 中的登录状态
+        const std::string loggedInCookie = environment().getCookie("lms_logged_in");
+        if (loggedInCookie == "true")
+        {
+            _loggedIn = true;
+            showMediaBrowser();
+        }
+        else
+        {
+            showLogin();
+        }
     }
 
 private:
@@ -131,6 +145,8 @@ private:
             if (user == "admin" && pass == "adminadmin")
             {
                 _loggedIn = true;
+                // 保存登录状态到 cookie
+                setCookie("lms_logged_in", "true", 3600 * 24 * 7); // 7 天有效期
                 showMediaBrowser();
             }
             else
@@ -199,31 +215,66 @@ private:
         artistsText->setTextFormat(Wt::TextFormat::XHTML);
         layout->addWidget(std::move(artistsText));
 
-        // 扫描按钮
+        // 扫描按钮和状态显示
         auto scanStatus = layout->addWidget(std::make_unique<Wt::WText>(""));
+        scanStatus->setTextFormat(Wt::TextFormat::XHTML);
+        scanStatus->setStyleClass("text-info");
+        
         auto scanBtn = layout->addWidget(std::make_unique<Wt::WPushButton>("立即扫描媒体库"));
-        scanBtn->clicked().connect([scanStatus] {
+        
+        scanBtn->clicked().connect([this, scanStatus] {
             if (auto* scanner = lms::core::Service<lms::scanner::IScannerService>::get())
             {
+                // 检查当前状态
+                auto status = scanner->getStatus();
+                if (status.currentState == lms::scanner::IScannerService::State::InProgress)
+                {
+                    scanStatus->setText("<b>扫描正在进行中，请稍候...</b>");
+                    return;
+                }
+                
+                // 请求扫描
                 lms::scanner::ScanOptions opts;
                 opts.fullScan = true;
                 scanner->requestImmediateScan(opts);
-                scanStatus->setText("已请求扫描，稍后刷新页面查看更新结果。");
+                scanStatus->setText("<b>扫描请求已提交。扫描在后台进行，请稍后刷新页面查看结果。</b>");
+                
+                // 设置一个定时器，定期检查扫描状态并刷新页面
+                auto timer = std::make_unique<Wt::WTimer>();
+                timer->setInterval(std::chrono::seconds(3));
+                timer->timeout().connect([this, timer = timer.get()] {
+                    if (auto* scanner = lms::core::Service<lms::scanner::IScannerService>::get())
+                    {
+                        auto status = scanner->getStatus();
+                        if (status.currentState == lms::scanner::IScannerService::State::NotScheduled)
+                        {
+                            // 扫描完成，刷新页面
+                            timer->stop();
+                            Wt::WApplication::instance()->doJavaScript("window.location.reload();");
+                        }
+                    }
+                });
+                timer->start();
+                // 保存定时器到成员变量，避免被销毁
+                _scanStatusTimer = std::move(timer);
             }
             else
             {
-                scanStatus->setText("扫描服务尚未初始化。");
+                scanStatus->setText("<span class='text-danger'>扫描服务尚未初始化。</span>");
             }
         });
 
         auto logoutBtn = layout->addWidget(std::make_unique<Wt::WPushButton>("退出登录"));
         logoutBtn->clicked().connect([this] {
             _loggedIn = false;
+            // 清除登录 cookie
+            setCookie("lms_logged_in", "", 0);
             showLogin();
         });
     }
 
     bool _loggedIn;
+    std::unique_ptr<Wt::WTimer> _scanStatusTimer;  // 用于轮询扫描状态
 };
 
 static std::unique_ptr<Wt::WApplication> createLmsApp(const Wt::WEnvironment& env)

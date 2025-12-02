@@ -144,8 +144,8 @@ namespace lms::scanner
     {
         LMS_LOG(SCANNER, INFO, "Starting scan (fullScan=" << options.fullScan << ")");
 
-        // 发送扫描开始事件
-        _events.scanStarted.emit();
+        // 注意：不在后台线程中触发 Wt 信号，因为 Wt 信号不是线程安全的
+        // 事件触发将在主线程中通过轮询状态来实现
 
         ScanStats stats;
         stats.startTime = Wt::WDateTime::currentDateTime();
@@ -161,7 +161,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件（Wt 信号不是线程安全的）
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -250,7 +250,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -310,7 +310,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -330,7 +330,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -350,7 +350,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -370,7 +370,7 @@ namespace lms::scanner
             std::lock_guard lock(_mutex);
             if (_stopRequested)
             {
-                _events.scanAborted.emit();
+                // 不在后台线程中触发事件
                 _currentState = State::NotScheduled;
                 return;
             }
@@ -394,8 +394,8 @@ namespace lms::scanner
             _currentState = State::NotScheduled;
         }
 
-        // 发送扫描完成事件
-        _events.scanComplete.emit(stats);
+        // 不在后台线程中触发事件（Wt 信号不是线程安全的）
+        // 主线程将通过轮询 getStatus() 来检测扫描完成
 
         LMS_LOG(SCANNER, INFO, "Scan completed");
     }
