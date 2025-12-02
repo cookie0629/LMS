@@ -13,6 +13,12 @@ add_executable(lms ${LMS_SOURCES})
 # 链接库
 target_link_libraries(lms
     PRIVATE
+    lmscore
+    lmsdatabase
+    lmsscanner
+    lmsartwork
+    lmsaudio
+    lmsimage
     ${WT_LIBRARIES}
     ${Boost_LIBRARIES}
     ${AVCODEC_LIBRARIES}
