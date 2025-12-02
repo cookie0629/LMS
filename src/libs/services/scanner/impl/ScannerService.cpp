@@ -10,6 +10,7 @@
 #include "database/Session.hpp"
 #include "scanners/FileScanOperationBase.hpp"
 #include "steps/ScanStepScanFiles.hpp"
+#include "steps/ScanStepAssociateExternalLyrics.hpp"
 #include "steps/ScanStepCheckForRemovedFiles.hpp"
 #include "steps/ScanStepCheckForDuplicatedFiles.hpp"
 #include "steps/ScanStepUpdateLibraryFields.hpp"
@@ -235,7 +236,7 @@ namespace lms::scanner
         ScannerSettings settings;
         buildScannerSettings(settings);
         
-        // 步骤 1: 扫描文件
+        // 步骤 1: 扫描文件（音频 + 外部歌词）
         {
             ScanStepScanFiles scanFilesStep(_db, settings);
             if (!scanFilesStep.execute(stats))
@@ -255,7 +256,27 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 2: 检查已删除的文件
+        // 步骤 2: 关联外部歌词到 Track
+        {
+            ScanStepAssociateExternalLyrics associateLyricsStep(_db, settings);
+            if (!associateLyricsStep.execute(stats))
+            {
+                LMS_LOG(SCANNER, ERROR, "Associate external lyrics step failed");
+            }
+        }
+
+        // 再次检查是否需要停止
+        {
+            std::lock_guard lock(_mutex);
+            if (_stopRequested)
+            {
+                _events.scanAborted.emit();
+                _currentState = State::NotScheduled;
+                return;
+            }
+        }
+
+        // 步骤 3: 检查已删除的文件
         {
             ScanStepCheckForRemovedFiles checkRemovedStep(_db, settings);
             if (!checkRemovedStep.execute(stats))
@@ -275,7 +296,7 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 3: 检查重复文件
+        // 步骤 4: 检查重复文件
         {
             ScanStepCheckForDuplicatedFiles checkDuplicatedStep(_db, settings);
             if (!checkDuplicatedStep.execute(stats))
@@ -295,7 +316,7 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 4: 更新媒体库字段
+        // 步骤 5: 更新媒体库字段
         {
             ScanStepUpdateLibraryFields updateLibraryStep(_db, settings);
             if (!updateLibraryStep.execute(stats))
@@ -315,7 +336,7 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 5: 删除孤立数据库条目
+        // 步骤 6: 删除孤立数据库条目
         {
             ScanStepRemoveOrphanedDbEntries removeOrphanedStep(_db, settings);
             if (!removeOrphanedStep.execute(stats))
@@ -335,7 +356,7 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 6: 数据库优化
+        // 步骤 7: 数据库优化
         {
             ScanStepOptimize optimizeStep(_db, settings);
             if (!optimizeStep.execute(stats))
@@ -355,7 +376,7 @@ namespace lms::scanner
             }
         }
 
-        // 步骤 7: 数据库压缩
+        // 步骤 8: 数据库压缩
         {
             ScanStepCompact compactStep(_db, settings);
             if (!compactStep.execute(stats))

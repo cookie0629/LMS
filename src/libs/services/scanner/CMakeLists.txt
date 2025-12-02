@@ -21,6 +21,7 @@ add_library(lmsscanner STATIC
     impl/steps/ScanStepRemoveOrphanedDbEntries.cpp
     impl/steps/ScanStepOptimize.cpp
     impl/steps/ScanStepCompact.cpp
+    impl/steps/ScanStepAssociateExternalLyrics.cpp
 )
 
 target_include_directories(lmsscanner INTERFACE

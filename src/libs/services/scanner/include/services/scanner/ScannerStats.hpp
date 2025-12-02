@@ -34,10 +34,11 @@ namespace lms::scanner
      */
     enum class ScanStep
     {
-        ScanFiles,              // 扫描文件
-        CheckForRemovedFiles,   // 检查已删除的文件
+        ScanFiles,               // 扫描文件
+        AssociateExternalLyrics, // 关联外部歌词
+        CheckForRemovedFiles,    // 检查已删除的文件
         CheckForDuplicatedFiles, // 检查重复文件
-        UpdateLibraryFields,    // 更新媒体库字段
+        UpdateLibraryFields,     // 更新媒体库字段
         RemoveOrphanedDbEntries, // 删除孤立的数据库条目
         Optimize,                // 优化数据库
         Compact,                 // 压缩数据库

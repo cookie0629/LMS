@@ -7,8 +7,10 @@
 
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
+#include "database/Transaction.hpp"
 #include "database/objects/MediaLibrary.hpp"
 #include "database/objects/TrackLyrics.hpp"
+#include "database/objects/Directory.hpp"
 #include "services/scanner/ScanErrors.hpp"
 
 #include "ScannerSettings.hpp"
@@ -90,7 +92,7 @@ namespace lms::scanner
             if (mediaLibrary)
             {
                 db::Directory::pointer directory{ db::Directory::getOrCreate(dbSession, getFilePath().parent_path(), mediaLibrary) };
-                trackLyrics.modify()->setDirectory(ObjectPtr<db::Directory>(directory));
+                trackLyrics.modify()->setDirectory(directory);
             }
 
             if (added)
