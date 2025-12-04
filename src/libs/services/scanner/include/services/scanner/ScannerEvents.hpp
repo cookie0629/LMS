@@ -27,21 +27,18 @@
 namespace lms::scanner
 {
 
+    // Events: 扫描服务对外暴露的一组信号，用于 UI 显示进度和结果。
+    // Events: набор сигналов сканера, который слушают UI и другие подсистемы для отображения прогресса/результатов.
     struct Events
     {
-        // Called if scan was aborted
         Wt::Signal<> scanAborted;
 
-        // Called just after scan start
         Wt::Signal<> scanStarted;
 
-        // Called just after scan complete (true if changes have been made)
         Wt::Signal<ScanStats> scanComplete;
 
-        // Called during scan in progress
         Wt::Signal<ScanStepStats> scanInProgress;
 
-        // Called after a schedule
         Wt::Signal<Wt::WDateTime> scanScheduled;
     };
 

@@ -24,7 +24,8 @@
 
 namespace lms::scanner
 {
-    // Forward declarations of all error types
+    // 所有扫描错误类型的前置声明。
+    // Предварительные объявления всех типов ошибок сканера.
     struct ScanError;
     struct IOScanError;
     struct AudioFileScanError;
@@ -39,7 +40,8 @@ namespace lms::scanner
     struct PlayListFilePathMissingError;
     struct PlayListFileAllPathesMissingError;
 
-    // Visitor interface
+    // ScanErrorVisitor: 访问者接口，用于统一处理不同类型的扫描错误。
+    // ScanErrorVisitor: интерфейс посетителя для единообразной обработки различных ошибок сканирования.
     struct ScanErrorVisitor
     {
         virtual ~ScanErrorVisitor() = default;
@@ -59,6 +61,8 @@ namespace lms::scanner
         virtual void visit(const scanner::PlayListFileAllPathesMissingError& error) = 0;
     };
 
+    // ScanError: 所有扫描错误的基类，只包含出错路径。
+    // ScanError: базовый класс ошибок сканирования, содержит только путь файла.
     struct ScanError
     {
         ScanError(const std::filesystem::path& p)
@@ -66,7 +70,7 @@ namespace lms::scanner
         virtual ~ScanError() = default;
         virtual void accept(ScanErrorVisitor&) const = 0;
 
-        std::filesystem::path path; // Error that occurs on this path
+        std::filesystem::path path; // 出错的路径 / путь, на котором возникла ошибка
     };
 
     struct IOScanError : public ScanError
