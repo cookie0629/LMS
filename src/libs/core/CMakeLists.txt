@@ -1,52 +1,63 @@
-# Core 库 CMakeLists.txt
+pkg_check_modules(Config++ REQUIRED IMPORTED_TARGET libconfig++)
+pkg_check_modules(Archive REQUIRED IMPORTED_TARGET libarchive)
+pkg_check_modules(XXHASH REQUIRED IMPORTED_TARGET libxxhash)
 
-# 创建 Core 库
-add_library(lmscore
-    impl/Path.cpp
-    impl/String.cpp
-    impl/Random.cpp
-    impl/UUID.cpp
-    impl/Config.cpp
-    impl/Logger.cpp
-)
+set(LMS_VERSION ${PROJECT_VERSION})
 
-# 设置包含目录
-target_include_directories(lmscore PUBLIC
-    include/
-)
+configure_file(
+	impl/Version.cpp.in
+	impl/Version.cpp
+	@ONLY
+	)
 
-# 链接标准库和依赖
+add_library(lmscore STATIC
+	impl/http/Client.cpp
+	impl/http/SendQueue.cpp
+	impl/ArchiveZipper.cpp
+	impl/ChildProcess.cpp
+	impl/ChildProcessManager.cpp
+	impl/Config.cpp
+	impl/FileResourceHandler.cpp
+	impl/JobScheduler.cpp
+	impl/IOContextRunner.cpp
+	impl/Logger.cpp
+	impl/MimeTypes.cpp
+	impl/NetAddress.cpp
+	impl/PartialDateTime.cpp
+	impl/Path.cpp
+	impl/Random.cpp
+	impl/RecursiveSharedMutex.cpp
+	impl/String.cpp
+	impl/TraceLogger.cpp
+	impl/UUID.cpp
+	impl/XxHash3.cpp
+	${CMAKE_CURRENT_BINARY_DIR}/impl/Version.cpp
+	)
+
+target_include_directories(lmscore INTERFACE
+	include
+	)
+
+target_include_directories(lmscore PRIVATE
+	include
+	${XXHASH_INCLUDE_DIRS}
+	)
+
+target_link_libraries(lmscore PRIVATE
+	PkgConfig::Config++
+	PkgConfig::Archive
+	OpenSSL::Crypto
+	)
+
 target_link_libraries(lmscore PUBLIC
-    # std::filesystem 在 C++17 中，通常不需要显式链接
-    # 但某些编译器可能需要
-    ${CONFIGPP_LIBRARIES}
-)
+	std::filesystem
+	Wt::Wt
+	)
 
-# 设置 C++ 标准
-target_compile_features(lmscore PUBLIC cxx_std_20)
-
-# 测试程序（可选）
-option(ENABLE_CORE_TESTS "Enable Core library tests" ON)
-if(ENABLE_CORE_TESTS)
-    add_executable(test_path test/test_path.cpp)
-    target_link_libraries(test_path PRIVATE lmscore)
-    target_include_directories(test_path PRIVATE include/)
-    
-    add_executable(test_string test/test_string.cpp)
-    target_link_libraries(test_string PRIVATE lmscore)
-    target_include_directories(test_string PRIVATE include/)
-    
-    add_executable(test_uuid test/test_uuid.cpp)
-    target_link_libraries(test_uuid PRIVATE lmscore)
-    target_include_directories(test_uuid PRIVATE include/)
-    
-    add_executable(test_config test/test_config.cpp)
-    target_link_libraries(test_config PRIVATE lmscore)
-    target_include_directories(test_config PRIVATE include/)
-    target_link_libraries(test_config PRIVATE ${CONFIGPP_LIBRARIES})
-    
-    add_executable(test_logger test/test_logger.cpp)
-    target_link_libraries(test_logger PRIVATE lmscore)
-    target_include_directories(test_logger PRIVATE include/)
+if(BUILD_TESTING)
+	add_subdirectory(test)
 endif()
 
+if (BUILD_BENCHMARKS)
+	add_subdirectory(bench)
+endif()

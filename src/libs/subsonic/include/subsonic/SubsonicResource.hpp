@@ -31,5 +31,3 @@ namespace lms::api::subsonic
 {
     std::unique_ptr<Wt::WResource> createSubsonicResource(db::IDb& db);
 } // namespace lms::api::subsonic
-
-

@@ -1,59 +1,66 @@
+/*
+ * Copyright (C) 2021 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <cstdint>
-#include <functional>
 #include <string>
-#include <string_view>
-#include <type_traits>
-
-#include "core/TaggedType.hpp"
 
 namespace lms::db
 {
-    /**
-     * @brief 数据库ID类型基类
-     */
-    class IdType : public core::TaggedType<std::int64_t, struct IdTypeTag>
+    class IdType
     {
     public:
-        using ValueType = std::int64_t;
-        
-        IdType() = default;
-        explicit IdType(ValueType id) : TaggedType(id) {}
-        
-        // 显式禁用 TaggedType 的构造函数，避免歧义
-        IdType(const TaggedType&) = delete;
-        IdType(TaggedType&&) = delete;
-        
-        ValueType getValue() const { return TaggedType::getValue(); }
+        using ValueType = long long;
+
+        IdType();
+        IdType(ValueType id);
+
+        bool isValid() const;
+        std::string toString() const;
+
+        ValueType getValue() const { return _id; }
+        auto operator<=>(const IdType& other) const = default;
+
+    private:
+        ValueType _id;
     };
 
+#define LMS_DECLARE_IDTYPE(name)                                             \
+    namespace lms::db                                                        \
+    {                                                                        \
+        class name : public IdType                                           \
+        {                                                                    \
+        public:                                                              \
+            using IdType::IdType;                                            \
+            auto operator<=>(const name& other) const = default;             \
+        };                                                                   \
+    }                                                                        \
+    namespace std                                                            \
+    {                                                                        \
+        template<>                                                           \
+        class hash<lms::db::name>                                            \
+        {                                                                    \
+        public:                                                              \
+            size_t operator()(lms::db::name id) const                        \
+            {                                                                \
+                return std::hash<lms::db::name::ValueType>()(id.getValue()); \
+            }                                                                \
+        };                                                                   \
+    } // ns std
 } // namespace lms::db
-
-/**
- * @brief 声明ID类型宏
- * 
- * 使用示例：
- * LMS_DECLARE_IDTYPE(UserId)
- */
-#define LMS_DECLARE_IDTYPE(TypeName) \
-    namespace lms::db \
-    { \
-        class TypeName : public IdType \
-        { \
-        public: \
-            using IdType::IdType; \
-        }; \
-    } \
-    namespace std \
-    { \
-        template<> \
-        struct hash<lms::db::TypeName> \
-        { \
-            size_t operator()(lms::db::TypeName id) const \
-            { \
-                return std::hash<lms::db::IdType::ValueType>{}(id.getValue()); \
-            } \
-        }; \
-    }
-

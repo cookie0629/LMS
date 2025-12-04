@@ -1,371 +1,464 @@
+/*
+ * Copyright (C) 2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "TrackMetadataParser.hpp"
 
-#include <algorithm>
-#include <cctype>
-#include <sstream>
+#include <span>
 #include <string>
 #include <string_view>
-#include <utility>
 
-#include "audio/ITagReader.hpp"
+#include "audio/IAudioFileInfo.hpp"
+#include "core/ILogger.hpp"
+#include "core/PartialDateTime.hpp"
 #include "core/String.hpp"
 
-namespace
-{
-    using lms::scanner::TrackMetadataParser;
+#include "scanners/lyrics/LyricsParser.hpp"
 
-    using ReplacementPair = std::pair<std::string, std::string>;
-
-    TrackMetadataParser::Parameters normalizeParameters(TrackMetadataParser::Parameters params)
-    {
-        const auto normalizeDelimiterList = [](std::vector<std::string>& list) {
-            std::vector<std::string> normalized;
-            normalized.reserve(list.size());
-
-            for (const auto& entry : list)
-            {
-                auto trimmed = lms::core::stringUtils::stringTrim(entry);
-                if (!trimmed.empty())
-                {
-                    normalized.emplace_back(trimmed);
-                }
-            }
-
-            std::vector<std::string> deduped;
-            deduped.reserve(normalized.size());
-            for (auto& value : normalized)
-            {
-                if (std::find(deduped.begin(), deduped.end(), value) == deduped.end())
-                {
-                    deduped.push_back(std::move(value));
-                }
-            }
-
-            list = std::move(deduped);
-        };
-
-        normalizeDelimiterList(params.artistTagDelimiters);
-        normalizeDelimiterList(params.defaultTagDelimiters);
-
-        std::vector<std::string> whitelist;
-        whitelist.reserve(params.artistsToNotSplit.size());
-        for (const auto& entry : params.artistsToNotSplit)
-        {
-            auto trimmed = lms::core::stringUtils::stringTrim(entry);
-            if (!trimmed.empty())
-            {
-                whitelist.emplace_back(trimmed);
-            }
-        }
-
-        std::sort(whitelist.begin(), whitelist.end(), [](const std::string& lhs, const std::string& rhs) {
-            if (lhs.size() != rhs.size())
-            {
-                return lhs.size() > rhs.size();
-            }
-            return lhs < rhs;
-        });
-        whitelist.erase(std::unique(whitelist.begin(), whitelist.end()), whitelist.end());
-
-        params.artistsToNotSplit = std::move(whitelist);
-        return params;
-    }
-
-    void applyWhitelistPlaceholders(std::string& value,
-                                    const std::vector<std::string>& whitelist,
-                                    std::vector<ReplacementPair>& replacements)
-    {
-        if (whitelist.empty())
-        {
-            return;
-        }
-
-        constexpr std::string_view prefix{ "__LMS_PRESERVE__" };
-        std::size_t counter{};
-
-        for (const auto& entry : whitelist)
-        {
-            std::size_t pos = 0;
-            while ((pos = value.find(entry, pos)) != std::string::npos)
-            {
-                std::string marker = std::string(prefix) + std::to_string(counter++);
-                value.replace(pos, entry.size(), marker);
-                replacements.emplace_back(marker, entry);
-                pos += marker.size();
-            }
-        }
-    }
-
-    void restoreWhitelistPlaceholders(std::string& value, const std::vector<ReplacementPair>& replacements)
-    {
-        for (const auto& replacement : replacements)
-        {
-            std::size_t pos = 0;
-            while ((pos = value.find(replacement.first, pos)) != std::string::npos)
-            {
-                value.replace(pos, replacement.first.size(), replacement.second);
-                pos += replacement.second.size();
-            }
-        }
-    }
-} // namespace
+#include "Utils.hpp"
 
 namespace lms::scanner
 {
-    TrackMetadataParser::TrackMetadataParser(const Parameters& params)
-        : _params{ normalizeParameters(params) }
+    namespace
     {
-    }
-
-    TrackMetadata TrackMetadataParser::parseTrackMetadata(const audio::ITagReader& reader) const
-    {
-        TrackMetadata metadata;
-        processTags(reader, metadata);
-        return metadata;
-    }
-
-    void TrackMetadataParser::processTags(const audio::ITagReader& reader, TrackMetadata& metadata) const
-    {
-        metadata.title = getTagValue(reader, audio::TagType::Title);
-
-        metadata.artists = extractValues(reader, audio::TagType::Artist, _params.artistTagDelimiters, &_params.artistsToNotSplit);
-        if (!metadata.artists.empty())
+        void visitTagValues(const audio::ITagReader& tagReader, std::string_view tagType, std::span<const std::string> tagDelimiters, audio::ITagReader::TagValueVisitor visitor)
         {
-            metadata.artist = metadata.artists.front();
-        }
-        else
-        {
-            metadata.artist.reset();
-        }
+            tagReader.visitTagValues(tagType, [&](std::string_view value) {
+                auto visitTagIfNonEmpty{ [&](std::string_view tag) {
+                    tag = core::stringUtils::stringTrim(tag);
+                    if (!tag.empty())
+                        visitor(tag);
+                } };
 
-        metadata.album = getTagValue(reader, audio::TagType::Album);
-
-        metadata.albumArtists = extractValues(reader, audio::TagType::AlbumArtist, _params.artistTagDelimiters, &_params.artistsToNotSplit);
-        if (!metadata.albumArtists.empty())
-        {
-            metadata.albumArtist = metadata.albumArtists.front();
-        }
-        else
-        {
-            metadata.albumArtist.reset();
-        }
-
-        metadata.genres = extractValues(reader, audio::TagType::Genre, _params.defaultTagDelimiters);
-        if (!metadata.genres.empty())
-        {
-            metadata.genre = metadata.genres.front();
-        }
-        else
-        {
-            metadata.genre.reset();
-        }
-
-        metadata.date = normalizeDate(getTagValue(reader, audio::TagType::Date));
-        metadata.trackNumber = getTagValueAsInt(reader, audio::TagType::TrackNumber);
-        metadata.discNumber = getTagValueAsInt(reader, audio::TagType::DiscNumber);
-        metadata.comment = getTagValue(reader, audio::TagType::Comment);
-    }
-
-    std::vector<std::string> TrackMetadataParser::extractValues(const audio::ITagReader& reader,
-                                                               audio::TagType tagType,
-                                                               const std::vector<std::string>& delimiters,
-                                                               const std::vector<std::string>* whitelist) const
-    {
-        std::vector<std::string> rawValues = reader.getMultiTag(tagType);
-        if (rawValues.empty())
-        {
-            if (auto single = reader.getTag(tagType))
-            {
-                rawValues.push_back(*single);
-            }
-        }
-
-        std::vector<std::string> result;
-        for (auto& raw : rawValues)
-        {
-            auto splitted = splitAndNormalizeValue(raw, delimiters, whitelist);
-            for (auto& value : splitted)
-            {
-                if (std::find(result.begin(), result.end(), value) == result.end())
+                for (std::string_view tagDelimiter : tagDelimiters)
                 {
-                    result.push_back(std::move(value));
+                    if (value.find(tagDelimiter) != std::string_view::npos)
+                    {
+                        for (std::string_view splitTag : core::stringUtils::splitString(value, tagDelimiters))
+                            visitTagIfNonEmpty(splitTag);
+
+                        return;
+                    }
                 }
-            }
-        }
-        return result;
-    }
 
-    std::vector<std::string> TrackMetadataParser::splitAndNormalizeValue(std::string value,
-                                                                         const std::vector<std::string>& delimiters,
-                                                                         const std::vector<std::string>* whitelist) const
-    {
-        if (value.empty())
-        {
-            return {};
+                // no delimiter found, or no delimiter to be used
+                visitTagIfNonEmpty(value);
+            });
         }
 
-        std::vector<ReplacementPair> replacements;
-        if (whitelist && !whitelist->empty())
+        template<typename T>
+        void addTagIfNonEmpty(std::vector<T>& res, std::string_view tag)
         {
-            applyWhitelistPlaceholders(value, *whitelist, replacements);
+            if (tag.empty())
+                return;
+
+            if (std::optional<T> val{ core::stringUtils::readAs<T>(tag) })
+                res.emplace_back(std::move(*val));
         }
 
-        std::vector<std::string> segments{ std::move(value) };
-        for (const auto& delimiter : delimiters)
+        template<typename T>
+        std::vector<T> getTagValuesFirstMatchAs(const audio::ITagReader& tagReader, std::initializer_list<audio::TagType> tagTypes, std::span<const std::string> tagDelimiters, const TrackMetadataParser::WhiteList* whitelist = nullptr)
         {
-            if (delimiter.empty())
+            std::vector<T> res;
+
+            for (const audio::TagType tagType : tagTypes)
             {
-                continue;
-            }
+                tagReader.visitTagValues(tagType, [&](std::string_view value) {
+                    value = core::stringUtils::stringTrim(value);
 
-            std::vector<std::string> temp;
-            temp.reserve(segments.size());
+                    // short path: no custom delimiter
+                    if (tagDelimiters.empty())
+                    {
+                        addTagIfNonEmpty(res, value);
+                        return;
+                    }
 
-            for (const auto& segment : segments)
-            {
-                std::size_t start = 0;
-                std::size_t pos = 0;
-                while ((pos = segment.find(delimiter, start)) != std::string::npos)
-                {
-                    temp.emplace_back(segment.substr(start, pos - start));
-                    start = pos + delimiter.size();
-                }
-                temp.emplace_back(segment.substr(start));
-            }
+                    // Algo:
+                    // 1. replace whitelist entries by placeholders
+                    // 2. apply delimiters
+                    // 3. replace whitelist entries back
 
-            segments = std::move(temp);
-        }
+                    constexpr std::string_view substitutionPrefix{ "__LMS_ENTRY__" };
+                    std::unordered_map<std::string, std::string_view> substitutionMap;
+                    std::string strToSplit{ value };
+                    if (whitelist)
+                    {
+                        std::size_t counter{};
 
-        std::vector<std::string> normalized;
-        normalized.reserve(segments.size());
-        for (const auto& segment : segments)
-        {
-            std::string restoredSegment{ segment };
-            if (!replacements.empty())
-            {
-                restoreWhitelistPlaceholders(restoredSegment, replacements);
-            }
+                        for (std::string_view whiteListEntry : *whitelist)
+                        {
+                            whiteListEntry = core::stringUtils::stringTrim(whiteListEntry);
 
-            auto trimmed = core::stringUtils::stringTrim(restoredSegment);
-            if (!trimmed.empty())
-            {
-                normalized.emplace_back(trimmed);
-            }
-        }
+                            const std::string::size_type pos{ strToSplit.find(whiteListEntry) };
+                            if (pos == std::string::npos)
+                                continue;
 
-        return normalized;
-    }
+                            std::string substitutionStr{ std::string{ substitutionPrefix } + std::to_string(counter++) };
+                            strToSplit.replace(pos, whiteListEntry.size(), substitutionStr);
+                            substitutionMap.emplace(std::move(substitutionStr), whiteListEntry);
+                        }
+                    }
 
-    std::optional<std::string> TrackMetadataParser::getTagValue(const audio::ITagReader& reader, audio::TagType tagType) const
-    {
-        auto value = reader.getTag(tagType);
-        if (!value)
-            return std::nullopt;
+                    for (std::string_view strSplit : core::stringUtils::splitString(strToSplit, tagDelimiters))
+                    {
+                        std::string str{ core::stringUtils::stringTrim(strSplit) };
 
-        // 修剪字符串
-        std::string_view trimmed = core::stringUtils::stringTrim(*value);
-        if (trimmed.empty())
-            return std::nullopt;
+                        while (true)
+                        {
+                            std::string::size_type prefixPos{ str.find(substitutionPrefix) };
+                            if (prefixPos == std::string::npos)
+                                break;
 
-        return std::string{ trimmed };
-    }
+                            std::string::size_type counterEnd{ prefixPos + substitutionPrefix.size() };
+                            while (std::isdigit(str[counterEnd]))
+                                counterEnd++;
 
-    std::optional<int> TrackMetadataParser::getTagValueAsInt(const audio::ITagReader& reader, audio::TagType tagType) const
-    {
-        auto value = getTagValue(reader, tagType);
-        return parseNumberValue(value);
-    }
+                            std::string substitutionStr{ str.substr(prefixPos, counterEnd - prefixPos) };
+                            auto it{ substitutionMap.find(substitutionStr) };
+                            if (it != std::cend(substitutionMap))
+                                str.replace(prefixPos, counterEnd - prefixPos, it->second);
+                        }
 
-    std::optional<int> TrackMetadataParser::parseNumberValue(const std::optional<std::string>& value) const
-    {
-        if (!value)
-        {
-            return std::nullopt;
-        }
+                        addTagIfNonEmpty(res, str);
+                    }
+                });
 
-        auto trimmed = core::stringUtils::stringTrim(*value);
-        if (trimmed.empty())
-        {
-            return std::nullopt;
-        }
-
-        std::string digits;
-        digits.reserve(trimmed.size());
-        bool capturing = false;
-
-        for (char ch : trimmed)
-        {
-            if (std::isdigit(static_cast<unsigned char>(ch)))
-            {
-                digits.push_back(ch);
-                capturing = true;
-            }
-            else if (capturing)
-            {
-                break;
-            }
-        }
-
-        if (digits.empty())
-        {
-            return std::nullopt;
-        }
-
-        try
-        {
-            return std::stoi(digits);
-        }
-        catch (const std::exception&)
-        {
-            return std::nullopt;
-        }
-    }
-
-    std::optional<std::string> TrackMetadataParser::normalizeDate(const std::optional<std::string>& value) const
-    {
-        if (!value)
-        {
-            return std::nullopt;
-        }
-
-        std::string trimmed{ core::stringUtils::stringTrim(*value) };
-        if (trimmed.empty())
-        {
-            return std::nullopt;
-        }
-
-        for (std::size_t i = 0; i + 4 <= trimmed.size(); ++i)
-        {
-            bool digitsOnly = true;
-            for (std::size_t j = 0; j < 4; ++j)
-            {
-                if (!std::isdigit(static_cast<unsigned char>(trimmed[i + j])))
-                {
-                    digitsOnly = false;
+                if (!res.empty())
                     break;
+            }
+
+            return res;
+        }
+
+        template<typename T>
+        std::optional<T> getTagValueFirstMatchAs(const audio::ITagReader& tagReader, std::initializer_list<audio::TagType> tagTypes)
+        {
+            std::optional<T> res;
+            std::vector<T> values{ getTagValuesFirstMatchAs<T>(tagReader, tagTypes, {} /* don't expect multiple values here */) };
+            if (!values.empty())
+                res = std::move(values.front());
+
+            return res;
+        }
+
+        template<typename T>
+        std::vector<T> getTagValuesAs(const audio::ITagReader& tagReader, audio::TagType tagType, std::span<const std::string> tagDelimiters)
+        {
+            return getTagValuesFirstMatchAs<T>(tagReader, { tagType }, tagDelimiters);
+        }
+
+        template<typename T>
+        std::optional<T> getTagValueAs(const audio::ITagReader& tagReader, audio::TagType tagType)
+        {
+            return getTagValueFirstMatchAs<T>(tagReader, { tagType });
+        }
+
+        std::vector<Lyrics> getLyrics(const audio::ITagReader& tagReader)
+        {
+            std::vector<Lyrics> res;
+
+            tagReader.visitLyricsTags([&](std::string_view language, std::string_view lyricsText) {
+                std::istringstream iss{ std::string{ lyricsText } }; // TODO avoid copies (ispanstream?)
+                Lyrics lyrics{ parseLyrics(iss) };
+                if (lyrics.language.empty())
+                    lyrics.language = language;
+
+                res.emplace_back(std::move(lyrics));
+            });
+
+            return res;
+        }
+
+        std::vector<Artist> getArtists(const audio::ITagReader& tagReader,
+                                       std::initializer_list<audio::TagType> artistTagNames,
+                                       std::initializer_list<audio::TagType> artistSortTagNames,
+                                       std::initializer_list<audio::TagType> artistMBIDTagNames,
+                                       const TrackMetadataParser::Parameters& params)
+        {
+            std::vector<std::string> artistNames{ getTagValuesFirstMatchAs<std::string>(tagReader, artistTagNames, params.artistTagDelimiters, &params.artistsToNotSplit) };
+            if (artistNames.empty())
+                return {};
+
+            std::vector<std::string> artistSortNames{ getTagValuesFirstMatchAs<std::string>(tagReader, artistSortTagNames, params.artistTagDelimiters, &params.artistsToNotSplit) };
+            std::vector<core::UUID> artistMBIDs{ getTagValuesFirstMatchAs<core::UUID>(tagReader, artistMBIDTagNames, params.defaultTagDelimiters) };
+
+            std::vector<Artist> artists;
+            artists.reserve(artistNames.size());
+
+            for (std::size_t i{}; i < artistNames.size(); ++i)
+            {
+                Artist& artist{ artists.emplace_back(std::move(artistNames[i])) };
+
+                if (artistNames.size() == artistSortNames.size())
+                    artist.sortName = std::move(artistSortNames[i]);
+                if (artistNames.size() == artistMBIDs.size())
+                    artist.mbid = std::move(artistMBIDs[i]);
+            }
+
+            return artists;
+        }
+
+        PerformerContainer getPerformerArtists(const audio::ITagReader& tagReader)
+        {
+            PerformerContainer performers;
+
+            tagReader.visitPerformerTags([&](std::string_view role, std::string_view name) {
+                // picard stores like this: (see https://picard-docs.musicbrainz.org/en/appendices/tag_mapping.html#performer)
+                // We consider we may hit both styles for the same track
+                if (role.empty())
+                {
+                    // "PERFORMER" "artist (role)"
+                    utils::PerformerArtist performer{ utils::extractPerformerAndRole(name) };
+                    core::stringUtils::capitalize(performer.role);
+                    performers[performer.role].push_back(std::move(performer.artist));
+                }
+                else
+                {
+                    // "PERFORMER:role", "artist" (MP3)
+                    std::string roleCapitalized{ core::stringUtils::stringToLower(role) };
+                    core::stringUtils::capitalize(roleCapitalized);
+                    performers[roleCapitalized].push_back(Artist{ name });
+                }
+            });
+
+            return performers;
+        }
+
+        bool strIsMatchingArtistNames(std::string_view str, std::span<const std::string_view> artistNames)
+        {
+            std::string_view::size_type currentOffset{};
+
+            for (const std::string_view artistName : artistNames)
+            {
+                std::string_view::size_type newPos{ str.find(artistName, currentOffset) };
+                if (newPos == std::string_view::npos)
+                    return false;
+
+                currentOffset = newPos + artistName.size();
+            }
+
+            return true;
+        }
+
+        bool strIsContainingAny(std::string_view str, std::span<const std::string> subStrs)
+        {
+            return std::any_of(std::cbegin(subStrs), std::cend(subStrs), [&str](const std::string& subStr) { return str.find(subStr) != std::string_view::npos; });
+        }
+
+        std::string computeArtistDisplayName(std::span<const Artist> artists, const std::optional<std::string>& artistTag, std::span<const std::string> artistTagDelimiters)
+        {
+            std::string artistDisplayName;
+
+            if (artists.size() == 1)
+                artistDisplayName = artists.front().name;
+            else if (artists.size() > 1)
+            {
+                std::vector<std::string_view> artistNames;
+                std::transform(std::cbegin(artists), std::cend(artists), std::back_inserter(artistNames), [](const Artist& artist) -> std::string_view { return artist.name; });
+
+                // Picard use case: if we manage to match all artists in the "artist" tag (considered single-valued), and if no custom delimiter is hit, we use it as the display name
+                // Otherwise, we reconstruct the string using a standard, hardcoded, join
+                if (artistTag && strIsMatchingArtistNames(*artistTag, artistNames))
+                {
+                    // Limitation: this test does not take the whitelist into account
+                    if (!strIsContainingAny(*artistTag, artistTagDelimiters))
+                        artistDisplayName = *artistTag;
+                }
+
+                if (artistDisplayName.empty())
+                    artistDisplayName = core::stringUtils::joinStrings(artistNames, ", ");
+            }
+
+            return artistDisplayName;
+        }
+
+        std::optional<Track::Advisory> getAdvisory(const audio::ITagReader& tagReader)
+        {
+            if (const auto value{ getTagValueAs<int>(tagReader, audio::TagType::Advisory) })
+            {
+                switch (*value)
+                {
+                case 1:
+                case 4:
+                    return Track::Advisory::Explicit;
+                case 2:
+                    return Track::Advisory::Clean;
+                case 0:
+                    return Track::Advisory::Unknown;
                 }
             }
 
-            if (digitsOnly)
-            {
-                return trimmed.substr(i, 4);
-            }
+            return std::nullopt;
         }
+    } // namespace
 
-        const bool allDigits = std::all_of(trimmed.begin(), trimmed.end(), [](unsigned char c) {
-            return std::isdigit(c);
-        });
+    TrackMetadataParser::TrackMetadataParser(const Parameters& params)
+        : _params{ params }
+    {
+    }
 
-        if (allDigits)
+    TrackMetadataParser::~TrackMetadataParser() = default;
+
+    Track TrackMetadataParser::parseTrackMetaData(const audio::ITagReader& tagReader) const
+    {
+        Track track;
+        processTags(tagReader, track);
+        return track;
+    }
+
+    void TrackMetadataParser::processTags(const audio::ITagReader& tagReader, Track& track) const
+    {
+        using namespace audio;
+
+        track.title = getTagValueAs<std::string>(tagReader, TagType::TrackTitle).value_or("");
+        track.mbid = getTagValueAs<core::UUID>(tagReader, TagType::MusicBrainzTrackID);
+        track.recordingMBID = getTagValueAs<core::UUID>(tagReader, TagType::MusicBrainzRecordingID);
+        track.acoustID = getTagValueAs<core::UUID>(tagReader, TagType::AcoustID);
+        track.position = getTagValueAs<std::size_t>(tagReader, TagType::TrackNumber); // May parse 'Number/Total', that's fine
+        if (const auto dateStr{ getTagValueAs<std::string>(tagReader, TagType::Date) })
         {
-            if (trimmed.size() > 4)
-            {
-                trimmed.resize(4);
-            }
-            return trimmed;
+            if (const core::PartialDateTime date{ core::PartialDateTime::fromString(*dateStr) }; date.isValid())
+                track.date = date;
+        }
+        if (const auto dateStr = getTagValueAs<std::string>(tagReader, TagType::OriginalReleaseDate))
+        {
+            if (const core::PartialDateTime date{ core::PartialDateTime::fromString(*dateStr) }; date.isValid())
+                track.originalDate = date;
+        }
+        if (const auto dateStr{ getTagValueAs<std::string>(tagReader, TagType::OriginalReleaseYear) })
+            track.originalYear = utils::parseYear(*dateStr);
+
+        if (const auto encodingTimeStr{ getTagValueAs<std::string>(tagReader, TagType::EncodingTime) })
+        {
+            if (const core::PartialDateTime date{ core::PartialDateTime::fromString(*encodingTimeStr) }; date.isValid())
+                track.encodingTime = date;
         }
 
-        return trimmed;
+        track.advisory = getAdvisory(tagReader);
+
+        track.lyrics = getLyrics(tagReader); // no custom delimiter on lyrics
+        track.comments = getTagValuesAs<std::string>(tagReader, TagType::Comment, {} /* no custom delimiter on comments */);
+        track.copyright = getTagValueAs<std::string>(tagReader, TagType::Copyright).value_or("");
+        track.copyrightURL = getTagValueAs<std::string>(tagReader, TagType::CopyrightURL).value_or("");
+        track.replayGain = getTagValueAs<float>(tagReader, TagType::ReplayGainTrackGain);
+
+        for (const std::string& userExtraTag : _params.userExtraTags)
+        {
+            visitTagValues(tagReader, userExtraTag, _params.defaultTagDelimiters, [&](std::string_view value) {
+                value = core::stringUtils::stringTrim(value);
+                if (!value.empty())
+                    track.userExtraTags[userExtraTag].push_back(std::string{ value });
+            });
+        }
+
+        track.genres = getTagValuesAs<std::string>(tagReader, TagType::Genre, _params.defaultTagDelimiters);
+        track.moods = getTagValuesAs<std::string>(tagReader, TagType::Mood, _params.defaultTagDelimiters);
+        track.groupings = getTagValuesAs<std::string>(tagReader, TagType::Grouping, _params.defaultTagDelimiters);
+        track.languages = getTagValuesAs<std::string>(tagReader, TagType::Language, _params.defaultTagDelimiters);
+
+        std::vector<std::string_view> artistDelimiters{};
+
+        track.medium = getMedium(tagReader);
+        track.artists = getArtists(tagReader, { TagType::Artists, TagType::Artist }, { TagType::ArtistsSortOrder, TagType::ArtistSortOrder }, { TagType::MusicBrainzArtistID }, _params);
+        track.artistDisplayName = computeArtistDisplayName(track.artists, getTagValueAs<std::string>(tagReader, TagType::Artist), _params.artistTagDelimiters);
+
+        track.conductorArtists = getArtists(tagReader, { TagType::Conductors, TagType::Conductor }, { TagType::ConductorsSortOrder, TagType::ConductorSortOrder }, { TagType::MusicBrainzConductorID }, _params);
+        track.composerArtists = getArtists(tagReader, { TagType::Composers, TagType::Composer }, { TagType::ComposersSortOrder, TagType::ComposerSortOrder }, { TagType::MusicBrainzComposerID }, _params);
+        track.lyricistArtists = getArtists(tagReader, { TagType::Lyricists, TagType::Lyricist }, { TagType::LyricistsSortOrder, TagType::LyricistSortOrder }, { TagType::MusicBrainzLyricistID }, _params);
+        track.mixerArtists = getArtists(tagReader, { TagType::Mixers, TagType::Mixer }, { TagType::MixersSortOrder, TagType::MixerSortOrder }, { TagType::MusicBrainzMixerID }, _params);
+        track.producerArtists = getArtists(tagReader, { TagType::Producers, TagType::Producer }, { TagType::ProducersSortOrder, TagType::ProducerSortOrder }, { TagType::MusicBrainzProducerID }, _params);
+        track.remixerArtists = getArtists(tagReader, { TagType::Remixers, TagType::Remixer }, { TagType::RemixersSortOrder, TagType::RemixerSortOrder }, { TagType::MusicBrainzRemixerID }, _params);
+        track.performerArtists = getPerformerArtists(tagReader); // artistDelimiters not supported
+
+        // If a file has originalDate but no originalYear, set it
+        if (!track.originalYear)
+            track.originalYear = track.originalDate.getYear();
+    }
+
+    std::optional<Medium> TrackMetadataParser::getMedium(const audio::ITagReader& tagReader) const
+    {
+        using namespace audio;
+
+        std::optional<Medium> medium;
+        medium.emplace();
+
+        medium->media = getTagValueAs<std::string>(tagReader, TagType::Media).value_or("");
+        medium->name = getTagValueAs<std::string>(tagReader, TagType::DiscSubtitle).value_or("");
+        medium->trackCount = getTagValueAs<std::size_t>(tagReader, TagType::TotalTracks);
+        if (!medium->trackCount)
+        {
+            // totalTracks may be encoded as "position/count"
+            if (const auto value{ getTagValueAs<std::string>(tagReader, TagType::TrackNumber) })
+            {
+                // Expecting 'Number/Total'
+                const std::vector<std::string_view> strings{ core::stringUtils::splitString(*value, '/') };
+                if (strings.size() == 2)
+                    medium->trackCount = core::stringUtils::readAs<std::size_t>(strings[1]);
+            }
+        }
+        // Expecting 'Number[/Total]'
+        medium->position = getTagValueAs<std::size_t>(tagReader, TagType::DiscNumber);
+        medium->release = getRelease(tagReader);
+        medium->replayGain = getTagValueAs<float>(tagReader, TagType::ReplayGainAlbumGain);
+
+        if (medium->isDefault())
+            medium.reset();
+
+        return medium;
+    }
+
+    std::optional<Release> TrackMetadataParser::getRelease(const audio::ITagReader& tagReader) const
+    {
+        using namespace audio;
+
+        std::optional<Release> release;
+
+        auto releaseName{ getTagValueAs<std::string>(tagReader, TagType::Album) };
+        if (!releaseName)
+            return release;
+
+        release.emplace();
+        release->name = std::move(*releaseName);
+        release->sortName = getTagValueAs<std::string>(tagReader, TagType::AlbumSortOrder).value_or(release->name);
+        release->artists = getArtists(tagReader, { TagType::AlbumArtists, TagType::AlbumArtist }, { TagType::AlbumArtistsSortOrder, TagType::AlbumArtistSortOrder }, { TagType::MusicBrainzReleaseArtistID }, _params);
+        release->artistDisplayName = computeArtistDisplayName(release->artists, getTagValueAs<std::string>(tagReader, TagType::AlbumArtist), _params.artistTagDelimiters);
+        release->mbid = getTagValueAs<core::UUID>(tagReader, TagType::MusicBrainzReleaseID);
+        release->groupMBID = getTagValueAs<core::UUID>(tagReader, TagType::MusicBrainzReleaseGroupID);
+        release->mediumCount = getTagValueAs<std::size_t>(tagReader, TagType::TotalDiscs);
+        release->isCompilation = getTagValueAs<bool>(tagReader, TagType::Compilation).value_or(false);
+        release->barcode = getTagValueAs<std::string>(tagReader, TagType::Barcode).value_or("");
+        release->labels = getTagValuesAs<std::string>(tagReader, TagType::RecordLabel, _params.defaultTagDelimiters);
+        release->comment = getTagValueAs<std::string>(tagReader, TagType::AlbumComment).value_or("");
+        release->countries = getTagValuesAs<std::string>(tagReader, TagType::ReleaseCountry, _params.defaultTagDelimiters);
+        if (!release->mediumCount)
+        {
+            // mediumCount may be encoded as "position/count"
+            if (const auto value{ getTagValueAs<std::string>(tagReader, TagType::DiscNumber) })
+            {
+                // Expecting 'Number/Total'
+                const std::vector<std::string_view> strings{ core::stringUtils::splitString(*value, '/') };
+                if (strings.size() == 2)
+                    release->mediumCount = core::stringUtils::readAs<std::size_t>(strings[1]);
+            }
+        }
+
+        release->releaseTypes = getTagValuesAs<std::string>(tagReader, TagType::ReleaseType, _params.defaultTagDelimiters);
+
+        return release;
     }
 } // namespace lms::scanner
-

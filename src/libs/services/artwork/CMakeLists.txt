@@ -1,31 +1,26 @@
-cmake_minimum_required(VERSION 3.20)
 
-# 创建 Artwork Service 库
 add_library(lmsartwork STATIC
-    impl/ArtworkService.cpp
-    impl/ImageCache.cpp
-)
+	impl/ImageCache.cpp
+	impl/ArtworkService.cpp
+	)
 
 target_include_directories(lmsartwork INTERFACE
-    include
-)
+	include
+	)
 
 target_include_directories(lmsartwork PRIVATE
-    impl
-    include
-)
+	include
+	impl
+	)
 
-# 链接依赖
+target_link_libraries(lmsartwork PRIVATE
+	lmsaudio
+	lmsimage
+	)
+
 target_link_libraries(lmsartwork PUBLIC
-    lmscore
-    lmsdatabase
-    lmsimage
-    ${WT_LIBRARIES}
-)
-
-# 设置 C++20 标准
-set_target_properties(lmsartwork PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-)
-
+	lmsdatabase
+	lmsimage
+	lmscore
+	std::filesystem
+	)

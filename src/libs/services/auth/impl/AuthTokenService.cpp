@@ -1,11 +1,29 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "AuthTokenService.hpp"
 
-#include <boost/asio/ip/address.hpp>
+#include <Wt/Auth/HashFunction.h>
+#include <Wt/WRandom.h>
 
 #include "core/ILogger.hpp"
-#include "core/Service.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
 #include "database/objects/AuthToken.hpp"
 #include "database/objects/User.hpp"
 #include "services/auth/Types.hpp"
@@ -37,18 +55,14 @@ namespace lms::auth
     {
     }
 
-    void AuthTokenService::registerDomain(std::string_view domain, const DomainParameters& params)
+    void AuthTokenService::registerDomain(core::LiteralString domain, const DomainParameters& params)
     {
-        std::unique_lock lock(_mutex);
-        auto [it, inserted] = _domainParameters.emplace(std::string{ domain }, params);
+        [[maybe_unused]] auto [it, inserted]{ _domainParameters.emplace(domain, params) };
         if (!inserted)
             throw Exception{ "Auth token domain already registered!" };
     }
 
-    void AuthTokenService::createAuthToken(
-        std::string_view domain,
-        db::UserId userId,
-        std::string_view token)
+    void AuthTokenService::createAuthToken(core::LiteralString domain, db::UserId userId, std::string_view token)
     {
         const DomainParameters& params{ getDomainParameters(domain) };
 
@@ -63,41 +77,24 @@ namespace lms::auth
             if (!user)
                 throw Exception{ "User deleted" };
 
-            std::optional<long> maxUseCount;
-            if (params.tokenMaxUseCount)
-                maxUseCount = static_cast<long>(*params.tokenMaxUseCount);
+            const db::AuthToken::pointer authToken{ session.create<db::AuthToken>(domain.str(), token, expiry, params.tokenMaxUseCount, user) };
 
-            const db::AuthToken::pointer authToken{ session.create<db::AuthToken>(
-                std::string{ domain }, 
-                std::string{ token }, 
-                expiry, 
-                maxUseCount, 
-                user) };
+            LMS_LOG(UI, DEBUG, "Created auth token for user '" << user->getLoginName() << "', expiry = " << authToken->getExpiry().toString() << ", maxUseCount = " << (authToken->getMaxUseCount() ? std::to_string(*authToken->getMaxUseCount()) : "<unset>"));
 
-            LMS_LOG(UI, DEBUG, "Created auth token for user '" << user->getLoginName() 
-                << "', expiry = " << (authToken->getExpiry().isValid() ? authToken->getExpiry().toString() : "<unset>")
-                << ", maxUseCount = " << (authToken->getMaxUseCount() ? std::to_string(*authToken->getMaxUseCount()) : "<unset>"));
-
-            // 如果用户令牌数量过多，清理过期令牌
+            // TODO per domain
             if (user->getAuthTokensCount() >= 50)
-                db::AuthToken::removeExpiredTokens(session, std::string{ domain }, Wt::WDateTime::currentDateTime());
-
-            // 显式提交事务，确保数据被保存
-            transaction.commit();
+                db::AuthToken::removeExpiredTokens(session, domain.str(), Wt::WDateTime::currentDateTime());
         }
     }
 
-    std::optional<AuthTokenService::AuthTokenInfo> AuthTokenService::processAuthToken(std::string_view domain, std::string_view tokenValue)
+    std::optional<AuthTokenService::AuthTokenInfo> AuthTokenService::processAuthToken(core::LiteralString domain, std::string_view token)
     {
         db::Session& session{ getDbSession() };
         auto transaction{ session.createWriteTransaction() };
 
-        db::AuthToken::pointer authToken{ db::AuthToken::find(session, std::string{ domain }, std::string{ tokenValue }) };
+        db::AuthToken::pointer authToken{ db::AuthToken::find(session, domain.str(), token) };
         if (!authToken)
-        {
-            LMS_LOG(UI, DEBUG, "Auth token not found for domain '" << domain << "', token '" << tokenValue << "'");
             return std::nullopt;
-        }
 
         if (authToken->getExpiry().isValid() && authToken->getExpiry() < Wt::WDateTime::currentDateTime())
         {
@@ -105,7 +102,7 @@ namespace lms::auth
             return std::nullopt;
         }
 
-        LMS_LOG(UI, DEBUG, "Found auth token for user '" << authToken->getUser()->getLoginName() << "' on domain '" << domain << "'");
+        LMS_LOG(UI, DEBUG, "Found auth token for user '" << authToken->getUser()->getLoginName() << "' on domain '" << domain.str() << "'");
 
         AuthTokenInfo res{ createAuthTokenInfo(authToken) };
 
@@ -114,19 +111,16 @@ namespace lms::auth
 
         if (auto maxUseCount{ authToken->getMaxUseCount() })
         {
-            if (*maxUseCount <= tokenUseCount)
+            if (*maxUseCount >= tokenUseCount)
                 authToken.remove();
         }
 
         return res;
     }
 
-    IAuthTokenService::AuthTokenProcessResult AuthTokenService::processAuthToken(
-        std::string_view domain,
-        const boost::asio::ip::address& clientAddress,
-        std::string_view tokenValue)
+    AuthTokenService::AuthTokenProcessResult AuthTokenService::processAuthToken(core::LiteralString domain, const boost::asio::ip::address& clientAddress, std::string_view tokenValue)
     {
-        // 先检查是否被限流（使用共享锁，避免浪费资源）
+        // Do not waste too much resource on brute force attacks (optim)
         {
             std::shared_lock lock{ _mutex };
 
@@ -134,13 +128,10 @@ namespace lms::auth
                 return AuthTokenProcessResult{ .state = AuthTokenProcessResult::State::Throttled, .authTokenInfo = std::nullopt };
         }
 
-        // 处理令牌
         auto res{ processAuthToken(domain, tokenValue) };
-        
         {
             std::unique_lock lock{ _mutex };
 
-            // 再次检查限流（可能在处理过程中被限流）
             if (_loginThrottler.isClientThrottled(clientAddress))
                 return AuthTokenProcessResult{ .state = AuthTokenProcessResult::State::Throttled, .authTokenInfo = std::nullopt };
 
@@ -156,36 +147,33 @@ namespace lms::auth
         }
     }
 
-    void AuthTokenService::visitAuthTokens(
-        std::string_view domain,
-        db::UserId userId,
-        std::function<void(const AuthTokenInfo& info, std::string_view token)> visitor)
+    void AuthTokenService::visitAuthTokens(core::LiteralString domain, db::UserId userId, std::function<void(const AuthTokenInfo& info, std::string_view token)> visitor)
     {
         db::Session& session{ getDbSession() };
 
         {
             auto transaction{ session.createReadTransaction() };
 
-            db::AuthToken::find(session, std::string{ domain }, userId, [&](const db::AuthToken::pointer& authToken) {
+            db::AuthToken::find(session, domain.str(), userId, [&](const db::AuthToken::pointer& authToken) {
                 const AuthTokenInfo info{ createAuthTokenInfo(authToken) };
                 visitor(info, authToken->getValue());
             });
         }
     }
 
-    void AuthTokenService::clearAuthTokens(std::string_view domain, db::UserId userId)
+    void AuthTokenService::clearAuthTokens(core::LiteralString domain, db::UserId userId)
     {
         db::Session& session{ getDbSession() };
 
         {
             auto transaction{ session.createWriteTransaction() };
-            db::AuthToken::clearUserTokens(session, std::string{ domain }, userId);
+            db::AuthToken::clearUserTokens(session, domain.str(), userId);
         }
     }
 
-    const AuthTokenService::DomainParameters& AuthTokenService::getDomainParameters(std::string_view domain) const
+    const AuthTokenService::DomainParameters& AuthTokenService::getDomainParameters(core::LiteralString domain) const
     {
-        auto it{ _domainParameters.find(std::string{ domain }) };
+        auto it{ _domainParameters.find(domain) };
         if (it == std::cend(_domainParameters))
             throw Exception{ "Invalid auth token domain" };
 

@@ -1,9 +1,8 @@
-# 添加库目录
+add_compile_options(-Wall -Wextra -pedantic)
+
 add_subdirectory(libs)
-
-# 添加主程序
 add_subdirectory(lms)
+add_subdirectory(tools)
 
-# 添加工具（可选）
-# add_subdirectory(tools)
+
 

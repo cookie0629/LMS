@@ -1,13 +1,26 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "LyricsParser.hpp"
 
-#include <algorithm>
-#include <array>
 #include <cassert>
-#include <chrono>
 #include <regex>
-#include <string>
-#include <string_view>
-#include <vector>
 
 #include "core/String.hpp"
 
@@ -15,18 +28,19 @@ namespace lms::scanner
 {
     std::span<const std::filesystem::path> getSupportedLyricsFileExtensions()
     {
-        static const std::array<std::filesystem::path, 2> fileExtensions{ ".lrc", ".txt" };
+        static const std::array<std::filesystem::path, 2> fileExtensions{ ".lrc", ".txt" }; // TODO handle ".elrc"
         return fileExtensions;
     }
 
     namespace
     {
+        // Parse a single line with a tag like [ar: Artist] and set the appropriate fields in the Lyrics object
         bool parseTag(std::string_view line, Lyrics& lyrics)
         {
             if (line.empty())
                 return false;
 
-            if (line.front() != '[' || line.back() != ']')
+            if (line.front() != '[' || line.back() != ']') // consider lines are trimmed
                 return false;
 
             const auto separator{ line.find(':') };
@@ -37,6 +51,10 @@ namespace lms::scanner
             const std::string_view tagValue{ core::stringUtils::stringTrim(line.substr(separator + 1, line.size() - separator - 2)) };
 
             if (tagType.empty())
+                return false;
+
+            // check for timestamps
+            if (std::any_of(tagType.begin(), tagType.end(), [](char c) { return std::isdigit(c); }))
                 return false;
 
             if (tagType == "ar")
@@ -57,12 +75,15 @@ namespace lms::scanner
             }
             else if (tagType == "offset")
             {
-                // Offset parsing not implemented in simplified version
+                if (const auto value{ core::stringUtils::readAs<int>(tagValue) })
+                    lyrics.offset = std::chrono::milliseconds{ *value };
             }
+            // not interrested by other tags like 'duration', 'id', etc.
 
             return true;
         }
 
+        // Parse timestamps from a line, update the associated times in milliseconds and return the remaining line
         std::string_view extractTimestamps(std::string_view line, std::vector<std::chrono::milliseconds>& timestamps)
         {
             timestamps.clear();
@@ -79,10 +100,16 @@ namespace lms::scanner
                 int second{ std::stoi(match[3].str()) };
                 int fractional{ match[4].matched ? std::stoi(match[4].str()) : 0 };
 
-                std::chrono::milliseconds currentTimestamp{
-                    std::chrono::hours{ hour } + std::chrono::minutes{ minute } + std::chrono::seconds{ second } };
+                std::chrono::milliseconds currentTimestamp{ std::chrono::hours{ hour } + std::chrono::minutes{ minute } + std::chrono::seconds{ second } };
 
-                currentTimestamp += std::chrono::milliseconds{ fractional };
+                if (match[4].length() == 2) // Centiseconds
+                {
+                    currentTimestamp += std::chrono::milliseconds{ fractional * 10 };
+                }
+                else // Milliseconds
+                {
+                    currentTimestamp += std::chrono::milliseconds{ fractional };
+                }
 
                 offset = match[0].second - line.data();
                 timestamps.push_back(currentTimestamp);
@@ -93,6 +120,7 @@ namespace lms::scanner
         }
     } // namespace
 
+    // Main function to parse lyrics from an input stream
     Lyrics parseLyrics(std::istream& is)
     {
         Lyrics lyrics;
@@ -121,7 +149,7 @@ namespace lms::scanner
 
             for (std::chrono::milliseconds timestamp : lastTimestamps)
             {
-                std::string& synchronizedLine{ lyrics.synchronizedLines[timestamp] };
+                std::string& synchronizedLine{ lyrics.synchronizedLines.find(timestamp)->second };
                 synchronizedLine += accumulatedLyrics;
             }
             accumulatedLyrics.clear();
@@ -131,6 +159,7 @@ namespace lms::scanner
         std::string line;
         while (std::getline(is, line))
         {
+            // Remove potential UTF8 BOM
             if (firstLine)
             {
                 firstLine = false;
@@ -141,9 +170,11 @@ namespace lms::scanner
 
             std::string_view trimmedLine{ core::stringUtils::stringTrimEnd(line) };
 
+            // Skip comments
             if (!trimmedLine.empty() && trimmedLine.front() == '#')
                 continue;
 
+            // Skip empty lines before actual lyrics
             if (currentState == State::None && trimmedLine.empty())
                 continue;
 
@@ -152,20 +183,25 @@ namespace lms::scanner
 
             const std::string_view lyricsText{ extractTimestamps(trimmedLine, timestamps) };
 
+            // If there are timestamps, add as synchronized lyrics
             if (!timestamps.empty())
             {
                 if (currentState == State::UnsynchronizedLyrics)
-                    lyrics.unsynchronizedLines.clear();
+                    lyrics.unsynchronizedLines.clear(); // choice: discard all lyrics parsed so far
 
                 currentState = State::SynchronizedLyrics;
 
                 applyAccumulatedLyrics();
                 for (std::chrono::milliseconds timestamp : timestamps)
                 {
-                    auto& synchronizedLine = lyrics.synchronizedLines[timestamp];
-                    if (!synchronizedLine.empty())
-                        synchronizedLine.push_back('\n');
-                    synchronizedLine.append(lyricsText);
+                    auto itLine{ lyrics.synchronizedLines.find(timestamp) };
+                    if (itLine != std::cend(lyrics.synchronizedLines))
+                    {
+                        itLine->second.push_back('\n');
+                        itLine->second.append(lyricsText);
+                    }
+                    else
+                        lyrics.synchronizedLines.emplace(timestamp, lyricsText);
                 }
 
                 lastTimestamps = timestamps;
@@ -179,17 +215,16 @@ namespace lms::scanner
                 }
                 else
                 {
+                    assert(currentState != State::SynchronizedLyrics); // should be handled
                     currentState = State::UnsynchronizedLyrics;
+
                     lyrics.unsynchronizedLines.push_back(std::string{ trimmedLine });
                 }
             }
         }
-
         if (currentState == State::SynchronizedLyrics)
             applyAccumulatedLyrics(true);
 
         return lyrics;
     }
 } // namespace lms::scanner
-
-

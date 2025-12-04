@@ -1,166 +1,148 @@
+/*
+ * Copyright (C) 2023 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ScanStepRemoveOrphanedDbEntries.hpp"
 
-#include <filesystem>
-#include <vector>
-
-#include "core/IConfig.hpp"
 #include "core/ILogger.hpp"
-#include "core/Service.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
+#include "database/objects/Artist.hpp"
+#include "database/objects/Cluster.hpp"
 #include "database/objects/Directory.hpp"
-#include "database/objects/MediaLibrary.hpp"
+#include "database/objects/Medium.hpp"
+#include "database/objects/Release.hpp"
 #include "database/objects/Track.hpp"
+#include "database/objects/TrackEmbeddedImage.hpp"
+
+#include "ScanContext.hpp"
 
 namespace lms::scanner
 {
-    namespace
+    bool ScanStepRemoveOrphanedDbEntries::needProcess([[maybe_unused]] const ScanContext& context) const
     {
-        bool isPathInside(const std::filesystem::path& root, const std::filesystem::path& candidate)
-        {
-            if (root.empty())
-            {
-                return false;
-            }
-
-            auto rootGeneric = root.generic_string();
-            auto candidateGeneric = candidate.generic_string();
-
-            if (rootGeneric.empty() || candidateGeneric.empty())
-            {
-                return false;
-            }
-
-            if (rootGeneric.back() != '/')
-            {
-                rootGeneric.push_back('/');
-            }
-
-            if (candidateGeneric.size() < rootGeneric.size())
-            {
-                return candidateGeneric == rootGeneric.substr(0, candidateGeneric.size());
-            }
-
-            return candidateGeneric == rootGeneric.substr(0, rootGeneric.size() - 1) ||
-                   candidateGeneric.rfind(rootGeneric, 0) == 0;
-        }
-    } // namespace
-
-    ScanStepRemoveOrphanedDbEntries::ScanStepRemoveOrphanedDbEntries(db::IDb& db, const ScannerSettings& settings)
-        : ScanStepBase{ db, settings }
-    {
-    }
-
-    bool ScanStepRemoveOrphanedDbEntries::execute(ScanStats& stats)
-    {
-        LMS_LOG(SCANNER, INFO, "Starting remove orphaned DB entries step");
-
-        try
-        {
-            std::filesystem::path mediaLibraryPath;
-            if (auto* config = lms::core::Service<lms::core::IConfig>::get())
-            {
-                mediaLibraryPath = config->getPath("media-library-path", std::filesystem::path{});
-            }
-
-            if (mediaLibraryPath.empty())
-            {
-                LMS_LOG(SCANNER, WARNING, "Media library path not configured, skipping orphan cleanup step");
-                return true;
-            }
-
-            auto& session = getDb().getTLSSession();
-
-            std::vector<db::Directory::pointer> directories;
-            std::vector<db::Track::pointer> tracks;
-
-            {
-                auto readTx = session.createReadTransaction();
-                db::Directory::find(session, [&directories](const db::Directory::pointer& dir) {
-                    directories.push_back(dir);
-                });
-                db::Track::find(session, [&tracks](const db::Track::pointer& track) {
-                    tracks.push_back(track);
-                });
-                readTx.commit();
-            }
-
-            std::size_t removedDirectories{};
-            std::size_t removedTracks{};
-
-            {
-                auto writeTx = session.createWriteTransaction();
-                for (auto& directory : directories)
-                {
-                    if (!directory)
-                    {
-                        continue;
-                    }
-
-                    const auto dirPath = directory->getAbsolutePath();
-                    if (!std::filesystem::exists(dirPath) || !isPathInside(mediaLibraryPath, dirPath))
-                    {
-                        directory.remove();
-                        ++removedDirectories;
-                    }
-                }
-                writeTx.commit();
-            }
-
-            {
-                auto writeTx = session.createWriteTransaction();
-                for (auto& track : tracks)
-                {
-                    if (!track)
-                    {
-                        continue;
-                    }
-
-                    const auto filePath = track->getAbsoluteFilePath();
-                    if (!std::filesystem::exists(filePath))
-                    {
-                        track.remove();
-                        ++removedTracks;
-                        continue;
-                    }
-
-                    const auto directoryId = track->getDirectoryId();
-                    if (directoryId.getValue() == 0)
-                    {
-                        track.remove();
-                        ++removedTracks;
-                        continue;
-                    }
-
-                    auto directory = db::Directory::find(session, directoryId);
-                    if (!directory)
-                    {
-                        track.remove();
-                        ++removedTracks;
-                        continue;
-                    }
-                }
-                writeTx.commit();
-            }
-
-            if (removedDirectories > 0 || removedTracks > 0)
-            {
-                stats.deletions += removedDirectories + removedTracks;
-            }
-
-            LMS_LOG(SCANNER, INFO, "Remove orphaned entries step completed: "
-                << removedDirectories << " directories removed, "
-                << removedTracks << " tracks removed");
-        }
-        catch (const std::exception& e)
-        {
-            LMS_LOG(SCANNER, ERROR, "Remove orphaned DB entries step failed: " << e.what());
-            return false;
-        }
-
+        // fast enough when there is nothing to do
         return true;
     }
+
+    void ScanStepRemoveOrphanedDbEntries::process(ScanContext& context)
+    {
+        removeOrphanedClusters(context);
+        removeOrphanedClusterTypes(context);
+        removeOrphanedArtists(context);
+        removeOrphanedReleases(context);
+        removeOrphanedMediums(context); // after release so that most entries are removed using the medium foreign key
+        removeOrphanedReleaseTypes(context);
+        removeOrphanedLabels(context);
+        removeOrphanedCountries(context);
+        removeOrphanedDirectories(context);
+        removeOrphanedTrackEmbeddedImages(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedClusters(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned clusters...");
+        removeOrphanedEntries<db::Cluster>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedClusterTypes(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned cluster types...");
+        removeOrphanedEntries<db::ClusterType>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedArtists(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned artists...");
+        removeOrphanedEntries<db::Artist>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedMediums(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned mediums...");
+        removeOrphanedEntries<db::Medium>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedReleases(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned releases...");
+        removeOrphanedEntries<db::Release>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedReleaseTypes(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned release types...");
+        removeOrphanedEntries<db::ReleaseType>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedLabels(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned labels...");
+        removeOrphanedEntries<db::Label>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedCountries(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned countries...");
+        removeOrphanedEntries<db::Country>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedDirectories(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned directories...");
+        removeOrphanedEntries<db::Directory>(context);
+    }
+
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedTrackEmbeddedImages(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, DEBUG, "Checking orphaned embedded images in tracks...");
+        removeOrphanedEntries<db::TrackEmbeddedImage>(context);
+    }
+
+    template<typename T>
+    void ScanStepRemoveOrphanedDbEntries::removeOrphanedEntries(ScanContext& context)
+    {
+        constexpr std::size_t batchSize = 200;
+
+        using IdType = typename T::IdType;
+
+        db::Session& session{ _db.getTLSSession() };
+
+        db::RangeResults<IdType> entries;
+        while (!_abortScan)
+        {
+            {
+                auto transaction{ session.createReadTransaction() };
+
+                entries = T::findOrphanIds(session, db::Range{ 0, batchSize });
+            };
+
+            if (entries.results.empty())
+                break;
+
+            {
+                auto transaction{ session.createWriteTransaction() };
+
+                session.destroy<T>(entries.results);
+            }
+
+            context.currentStepStats.processedElems += entries.results.size();
+            _progressCallback(context.currentStepStats);
+        }
+    }
 } // namespace lms::scanner
-
-

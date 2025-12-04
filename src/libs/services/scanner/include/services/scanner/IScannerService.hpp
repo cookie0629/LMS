@@ -1,7 +1,25 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <filesystem>
-#include <memory>
 #include <optional>
 
 #include "ScannerEvents.hpp"
@@ -11,31 +29,26 @@
 namespace lms::db
 {
     class IDb;
-} // namespace lms::db
+}
 
 namespace lms::scanner
 {
-    /**
-     * @brief 扫描服务接口
-     */
     class IScannerService
     {
     public:
         virtual ~IScannerService() = default;
 
-        /**
-         * @brief 扫描状态
-         */
+        // Async requests
+        virtual void requestReload() = 0; // will stop/reschedule scan
+        virtual void requestImmediateScan(const ScanOptions& options = {}) = 0;
+
         enum class State
         {
-            NotScheduled,  // 未调度
-            Scheduled,     // 已调度
-            InProgress,    // 进行中
+            NotScheduled,
+            Scheduled,
+            InProgress,
         };
 
-        /**
-         * @brief 扫描服务状态
-         */
         struct Status
         {
             State currentState{ State::NotScheduled };
@@ -44,36 +57,10 @@ namespace lms::scanner
             std::optional<ScanStepStats> currentScanStepStats;
         };
 
-        /**
-         * @brief 请求重新加载（将停止/重新调度扫描）
-         */
-        virtual void requestReload() = 0;
-
-        /**
-         * @brief 请求立即扫描
-         * @param options 扫描选项
-         */
-        virtual void requestImmediateScan(const ScanOptions& options = {}) = 0;
-
-        /**
-         * @brief 获取当前状态
-         */
         virtual Status getStatus() const = 0;
 
-        /**
-         * @brief 获取事件对象
-         */
         virtual Events& getEvents() = 0;
     };
 
-    /**
-     * @brief 创建扫描服务
-     * @param db 数据库引用
-     * @param cachePath 缓存路径
-     * @return 扫描服务实例
-     */
-    std::unique_ptr<IScannerService> createScannerService(
-        db::IDb& db,
-        const std::filesystem::path& cachePath);
+    std::unique_ptr<IScannerService> createScannerService(db::IDb& db, const std::filesystem::path& cachePath);
 } // namespace lms::scanner
-

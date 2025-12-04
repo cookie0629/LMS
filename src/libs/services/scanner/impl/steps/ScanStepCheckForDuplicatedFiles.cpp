@@ -1,112 +1,62 @@
-#include "ScanStepCheckForDuplicatedFiles.hpp"
+/*
+ * Copyright (C) 2023 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
-#include <unordered_map>
-#include <vector>
+#include "ScanStepCheckForDuplicatedFiles.hpp"
 
 #include "core/ILogger.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
 #include "database/objects/Track.hpp"
+
+#include "ScanContext.hpp"
 
 namespace lms::scanner
 {
-    namespace
+    bool ScanStepCheckForDuplicatedFiles::needProcess([[maybe_unused]] const ScanContext& context) const
     {
-        using TrackPointerVector = std::vector<db::Track::pointer>;
-
-        void accumulateDuplicates(const TrackPointerVector& candidates,
-                                  ScanStats& stats,
-                                  DuplicateReason reason)
-        {
-            if (candidates.size() < 2)
-            {
-                return;
-            }
-
-            for (const auto& track : candidates)
-            {
-                if (!track)
-                {
-                    continue;
-                }
-
-                const auto trackId = track->getId();
-                stats.duplicates.push_back(ScanDuplicate{
-                    .trackId = static_cast<std::int64_t>(trackId.getValue()),
-                    .reason = reason,
-                });
-            }
-        }
-    } // namespace
-
-    ScanStepCheckForDuplicatedFiles::ScanStepCheckForDuplicatedFiles(db::IDb& db, const ScannerSettings& settings)
-        : ScanStepBase{ db, settings }
-    {
-    }
-
-    bool ScanStepCheckForDuplicatedFiles::execute(ScanStats& stats)
-    {
-        LMS_LOG(SCANNER, INFO, "Starting duplicate files check");
-
-        try
-        {
-            auto& session = getDb().getTLSSession();
-
-            // 读取所有 Track
-            std::vector<db::Track::pointer> tracks;
-            {
-                auto readTx = session.createReadTransaction();
-                db::Track::find(session, [&tracks](const db::Track::pointer& track) {
-                    tracks.push_back(track);
-                });
-                readTx.commit();
-            }
-
-            LMS_LOG(SCANNER, INFO, "Loaded " << tracks.size() << " tracks for duplicate analysis");
-
-            std::unordered_map<std::string, TrackPointerVector> tracksByPath;
-            std::unordered_map<long long, TrackPointerVector> tracksBySize;
-
-            tracksByPath.reserve(tracks.size());
-            tracksBySize.reserve(tracks.size());
-
-            for (const auto& track : tracks)
-            {
-                if (!track)
-                {
-                    continue;
-                }
-
-                tracksByPath[track->getAbsoluteFilePath().string()].push_back(track);
-                tracksBySize[track->getFileSize()].push_back(track);
-            }
-
-            const auto initialDuplicatesCount = stats.duplicates.size();
-
-            for (const auto& [path, candidates] : tracksByPath)
-            {
-                (void)path;
-                accumulateDuplicates(candidates, stats, DuplicateReason::SameHash);
-            }
-
-            for (const auto& [size, candidates] : tracksBySize)
-            {
-                (void)size;
-                accumulateDuplicates(candidates, stats, DuplicateReason::SameTrackMBID);
-            }
-
-            const auto addedDuplicates = stats.duplicates.size() - initialDuplicatesCount;
-            LMS_LOG(SCANNER, INFO, "Duplicate files check completed: " << addedDuplicates << " duplicates detected");
-        }
-        catch (const std::exception& e)
-        {
-            LMS_LOG(SCANNER, ERROR, "Duplicate files check failed: " << e.what());
-            return false;
-        }
-
+        // Always check for everything
         return true;
     }
+
+    void ScanStepCheckForDuplicatedFiles::process(ScanContext& context)
+    {
+        using namespace db;
+
+        Session& session{ _db.getTLSSession() };
+        auto transaction{ session.createReadTransaction() };
+
+        const RangeResults<TrackId> tracks = Track::findIdsTrackMBIDDuplicates(session);
+        for (const TrackId trackId : tracks.results)
+        {
+            if (_abortScan)
+                break;
+
+            const Track::pointer track{ Track::find(session, trackId) };
+            if (auto trackMBID{ track->getTrackMBID() })
+            {
+                LMS_LOG(DBUPDATER, INFO, "Found duplicated track MBID [" << trackMBID->getAsString() << "], file: " << track->getAbsoluteFilePath().string() << " - " << track->getName());
+                context.stats.duplicates.emplace_back(ScanDuplicate{ track->getId(), DuplicateReason::SameTrackMBID });
+                context.currentStepStats.processedElems++;
+                _progressCallback(context.currentStepStats);
+            }
+        }
+
+        LMS_LOG(DBUPDATER, DEBUG, "Found " << context.currentStepStats.processedElems << " duplicated audio files");
+    }
 } // namespace lms::scanner
-
-

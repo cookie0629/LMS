@@ -1,31 +1,39 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include "core/ILogger.hpp"
-
 #include <filesystem>
-#include <fstream>
 #include <iosfwd>
 #include <list>
 #include <mutex>
 #include <unordered_map>
 
+#include "core/ILogger.hpp"
+
 namespace lms::core::logging
 {
-    /**
-     * @brief 日志器实现类
-     */
     class Logger final : public ILogger
     {
     public:
-        /**
-         * @brief 构造函数
-         * @param minSeverity 最小严重级别
-         * @param logFilePath 日志文件路径（空表示输出到控制台）
-         */
         Logger(Severity minSeverity, const std::filesystem::path& logFilePath);
-        
         ~Logger() override;
-        
         Logger(const Logger&) = delete;
         Logger& operator=(const Logger&) = delete;
 
@@ -34,19 +42,11 @@ namespace lms::core::logging
         void processLog(const Log& log) override;
         void processLog(Module module, Severity severity, std::string_view message) override;
 
-        /**
-         * @brief 添加输出流
-         * @param os 输出流引用
-         * @param severity 严重级别
-         */
         void addOutputStream(std::ostream& os, Severity severity);
 
-        /**
-         * @brief 输出流包装器（包含互斥锁）
-         */
         struct OutputStream
         {
-            explicit OutputStream(std::ostream& os);
+            OutputStream(std::ostream& os);
 
             std::mutex mutex;
             std::ostream& stream;
@@ -57,4 +57,3 @@ namespace lms::core::logging
         std::unique_ptr<std::ofstream> _logFileStream;
     };
 } // namespace lms::core::logging
-

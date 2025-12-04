@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2021 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <Wt/Dbo/ptr.h>
@@ -6,32 +25,27 @@
 
 namespace lms::db
 {
-    /**
-     * @brief 对象指针基类
-     */
     class ObjectPtrBase
     {
     protected:
         static void checkWriteTransaction(Wt::Dbo::Session& session);
     };
 
-    /**
-     * @brief 对象指针模板类
-     */
     template<typename T>
     class ObjectPtr : public ObjectPtrBase
     {
     public:
         ObjectPtr() = default;
-        ObjectPtr(const Wt::Dbo::ptr<T>& obj) : _obj{ obj } {}
-        ObjectPtr(Wt::Dbo::ptr<T>&& obj) : _obj{ std::move(obj) } {}
+        ObjectPtr(const Wt::Dbo::ptr<T>& obj)
+            : _obj{ obj } {}
+        ObjectPtr(Wt::Dbo::ptr<T>&& obj)
+            : _obj{ std::move(obj) } {}
 
         const T* operator->() const { return _obj.get(); }
-        T* operator->() { return const_cast<T*>(_obj.get()); }
         operator bool() const { return _obj.get(); }
         bool operator!() const { return !_obj.get(); }
         bool operator==(const ObjectPtr& other) const { return _obj == other._obj; }
-        bool operator!=(const ObjectPtr& other) const { return _obj != other._obj; }
+        bool operator!=(const ObjectPtr& other) const { return other._obj != _obj; }
 
         auto modify()
         {
@@ -51,45 +65,26 @@ namespace lms::db
         Wt::Dbo::ptr<T> _obj;
     };
 
-    /**
-     * @brief 数据库对象基类模板
-     * 
-     * @tparam T 对象类型
-     * @tparam ObjectIdType ID类型
-     */
     template<typename T, typename ObjectIdType>
     class Object : public Wt::Dbo::Dbo<T>
     {
-        static_assert(std::is_base_of_v<IdType, ObjectIdType>);
-        static_assert(!std::is_same_v<IdType, ObjectIdType>);
+        static_assert(std::is_base_of_v<db::IdType, ObjectIdType>);
+        static_assert(!std::is_same_v<db::IdType, ObjectIdType>);
 
     public:
         using pointer = ObjectPtr<T>;
-        using ObjectId = ObjectIdType;
+        using IdType = ObjectIdType;
 
-        /**
-         * @brief 获取对象ID
-         */
-        ObjectId getId() const 
-        { 
-            // 直接返回 Wt::Dbo 的 id()，它应该返回与 ObjectId 兼容的类型
-            // 注意：Wt::Dbo::Dbo<T>::id() 返回的是 dbo_traits<T>::IdType
-            // 在我们的实现中，这应该是 long long 或 int64_t
-            auto idValue = Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id();
-            // 直接使用值构造，通过显式指定类型避免歧义
-            typename ObjectId::ValueType value = static_cast<typename ObjectId::ValueType>(idValue);
-            // 使用 IdType 的显式构造函数
-            return ObjectId(static_cast<typename ObjectId::ValueType>(value));
-        }
+        IdType getId() const { return Wt::Dbo::Dbo<T>::self()->Wt::Dbo::template Dbo<T>::id(); }
 
-        // 禁止直接使用 id()，必须使用 getId()
+        // catch some misuses
         typename Wt::Dbo::dbo_traits<T>::IdType id() const = delete;
 
     protected:
         template<typename>
         friend class ObjectPtr;
 
-        // 从ObjectPtr获取原始dbo指针
+        // Can get raw dbo ptr only from Objects
         template<typename SomeObject>
         static Wt::Dbo::ptr<SomeObject> getDboPtr(const ObjectPtr<SomeObject>& ptr)
         {
@@ -97,4 +92,3 @@ namespace lms::db
         }
     };
 } // namespace lms::db
-

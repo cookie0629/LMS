@@ -1,3 +1,4 @@
+
 /*
  * Copyright (C) 2018 Emeric Poupon
  *
@@ -190,5 +191,3 @@ namespace lms::som
         std::vector<value_type> _values;
     };
 } // namespace lms::som
-
-

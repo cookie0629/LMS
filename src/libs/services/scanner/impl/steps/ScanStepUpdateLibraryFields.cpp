@@ -1,140 +1,94 @@
+/*
+ * Copyright (C) 2023 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ScanStepUpdateLibraryFields.hpp"
 
-#include <filesystem>
-#include <vector>
-
-#include "core/IConfig.hpp"
-#include "core/ILogger.hpp"
-#include "core/Path.hpp"
-#include "core/Service.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
 #include "database/objects/Directory.hpp"
 #include "database/objects/MediaLibrary.hpp"
 
+#include "MediaLibraryInfo.hpp"
+#include "ScanContext.hpp"
+#include "ScannerSettings.hpp"
+
 namespace lms::scanner
 {
-    namespace
+    bool ScanStepUpdateLibraryFields::needProcess([[maybe_unused]] const ScanContext& context) const
     {
-        bool isPathInside(const std::filesystem::path& root, const std::filesystem::path& candidate)
-        {
-            if (root.empty())
-            {
-                return false;
-            }
-
-            auto rootGeneric = root.generic_string();
-            auto candidateGeneric = candidate.generic_string();
-
-            if (rootGeneric.empty() || candidateGeneric.empty())
-            {
-                return false;
-            }
-
-            if (rootGeneric.back() != '/')
-            {
-                rootGeneric.push_back('/');
-            }
-
-            return candidateGeneric == rootGeneric.substr(0, rootGeneric.size() - 1) ||
-                   candidateGeneric.rfind(rootGeneric, 0) == 0;
-        }
-    } // namespace
-
-    ScanStepUpdateLibraryFields::ScanStepUpdateLibraryFields(db::IDb& db, const ScannerSettings& settings)
-        : ScanStepBase{ db, settings }
-    {
-    }
-
-    bool ScanStepUpdateLibraryFields::execute(ScanStats& stats)
-    {
-        LMS_LOG(SCANNER, INFO, "Starting update library fields step");
-
-        try
-        {
-            std::filesystem::path mediaLibraryPath;
-            if (auto* config = lms::core::Service<lms::core::IConfig>::get())
-            {
-                mediaLibraryPath = config->getPath("media-library-path", std::filesystem::path{});
-            }
-
-            if (mediaLibraryPath.empty())
-            {
-                LMS_LOG(SCANNER, WARNING, "Media library path not configured, skipping update library fields step");
-                return true;
-            }
-
-            auto& session = getDb().getTLSSession();
-
-            db::MediaLibrary::pointer mediaLibrary;
-            {
-                auto readTx = session.createReadTransaction();
-                mediaLibrary = db::MediaLibrary::find(session, mediaLibraryPath);
-                readTx.commit();
-            }
-
-            if (!mediaLibrary)
-            {
-                auto writeTx = session.createWriteTransaction();
-                mediaLibrary = db::MediaLibrary::getOrCreate(
-                    session,
-                    core::pathUtils::getFilename(mediaLibraryPath),
-                    mediaLibraryPath);
-                writeTx.commit();
-            }
-
-            std::vector<db::Directory::pointer> directories;
-            {
-                auto readTx = session.createReadTransaction();
-                db::Directory::find(session, [&directories](const db::Directory::pointer& dir) {
-                    directories.push_back(dir);
-                });
-                readTx.commit();
-            }
-
-            std::size_t updatedCount = 0;
-
-            auto writeTx = session.createWriteTransaction();
-            for (auto& directory : directories)
-            {
-                if (!directory)
-                {
-                    continue;
-                }
-
-                const auto dirPath = directory->getAbsolutePath();
-                if (!isPathInside(mediaLibraryPath, dirPath))
-                {
-                    continue;
-                }
-
-                const auto currentLibraryId = directory->getMediaLibraryId();
-                if (currentLibraryId == mediaLibrary->getId())
-                {
-                    continue;
-                }
-
-                directory.modify()->setMediaLibrary(mediaLibrary);
-                ++updatedCount;
-            }
-            writeTx.commit();
-
-            if (updatedCount > 0)
-            {
-                stats.updates += updatedCount;
-            }
-
-            LMS_LOG(SCANNER, INFO, "Update library fields step completed: " << updatedCount << " directories updated");
-        }
-        catch (const std::exception& e)
-        {
-            LMS_LOG(SCANNER, ERROR, "Update library fields step failed: " << e.what());
-            return false;
-        }
-
+        // Fast enough when nothing to do
         return true;
     }
+
+    void ScanStepUpdateLibraryFields::process(ScanContext& context)
+    {
+        processDirectories(context);
+    }
+
+    void ScanStepUpdateLibraryFields::processDirectories(ScanContext& context)
+    {
+        for (const MediaLibraryInfo& mediaLibrary : _settings.mediaLibraries)
+        {
+            if (_abortScan)
+                break;
+
+            processDirectory(context, mediaLibrary);
+        }
+    }
+
+    void ScanStepUpdateLibraryFields::processDirectory(ScanContext& context, const MediaLibraryInfo& mediaLibrary)
+    {
+        db::Session& session{ _db.getTLSSession() };
+
+        constexpr std::size_t batchSize = 100;
+
+        db::RangeResults<db::DirectoryId> entries;
+        while (!_abortScan)
+        {
+            {
+                auto transaction{ session.createReadTransaction() };
+
+                entries = db::Directory::findMismatchedLibrary(session, db::Range{ 0, batchSize }, mediaLibrary.rootDirectory, mediaLibrary.id);
+            };
+
+            if (entries.results.empty())
+                break;
+
+            {
+                auto transaction{ session.createWriteTransaction() };
+
+                db::MediaLibrary::pointer library{ db::MediaLibrary::find(session, mediaLibrary.id) };
+                if (!library) // may be legit
+                    break;
+
+                for (const db::DirectoryId directoryId : entries.results)
+                {
+                    if (_abortScan)
+                        break;
+
+                    db::Directory::pointer directory{ db::Directory::find(session, directoryId) };
+                    directory.modify()->setMediaLibrary(library);
+                }
+            }
+
+            context.currentStepStats.processedElems += entries.results.size();
+            _progressCallback(context.currentStepStats);
+        }
+    }
 } // namespace lms::scanner
-
-

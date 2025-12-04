@@ -1,18 +1,40 @@
-add_library(lmsaudio STATIC
-    impl/AudioFileInfo.cpp
-)
+pkg_check_modules(LIBAV IMPORTED_TARGET libavcodec libavutil libavformat)
+pkg_check_modules(Taglib REQUIRED IMPORTED_TARGET taglib)
 
-target_include_directories(lmsaudio PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-)
+add_library(lmsaudio STATIC
+	impl/ffmpeg/AudioFile.cpp
+	impl/ffmpeg/AudioFileInfo.cpp
+	impl/ffmpeg/ImageReader.cpp
+	impl/ffmpeg/TagReader.cpp
+	impl/ffmpeg/Transcoder.cpp
+	impl/ffmpeg/Utils.cpp
+	impl/taglib/AudioFileInfo.cpp
+	impl/taglib/ImageReader.cpp
+	impl/taglib/TagReader.cpp
+	impl/taglib/Utils.cpp
+	impl/AudioTypes.cpp
+	impl/ImageReader.cpp
+	impl/ParseAudioFileInfo.cpp
+	impl/TagReader.cpp
+	)
+
+target_include_directories(lmsaudio INTERFACE
+	include
+	)
+
+target_include_directories(lmsaudio PRIVATE
+	include
+	${AVCODEC_INCLUDE_DIR}
+	${AVFORMAT_INCLUDE_DIR}
+	${AVUTIL_INCLUDE_DIR}
+	)
 
 target_link_libraries(lmsaudio PUBLIC
-    lmscore
-)
+	lmscore
+	std::filesystem
+	)
 
-find_package(TagLib QUIET)
-if (TagLib_FOUND)
-    target_link_libraries(lmsaudio PUBLIC TagLib::TagLib)
-    target_compile_definitions(lmsaudio PRIVATE LMS_AUDIO_HAS_TAGLIB=1)
-endif()
-
+target_link_libraries(lmsaudio PRIVATE
+	PkgConfig::LIBAV
+	PkgConfig::Taglib
+	)

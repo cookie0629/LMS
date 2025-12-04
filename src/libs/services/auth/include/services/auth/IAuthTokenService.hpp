@@ -1,7 +1,25 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <chrono>
-#include <functional>
 #include <memory>
 #include <optional>
 #include <string_view>
@@ -9,6 +27,7 @@
 #include <Wt/WDateTime.h>
 #include <boost/asio/ip/address.hpp>
 
+#include "core/LiteralString.hpp"
 #include "database/objects/UserId.hpp"
 
 namespace lms::db
@@ -18,108 +37,49 @@ namespace lms::db
 
 namespace lms::auth
 {
-    /**
-     * @brief 认证令牌服务接口
-     */
     class IAuthTokenService
     {
     public:
         virtual ~IAuthTokenService() = default;
 
-        /**
-         * @brief 认证令牌信息
-         */
         struct AuthTokenInfo
         {
             db::UserId userId;
             Wt::WDateTime expiry;
-            Wt::WDateTime lastUsed;
-            std::size_t useCount;
+            Wt::WDateTime lastUsed; // if called by processAuthToken, value is before processing
+            std::size_t useCount;   // if called by processAuthToken, value is before processing
             std::optional<std::size_t> maxUseCount;
         };
 
-        /**
-         * @brief 认证令牌处理结果
-         */
         struct AuthTokenProcessResult
         {
             enum class State
             {
-                Granted,   // 授权通过
-                Throttled, // 限流
-                Denied,    // 拒绝
+                Granted,
+                Throttled,
+                Denied,
             };
 
             State state{ State::Denied };
             std::optional<AuthTokenInfo> authTokenInfo;
         };
 
-        /**
-         * @brief 域参数
-         */
         struct DomainParameters
         {
             std::optional<std::size_t> tokenMaxUseCount;
             std::optional<std::chrono::seconds> tokenDuration;
         };
 
-        /**
-         * @brief 注册域
-         * @param domain 域名
-         * @param params 域参数
-         */
-        virtual void registerDomain(std::string_view domain, const DomainParameters& params) = 0;
+        virtual void registerDomain(core::LiteralString domain, const DomainParameters& params) = 0;
 
-        /**
-         * @brief 处理认证令牌
-         * @param domain 域名
-         * @param clientAddress 客户端IP地址
-         * @param tokenValue 令牌值
-         * @return 处理结果
-         */
-        virtual AuthTokenProcessResult processAuthToken(
-            std::string_view domain,
-            const boost::asio::ip::address& clientAddress,
-            std::string_view tokenValue) = 0;
+        // Processing an auth token will make its useCount increase by 1. Token is then automatically deleted if its maxUsecount is reached
+        virtual AuthTokenProcessResult processAuthToken(core::LiteralString domain, const boost::asio::ip::address& clientAddress, std::string_view tokenValue) = 0;
 
-        /**
-         * @brief 访问认证令牌
-         * @param domain 域名
-         * @param userId 用户ID
-         * @param visitor 访问器函数
-         */
-        virtual void visitAuthTokens(
-            std::string_view domain,
-            db::UserId userId,
-            std::function<void(const AuthTokenInfo& info, std::string_view token)> visitor) = 0;
+        virtual void visitAuthTokens(core::LiteralString domain, db::UserId userid, std::function<void(const AuthTokenInfo& info, std::string_view token)> visitor) = 0;
 
-        /**
-         * @brief 创建认证令牌
-         * @param domain 域名
-         * @param userId 用户ID
-         * @param token 令牌值
-         */
-        virtual void createAuthToken(
-            std::string_view domain,
-            db::UserId userId,
-            std::string_view token) = 0;
-
-        /**
-         * @brief 清除认证令牌
-         * @param domain 域名
-         * @param userId 用户ID
-         */
-        virtual void clearAuthTokens(std::string_view domain, db::UserId userId) = 0;
+        virtual void createAuthToken(core::LiteralString domain, db::UserId userid, std::string_view token) = 0;
+        virtual void clearAuthTokens(core::LiteralString domain, db::UserId userid) = 0;
     };
 
-    /**
-     * @brief 创建认证令牌服务
-     * @param db 数据库引用
-     * @param maxThrottlerEntryCount 限流器最大条目数
-     * @return 认证令牌服务实例
-     */
-    std::unique_ptr<IAuthTokenService> createAuthTokenService(
-        db::IDb& db,
-        std::size_t maxThrottlerEntryCount = 1000);
+    std::unique_ptr<IAuthTokenService> createAuthTokenService(db::IDb& db, std::size_t maxThrottlerEntryCount);
 } // namespace lms::auth
-

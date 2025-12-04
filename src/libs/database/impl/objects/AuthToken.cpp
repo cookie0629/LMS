@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "database/objects/AuthToken.hpp"
 
 #include <Wt/Dbo/Impl.h>
@@ -5,7 +24,10 @@
 
 #include "database/Session.hpp"
 #include "database/objects/User.hpp"
-#include "database/Utils.hpp"
+
+#include "Utils.hpp"
+#include "traits/IdTypeTraits.hpp"
+#include "traits/StringViewTraits.hpp"
 
 DBO_INSTANTIATE_TEMPLATES(lms::db::AuthToken)
 
@@ -29,80 +51,47 @@ namespace lms::db
     {
         session.checkReadTransaction();
 
-        auto query = session.getDboSession()->query<int>("SELECT COUNT(*) FROM auth_token");
-        auto result = utils::fetchQuerySingleResult(query);
-        return result ? *result : 0;
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<int>("SELECT COUNT(*) FROM auth_token"));
     }
 
     AuthToken::pointer AuthToken::find(Session& session, AuthTokenId id)
     {
-        session.checkReadTransaction();
-        
-        auto query = session.getDboSession()->query<Wt::Dbo::ptr<AuthToken>>("SELECT a_t from auth_token a_t").where("a_t.id = ?").bind(id.getValue());
-        auto result = utils::fetchQuerySingleResult(query);
-        return result ? *result : pointer{};
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<Wt::Dbo::ptr<AuthToken>>("SELECT a_t from auth_token a_t").where("a_t.id = ?").bind(id));
     }
 
     AuthToken::pointer AuthToken::find(Session& session, std::string_view domain, std::string_view value)
     {
-        // 注意：这里不检查事务类型，因为可能在读或写事务中调用
-        // session.checkReadTransaction();
+        session.checkReadTransaction();
 
         auto query{ session.getDboSession()->find<AuthToken>() };
-        query.where("domain = ?").bind(std::string{ domain });
-        query.where("value = ?").bind(std::string{ value });
+        query.where("domain = ?").bind(domain);
+        query.where("value = ?").bind(value);
 
-        auto result = utils::fetchQuerySingleResult(query);
-        return result ? *result : pointer{};
+        return utils::fetchQuerySingleResult(query);
     }
 
     void AuthToken::find(Session& session, std::string_view domain, UserId userId, std::function<void(const AuthToken::pointer&)> visitor)
     {
-        // 注意：这里不检查事务类型，因为可能在读或写事务中调用
-        // session.checkReadTransaction();
+        session.checkReadTransaction();
 
         auto query{ session.getDboSession()->find<AuthToken>() };
-        query.where("domain = ?").bind(std::string{ domain });
-        query.where("user_id = ?").bind(userId.getValue());
+        query.where("domain = ?").bind(domain);
+        query.where("user_id = ?").bind(userId);
 
-        auto results = query.resultList();
-        for (const auto& result : results)
-        {
-            visitor(result);
-        }
+        utils::forEachQueryResult(query, visitor);
     }
 
     void AuthToken::removeExpiredTokens(Session& session, std::string_view domain, const Wt::WDateTime& now)
     {
         session.checkWriteTransaction();
 
-        // 使用 Wt::Dbo 的查询接口删除过期令牌
-        // 通过查找并删除的方式实现
-        auto query = session.getDboSession()->find<AuthToken>();
-        query.where("expiry < ?").bind(now);
-        query.where("domain = ?").bind(std::string{ domain });
-        // 遍历并删除
-        auto results = query.resultList();
-        for (auto& token : results)
-        {
-            token.remove();
-        }
+        utils::executeCommand(*session.getDboSession(), "DELETE FROM auth_token WHERE expiry < ? AND domain = ?", now, domain);
     }
 
-    void AuthToken::clearUserTokens(Session& session, std::string_view domain, UserId userId)
+    void AuthToken::clearUserTokens(Session& session, std::string_view domain, UserId user)
     {
         session.checkWriteTransaction();
 
-        // 使用 Wt::Dbo 的查询接口删除用户令牌
-        auto query = session.getDboSession()->find<AuthToken>();
-        query.where("domain = ?").bind(std::string{ domain });
-        query.where("user_id = ?").bind(userId.getValue());
-        // 遍历并删除
-        auto results = query.resultList();
-        for (auto& token : results)
-        {
-            token.remove();
-        }
+        utils::executeCommand(*session.getDboSession(), "DELETE FROM auth_token WHERE user_id = ? AND domain = ?", user, domain);
     }
 } // namespace lms::db
-

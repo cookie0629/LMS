@@ -1,36 +1,41 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <mutex>
 #include <string>
 #include <vector>
-#include <filesystem>
-#include <memory>
 
 #include <Wt/Dbo/SqlConnectionPool.h>
+
+#include "core/RecursiveSharedMutex.hpp"
 
 #include "database/IDb.hpp"
 
 namespace lms::db
 {
-    class Session;
-
-    /**
-     * @brief 数据库实现类
-     */
     class Db : public IDb
     {
     public:
-        /**
-         * @brief 构造函数
-         * @param dbPath 数据库文件路径
-         * @param connectionCount 连接池大小
-         */
         Db(const std::filesystem::path& dbPath, std::size_t connectionCount);
 
-        /**
-         * @brief 执行 SQL 语句
-         * @param sql SQL 语句
-         */
         void executeSql(const std::string& sql);
 
     private:
@@ -39,36 +44,22 @@ namespace lms::db
 
         friend class Session;
 
-        /**
-         * @brief 获取线程局部存储的数据库会话
-         */
         Session& getTLSSession() override;
 
-        /**
-         * @brief 获取连接池
-         */
+        core::RecursiveSharedMutex& getMutex() { return _sharedMutex; }
         Wt::Dbo::SqlConnectionPool& getConnectionPool() { return *_connectionPool; }
 
-        /**
-         * @brief 记录数据库配置信息
-         */
         void logPageSize();
         void logCacheSize();
         void logCompileOptions();
-
-        /**
-         * @brief 数据库完整性检查
-         */
         void performQuickCheck();
         void performIntegrityCheck();
+        void performForeignKeyConstraintsCheck();
 
-        /**
-         * @brief 作用域连接类
-         */
         class ScopedConnection
         {
         public:
-            explicit ScopedConnection(Wt::Dbo::SqlConnectionPool& pool);
+            ScopedConnection(Wt::Dbo::SqlConnectionPool& pool);
             ~ScopedConnection();
 
             Wt::Dbo::SqlConnection* operator->() const;
@@ -82,10 +73,11 @@ namespace lms::db
             std::unique_ptr<Wt::Dbo::SqlConnection> _connection;
         };
 
+        core::RecursiveSharedMutex _sharedMutex;
         std::unique_ptr<Wt::Dbo::SqlConnectionPool> _connectionPool;
+
         std::mutex _tlsSessionsMutex;
         std::vector<std::unique_ptr<Session>> _tlsSessions;
-        std::filesystem::path _dbPath;
     };
-} // namespace lms::db
 
+} // namespace lms::db

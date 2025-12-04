@@ -1,38 +1,84 @@
-# 主程序
 
-# 源文件（待创建）
-set(LMS_SOURCES
-    main.cpp
-    # ui/LmsApplication.cpp
-    # ui/LmsInitApplication.cpp
-)
+add_executable(lms
+	main.cpp
+	ui/Auth.cpp
+	ui/LmsApplication.cpp
+	ui/LmsApplicationManager.cpp
+	ui/LmsInitApplication.cpp
+	ui/LmsTheme.cpp
+	ui/MediaPlayer.cpp
+	ui/ModalManager.cpp
+	ui/NotificationContainer.cpp
+	ui/PlayQueue.cpp
+	ui/SettingsView.cpp
+	ui/State.cpp
+	ui/Tooltip.cpp
+	ui/Utils.cpp
+	ui/admin/debug/Database.cpp
+	ui/admin/debug/Tracing.cpp
+	ui/admin/About.cpp
+	ui/admin/DebugToolsView.cpp
+	ui/admin/InitWizardView.cpp
+	ui/admin/MediaLibrariesView.cpp
+	ui/admin/MediaLibraryModal.cpp
+	ui/admin/ScannerController.cpp
+	ui/admin/ScannerReportResource.cpp
+	ui/admin/ScanSettingsView.cpp
+	ui/admin/UserView.cpp
+	ui/admin/UsersView.cpp
+	ui/common/DoubleValidator.cpp
+	ui/common/InfiniteScrollingContainer.cpp
+	ui/common/LoadingIndicator.cpp
+	ui/common/LoginNameValidator.cpp
+	ui/common/MandatoryValidator.cpp
+	ui/common/PasswordValidator.cpp
+	ui/common/Template.cpp
+	ui/common/UppercaseValidator.cpp
+	ui/common/UUIDValidator.cpp
+	ui/explore/ArtistCollector.cpp
+	ui/explore/ArtistListHelpers.cpp
+	ui/explore/ArtistView.cpp
+	ui/explore/ArtistsView.cpp
+	ui/explore/DatabaseCollectorBase.cpp
+	ui/explore/Explore.cpp
+	ui/explore/Filters.cpp
+	ui/explore/PlayQueueController.cpp
+	ui/explore/ReleaseCollector.cpp
+	ui/explore/ReleaseHelpers.cpp
+	ui/explore/ReleasesView.cpp
+	ui/explore/ReleaseView.cpp
+	ui/explore/ReleaseTypes.cpp
+	ui/explore/TrackCollector.cpp
+	ui/explore/TrackListHelpers.cpp
+	ui/explore/TrackListView.cpp
+	ui/explore/TrackListsView.cpp
+	ui/explore/TracksView.cpp
+	ui/resource/AudioFileResource.cpp
+	ui/resource/AudioTranscodingResource.cpp
+	ui/resource/ArtworkResource.cpp
+	ui/resource/DownloadResource.cpp
+	)
 
-# 创建可执行文件
-add_executable(lms ${LMS_SOURCES})
+target_include_directories(lms PRIVATE
+	ui/
+	)
 
-# 链接库
-target_link_libraries(lms
-    PRIVATE
-    lmscore
-    lmsdatabase
-    lmsscanner
-    lmsartwork
-    lmsaudio
-    lmsimage
-    ${WT_LIBRARIES}
-    ${Boost_LIBRARIES}
-    ${AVCODEC_LIBRARIES}
-    ${AVFORMAT_LIBRARIES}
-    ${AVUTIL_LIBRARIES}
-    ${TAGLIB_LIBRARIES}
-    SQLite::SQLite3
-    OpenSSL::SSL
-    OpenSSL::Crypto
-    ${PUGIXML_LIBRARIES}
-    ${CONFIGPP_LIBRARIES}
-    pthread
-)
+target_link_libraries(lms PRIVATE
+	Boost::iostreams
+	Wt::Wt
+	Wt::HTTP
+	lmsaudio
+	lmsauth
+	lmsdatabase
+	lmsfeedback
+	lmsrecommendation
+	lmsscanner
+	lmsscrobbling
+	lmspodcast
+	lmsartwork
+	lmssubsonic
+	lmstranscoding
+	lmscore
+	)
 
-# 安装
-install(TARGETS lms RUNTIME DESTINATION bin)
-
+install(TARGETS lms DESTINATION bin)

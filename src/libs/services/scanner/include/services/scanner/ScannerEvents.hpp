@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2020 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <Wt/WDateTime.h>
@@ -7,25 +26,23 @@
 
 namespace lms::scanner
 {
-    /**
-     * @brief 扫描事件
-     */
+
     struct Events
     {
-        // 扫描被中止时调用
+        // Called if scan was aborted
         Wt::Signal<> scanAborted;
 
-        // 扫描开始时调用
+        // Called just after scan start
         Wt::Signal<> scanStarted;
 
-        // 扫描完成时调用（参数表示是否有变更）
+        // Called just after scan complete (true if changes have been made)
         Wt::Signal<ScanStats> scanComplete;
 
-        // 扫描进行中调用
+        // Called during scan in progress
         Wt::Signal<ScanStepStats> scanInProgress;
 
-        // 扫描被调度后调用
+        // Called after a schedule
         Wt::Signal<Wt::WDateTime> scanScheduled;
     };
-} // namespace lms::scanner
 
+} // namespace lms::scanner

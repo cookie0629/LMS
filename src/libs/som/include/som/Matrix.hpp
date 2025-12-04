@@ -126,5 +126,3 @@ namespace std
         }
     };
 } // namespace std
-
-

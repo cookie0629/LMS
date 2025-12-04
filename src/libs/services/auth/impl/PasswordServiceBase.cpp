@@ -1,67 +1,87 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "PasswordServiceBase.hpp"
 
-#include <boost/asio/ip/address.hpp>
+#include <Wt/Auth/HashFunction.h>
+#include <Wt/WRandom.h>
 
+#include "internal/InternalPasswordService.hpp"
+#ifdef LMS_SUPPORT_PAM
+    #include "pam/PAMPasswordService.hpp"
+#endif // LMS_SUPPORT_PAM
+
+#include "core/ILogger.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
-#include "database/objects/User.hpp"
+#include "services/auth/Types.hpp"
 
 namespace lms::auth
 {
+    static const Wt::Auth::SHA1HashFunction sha1Function;
+
+    std::unique_ptr<IPasswordService> createPasswordService(std::string_view backend, db::IDb& db, std::size_t maxThrottlerEntryCount)
+    {
+        if (backend == "internal")
+            return std::make_unique<InternalPasswordService>(db, maxThrottlerEntryCount);
+#ifdef LMS_SUPPORT_PAM
+        if (backend == "PAM")
+            return std::make_unique<PAMPasswordService>(db, maxThrottlerEntryCount);
+#endif // LMS_SUPPORT_PAM
+        throw Exception{ "Authentication backend '" + std::string{ backend } + "' not supported!" };
+    }
+
     PasswordServiceBase::PasswordServiceBase(db::IDb& db, std::size_t maxThrottlerEntries)
         : AuthServiceBase{ db }
         , _loginThrottler{ maxThrottlerEntries }
     {
     }
 
-    IPasswordService::CheckResult PasswordServiceBase::checkUserPassword(
-        const boost::asio::ip::address& clientAddress,
-        std::string_view loginName,
-        std::string_view password)
+    PasswordServiceBase::CheckResult PasswordServiceBase::checkUserPassword(const boost::asio::ip::address& clientAddress, std::string_view loginName, std::string_view password)
     {
-        std::unique_lock lock(_mutex);
+        LMS_LOG(AUTH, DEBUG, "Checking password for user '" << loginName << "'");
 
-        CheckResult result;
-
-        // 检查是否被限流
-        if (_loginThrottler.isClientThrottled(clientAddress))
+        // Do not waste too much resource on brute force attacks (optim)
         {
-            result.state = CheckResult::State::Throttled;
-            return result;
+            std::shared_lock lock{ _mutex };
+
+            if (_loginThrottler.isClientThrottled(clientAddress))
+                return CheckResult{ .state = CheckResult::State::Throttled, .userId = {} };
         }
 
-        // 检查密码
-        bool passwordValid = checkUserPassword(loginName, password);
+        const bool match{ checkUserPassword(loginName, password) };
+        {
+            std::unique_lock lock{ _mutex };
 
-        if (passwordValid)
-        {
-            // 密码正确
-            _loginThrottler.onGoodClientAttempt(clientAddress);
-            
-            // 获取用户ID
-            auto& session = getDbSession();
-            auto transaction = session.createReadTransaction();
-            auto user = db::User::find(session, loginName);
-            
-            if (user)
+            if (_loginThrottler.isClientThrottled(clientAddress))
+                return CheckResult{ .state = CheckResult::State::Throttled, .userId = {} };
+
+            if (match)
             {
-                result.state = CheckResult::State::Granted;
-                result.userId = user->getId();
-                onUserAuthenticated(result.userId);
+                _loginThrottler.onGoodClientAttempt(clientAddress);
+
+                const db::UserId userId{ getOrCreateUser(loginName) };
+                onUserAuthenticated(userId);
+                return CheckResult{ .state = CheckResult::State::Granted, .userId = userId };
             }
-            else
-            {
-                result.state = CheckResult::State::Denied;
-            }
-        }
-        else
-        {
-            // 密码错误
+
             _loginThrottler.onBadClientAttempt(clientAddress);
-            result.state = CheckResult::State::Denied;
+            return CheckResult{ .state = CheckResult::State::Denied, .userId = {} };
         }
-
-        return result;
     }
 } // namespace lms::auth
-

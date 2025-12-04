@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2015 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <filesystem>
@@ -5,6 +24,7 @@
 #include <optional>
 
 #include "database/objects/ArtworkId.hpp"
+#include "database/objects/TrackListId.hpp"
 #include "image/IEncodedImage.hpp"
 
 namespace lms::db
@@ -14,42 +34,26 @@ namespace lms::db
 
 namespace lms::artwork
 {
-    /**
-     * @brief Artwork Service 接口
-     */
     class IArtworkService
     {
     public:
         virtual ~IArtworkService() = default;
 
-        /**
-         * @brief 获取图像（简化版，不支持调整大小）
-         * @param artworkId Artwork ID
-         * @return 编码图像，如果不存在则返回 nullptr
-         */
-        virtual std::shared_ptr<image::IEncodedImage> getImage(db::ArtworkId artworkId) = 0;
+        // Helpers to get preferred artworks
+        virtual db::ArtworkId findTrackListImage(db::TrackListId trackListId) = 0;
 
-        /**
-         * @brief 获取默认专辑封面
-         */
+        // Image retrieval, no width means original size
+        virtual std::shared_ptr<image::IEncodedImage> getImage(db::ArtworkId artworkId, std::optional<image::ImageSize> width) = 0;
+
+        // Svg images don't have image "size"
         virtual std::shared_ptr<image::IEncodedImage> getDefaultReleaseArtwork() = 0;
-
-        /**
-         * @brief 获取默认艺术家图像
-         */
         virtual std::shared_ptr<image::IEncodedImage> getDefaultArtistArtwork() = 0;
 
-        /**
-         * @brief 清空缓存
-         */
         virtual void flushCache() = 0;
+
+        virtual void setJpegQuality(unsigned quality) = 0; // from 1 to 100
     };
 
-    /**
-     * @brief 创建 Artwork Service
-     */
-    std::unique_ptr<IArtworkService> createArtworkService(db::IDb& db,
-                                                          const std::filesystem::path& defaultReleaseCoverSvgPath,
-                                                          const std::filesystem::path& defaultArtistImageSvgPath);
-} // namespace lms::artwork
+    std::unique_ptr<IArtworkService> createArtworkService(db::IDb& db, const std::filesystem::path& defaultReleaseCoverSvgPath, const std::filesystem::path& defaultArtistImageSvgPath);
 
+} // namespace lms::artwork

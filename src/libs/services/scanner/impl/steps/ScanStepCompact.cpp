@@ -1,46 +1,39 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ScanStepCompact.hpp"
 
-#include "core/ILogger.hpp"
-#include "core/Service.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
 
+#include "ScanContext.hpp"
+
 namespace lms::scanner
 {
-    ScanStepCompact::ScanStepCompact(db::IDb& db, const ScannerSettings& settings)
-        : ScanStepBase{ db, settings }
+    bool ScanStepCompact::needProcess(const ScanContext& context) const
     {
+        // Don't auto compact as it may be too annoying to block the whole application for very large databases
+        return context.scanOptions.compact;
     }
 
-    bool ScanStepCompact::execute(ScanStats& stats)
+    void ScanStepCompact::process([[maybe_unused]] ScanContext& context)
     {
-        (void)stats;
-
-        if (!getScannerSettings().enableCompact)
-        {
-            LMS_LOG(SCANNER, INFO, "Compact step disabled, skipping");
-            return true;
-        }
-
-        LMS_LOG(SCANNER, INFO, "Starting compact database step");
-
-        try
-        {
-            auto& session = getDb().getTLSSession();
-
-            // VACUUM 不能在显式事务中运行，直接执行即可
-            session.execute("VACUUM;");
-
-            LMS_LOG(SCANNER, INFO, "Compact database step completed");
-        }
-        catch (const std::exception& e)
-        {
-            LMS_LOG(SCANNER, ERROR, "Compact database step failed: " << e.what());
-            return false;
-        }
-
-        return true;
+        _db.getTLSSession().vacuum();
     }
 } // namespace lms::scanner
-
-

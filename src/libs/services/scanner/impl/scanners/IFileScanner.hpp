@@ -1,50 +1,44 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <filesystem>
-#include <memory>
 #include <span>
 
+#include "core/LiteralString.hpp"
+
 #include "FileToScan.hpp"
-#include "IFileScanOperation.hpp"
 
 namespace lms::scanner
 {
-    /**
-     * @brief 文件扫描器接口
-     */
+    class IFileScanOperation;
+
     class IFileScanner
     {
     public:
         virtual ~IFileScanner() = default;
 
-        /**
-         * @brief 获取扫描器名称
-         */
-        virtual std::string_view getName() const = 0;
-
-        /**
-         * @brief 获取支持的文件列表（完整文件名匹配）
-         */
+        virtual core::LiteralString getName() const = 0;
         virtual std::span<const std::filesystem::path> getSupportedFiles() const = 0;
-
-        /**
-         * @brief 获取支持的扩展名列表
-         */
         virtual std::span<const std::filesystem::path> getSupportedExtensions() const = 0;
-
-        /**
-         * @brief 检查文件是否需要扫描
-         * @param file 待扫描的文件
-         * @return true 如果需要扫描，false 否则
-         */
         virtual bool needsScan(const FileToScan& file) const = 0;
-
-        /**
-         * @brief 创建扫描操作
-         * @param fileToScan 待扫描的文件
-         * @return 扫描操作对象
-         */
         virtual std::unique_ptr<IFileScanOperation> createScanOperation(FileToScan&& fileToScan) const = 0;
     };
 } // namespace lms::scanner
-

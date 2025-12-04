@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2013-2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <optional>
@@ -6,11 +25,15 @@
 
 #include <Wt/Dbo/Field.h>
 
+#include "core/EnumSet.hpp"
+#include "database/IdType.hpp"
 #include "database/Object.hpp"
 #include "database/Types.hpp"
 #include "database/objects/ArtistId.hpp"
-#include "database/objects/TrackArtistLinkId.hpp"
+#include "database/objects/ReleaseId.hpp"
 #include "database/objects/TrackId.hpp"
+
+LMS_DECLARE_IDTYPE(TrackArtistLinkId)
 
 namespace lms::db
 {
@@ -18,31 +41,72 @@ namespace lms::db
     class Session;
     class Track;
 
-    /**
-     * @brief Track 和 Artist 之间的关联（简化版）
-     */
     class TrackArtistLink final : public Object<TrackArtistLink, TrackArtistLinkId>
     {
     public:
+        struct FindParameters
+        {
+            std::optional<Range> range;
+            std::optional<TrackArtistLinkType> linkType; // if set, only artists that have produced at least one track with this link type
+            ArtistId artist;                             // if set, links involved with this artist
+            ReleaseId release;                           // if set, artists involved in this release
+            TrackId track;                               // if set, artists involved in this track
+            std::optional<bool> mbidMatched;
+            TrackArtistLinkSortMethod sortMethod{ TrackArtistLinkSortMethod::None };
+
+            FindParameters& setRange(std::optional<Range> _range)
+            {
+                range = _range;
+                return *this;
+            }
+            FindParameters& setLinkType(std::optional<TrackArtistLinkType> _linkType)
+            {
+                linkType = _linkType;
+                return *this;
+            }
+            FindParameters& setArtist(ArtistId _artist)
+            {
+                artist = _artist;
+                return *this;
+            }
+            FindParameters& setRelease(ReleaseId _release)
+            {
+                release = _release;
+                return *this;
+            }
+            FindParameters& setTrack(TrackId _track)
+            {
+                track = _track;
+                return *this;
+            }
+            FindParameters& setMBIDMatched(std::optional<bool> _mbidMatched)
+            {
+                mbidMatched = _mbidMatched;
+                return *this;
+            }
+            FindParameters& setSortMethod(TrackArtistLinkSortMethod _method)
+            {
+                sortMethod = _method;
+                return *this;
+            }
+        };
+
         TrackArtistLink() = default;
+        TrackArtistLink(const ObjectPtr<Track>& track, const ObjectPtr<Artist>& artist, TrackArtistLinkType type, std::string_view subType, bool artistMBIDMatched);
 
-        // find
+        static void find(Session& session, TrackId trackId, const std::function<void(const pointer&, const ObjectPtr<Artist>&)>& func);
+        static void find(Session& session, const FindParameters& parameters, const std::function<void(const pointer&)>& func);
+        static pointer find(Session& session, TrackArtistLinkId linkId);
         static std::size_t getCount(Session& session);
-        static pointer find(Session& session, TrackArtistLinkId id);
-        static void find(Session& session, TrackId trackId, const std::function<void(const pointer&)>& func);
-        static void removeForTrack(Session& session, TrackId trackId);
-
-        // create
-        static pointer create(Session& session,
-                             const ObjectPtr<Track>& track,
-                             const ObjectPtr<Artist>& artist,
-                             TrackArtistLinkType type,
-                             std::string_view subType = {},
-                             bool artistMBIDMatched = false);
+        static pointer create(Session& session, const ObjectPtr<Track>& track, const ObjectPtr<Artist>& artist, TrackArtistLinkType type, std::string_view subType, bool artistMBIDMatched = false);
+        static pointer create(Session& session, const ObjectPtr<Track>& track, const ObjectPtr<Artist>& artist, TrackArtistLinkType type, bool artistMBIDMatched = false);
+        static core::EnumSet<TrackArtistLinkType> findUsedTypes(Session& session, ArtistId _artist);
+        static void findArtistNameNoLongerMatch(Session& session, std::optional<Range> range, const std::function<void(const pointer&)>& func);
+        static void findWithArtistNameAmbiguity(Session& session, std::optional<Range> range, bool allowArtistMBIDFallback, const std::function<void(const pointer&)>& func);
 
         // accessors
-        ObjectPtr<Track> getTrack() const;
-        ObjectPtr<Artist> getArtist() const;
+        ObjectPtr<Track> getTrack() const { return _track; }
+        ObjectPtr<Artist> getArtist() const { return _artist; }
         TrackArtistLinkType getType() const { return _type; }
         std::string_view getSubType() const { return _subType; }
         std::string_view getArtistName() const { return _artistName; }
@@ -68,16 +132,13 @@ namespace lms::db
         }
 
     private:
-        friend class Session;
-
         TrackArtistLinkType _type{ TrackArtistLinkType::Artist };
         std::string _subType;
-        std::string _artistName;     // 标签中的艺术家名称
-        std::string _artistSortName; // 标签中的艺术家排序名称
+        std::string _artistName;     // as it was in the tags
+        std::string _artistSortName; // as it was in the tags
         bool _artistMBIDMatched{};
 
         Wt::Dbo::ptr<Track> _track;
         Wt::Dbo::ptr<Artist> _artist;
     };
 } // namespace lms::db
-

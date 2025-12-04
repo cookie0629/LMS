@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <cassert>
@@ -5,25 +24,13 @@
 
 namespace lms::core
 {
-    /**
-     * @brief 服务定位器模式模板类
-     * 
-     * 用于全局服务管理，支持依赖注入
-     * 
-     * @tparam Class 服务接口类型
-     * @tparam Tag 标签类型（用于区分相同接口的不同服务）
-     */
+    // Tag can be used if you have multiple services sharing the same interface
     template<typename Class, typename Tag = Class>
     class Service
     {
     public:
         Service() = default;
-        
-        /**
-         * @brief 构造函数，自动注册服务
-         * @param service 服务实例
-         */
-        explicit Service(std::unique_ptr<Class> service)
+        Service(std::unique_ptr<Class> service)
         {
             assign(std::move(service));
         }
@@ -33,73 +40,35 @@ namespace lms::core
             clear();
         }
 
-        // 禁止拷贝和移动
         Service(const Service&) = delete;
         Service(Service&&) = delete;
         Service& operator=(const Service&) = delete;
         Service& operator=(Service&&) = delete;
 
-        /**
-         * @brief 指针访问操作符
-         * @return 服务指针
-         */
         Class* operator->() const
         {
             return Service<Class, Tag>::get();
         }
 
-        /**
-         * @brief 解引用操作符
-         * @return 服务引用
-         */
         Class& operator*() const
         {
             return *Service<Class, Tag>::get();
         }
 
-        /**
-         * @brief 获取服务实例
-         * @return 服务指针，如果未注册则返回 nullptr
-         */
-        static Class* get() 
-        { 
-            return _service.get(); 
-        }
+        static Class* get() { return _service.get(); }
+        static bool exists() { return _service.get(); }
 
-        /**
-         * @brief 检查服务是否存在
-         * @return true 如果服务已注册，false 否则
-         */
-        static bool exists() 
-        { 
-            return _service.get() != nullptr; 
-        }
-
-        /**
-         * @brief 注册服务实例
-         * @tparam SubClass 服务实现类类型
-         * @param service 服务实例
-         * @return 服务引用
-         */
         template<typename SubClass>
         static Class& assign(std::unique_ptr<SubClass> service)
         {
-            assert(!_service && "Service already assigned");
+            assert(!_service);
             _service = std::move(service);
             return *get();
         }
 
     private:
-        /**
-         * @brief 清除服务实例
-         */
-        static void clear() 
-        { 
-            _service.reset(); 
-        }
+        static void clear() { _service.reset(); }
 
-        // 静态服务实例（每个模板特化一个实例）
         static inline std::unique_ptr<Class> _service;
     };
 } // namespace lms::core
-

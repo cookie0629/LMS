@@ -1,48 +1,93 @@
+/*
+ * Copyright (C) 2023 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <memory>
+#include <functional>
 
-#include "services/scanner/ScannerStats.hpp"
-#include "../ScannerSettings.hpp"
+#include "IScanStep.hpp"
+#include "ScanErrorLogger.hpp"
+
+namespace lms::core
+{
+    class IJobScheduler;
+}
 
 namespace lms::db
 {
     class IDb;
-    class Session;
-} // namespace lms::db
+}
 
 namespace lms::scanner
 {
-    /**
-     * @brief 扫描步骤基类
-     */
-    class ScanStepBase
+    class FileScanners;
+    struct ScannerSettings;
+    struct ScanStepStats;
+    struct ScanContext;
+
+    class ScanStepBase : public IScanStep
     {
     public:
-        ScanStepBase(db::IDb& db, const ScannerSettings& settings);
-        virtual ~ScanStepBase() = default;
+        using ProgressCallback = std::function<void(const ScanStepStats& stats)>;
+
+        struct InitParams
+        {
+            core::IJobScheduler& jobScheduler;
+            const ScannerSettings& settings;
+            const ScannerSettings* lastScanSettings{};
+            ProgressCallback progressCallback;
+            bool& abortScan;
+            db::IDb& db;
+            const FileScanners& fileScanners;
+            const std::filesystem::path& cachePath;
+        };
+        ScanStepBase(InitParams& initParams);
+        ~ScanStepBase() override;
         ScanStepBase(const ScanStepBase&) = delete;
         ScanStepBase& operator=(const ScanStepBase&) = delete;
 
-        /**
-         * @brief 执行扫描步骤
-         * @param stats 扫描统计信息（会被更新）
-         * @return true 如果成功，false 如果失败
-         */
-        virtual bool execute(ScanStats& stats) = 0;
-
-        /**
-         * @brief 获取步骤名称
-         */
-        virtual ScanStep getStep() const = 0;
-
     protected:
-        db::IDb& getDb() { return _db; }
-        const ScannerSettings& getScannerSettings() const { return _settings; }
+        core::IJobScheduler& getJobScheduler() { return _jobScheduler; };
+        const ScannerSettings* getLastScanSettings() const { return _lastScanSettings; }
+        const FileScanners& getFileScanners() const { return _fileScanners; }
+        const std::filesystem::path& getCachePath() const { return _cachePath; }
+
+        void addError(ScanContext& context, std::shared_ptr<ScanError> error);
+
+        template<typename T, typename... CtrArgs>
+        void addError(ScanContext& context, CtrArgs&&... args)
+        {
+            auto error{ std::make_shared<T>(std::forward<CtrArgs>(args)...) };
+            addError(context, error);
+        }
+
+        const ScannerSettings& _settings;
+        ProgressCallback _progressCallback;
+        bool& _abortScan;
+        db::IDb& _db;
 
     private:
-        db::IDb& _db;
-        const ScannerSettings& _settings;
+        core::IJobScheduler& _jobScheduler;
+        const FileScanners& _fileScanners;
+        const std::filesystem::path& _cachePath;
+
+        const ScannerSettings* _lastScanSettings{};
+        ScanErrorLogger _scanErrorLogger;
     };
 } // namespace lms::scanner
-

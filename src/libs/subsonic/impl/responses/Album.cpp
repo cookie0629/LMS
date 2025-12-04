@@ -236,5 +236,3 @@ namespace lms::api::subsonic
         return albumNode;
     }
 } // namespace lms::api::subsonic
-
-

@@ -1,11 +1,40 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "database/objects/User.hpp"
+
+#include <cassert>
 
 #include <Wt/Dbo/Impl.h>
 #include <Wt/Dbo/WtSqlTraits.h>
 
 #include "database/Session.hpp"
-#include "database/Utils.hpp"
+#include "database/objects/Artist.hpp"
 #include "database/objects/AuthToken.hpp"
+#include "database/objects/Release.hpp"
+#include "database/objects/Track.hpp"
+#include "database/objects/UIState.hpp"
+
+#include "Utils.hpp"
+#include "traits/EnumSetTraits.hpp"
+#include "traits/IdTypeTraits.hpp"
+#include "traits/StringViewTraits.hpp"
 
 DBO_INSTANTIATE_TEMPLATES(lms::db::User)
 
@@ -24,34 +53,56 @@ namespace lms::db
     std::size_t User::getCount(Session& session)
     {
         session.checkReadTransaction();
-        return session.getDboSession()->find<User>().resultList().size();
+
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<int>("SELECT COUNT(*) FROM user"));
     }
 
-    User::pointer User::find(Session& session, UserId id)
+    RangeResults<UserId> User::find(Session& session, const FindParameters& params)
     {
         session.checkReadTransaction();
-        Wt::Dbo::ptr<User> ptr = session.getDboSession()->find<User>()
-            .where("id = ?")
-            .bind(id.getValue());
-        return ptr ? User::pointer(ptr) : User::pointer();
+
+        auto query{ session.getDboSession()->query<UserId>("SELECT id FROM user") };
+
+        if (params.scrobblingBackend)
+            query.where("scrobbling_backend = ?").bind(*params.scrobblingBackend);
+        if (params.feedbackBackend)
+            query.where("feedback_backend = ?").bind(*params.feedbackBackend);
+
+        return utils::execRangeQuery<UserId>(query, params.range);
     }
 
-    User::pointer User::find(Session& session, std::string_view loginName)
+    void User::find(Session& session, const FindParameters& params, const std::function<void(const User::pointer&)>& func)
     {
-        session.checkReadTransaction();
-        Wt::Dbo::ptr<User> ptr = session.getDboSession()->find<User>()
-            .where("login_name = ?")
-            .bind(std::string{ loginName });
-        return ptr ? User::pointer(ptr) : User::pointer();
+        auto query{ session.getDboSession()->find<User>() };
+
+        if (params.scrobblingBackend)
+            query.where("scrobbling_backend = ?").bind(*params.scrobblingBackend);
+        if (params.feedbackBackend)
+            query.where("feedback_backend = ?").bind(*params.feedbackBackend);
+
+        return utils::forEachQueryRangeResult(query, params.range, func);
     }
 
     User::pointer User::findDemoUser(Session& session)
     {
         session.checkReadTransaction();
-        Wt::Dbo::ptr<User> ptr = session.getDboSession()->find<User>()
-            .where("type = ?")
-            .bind(static_cast<int>(UserType::DEMO));
-        return ptr ? User::pointer(ptr) : User::pointer();
+
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<Wt::Dbo::ptr<User>>("SELECT u from user u").where("u.type = ?").bind(UserType::DEMO));
+    }
+
+    User::pointer User::find(Session& session, UserId id)
+    {
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<Wt::Dbo::ptr<User>>("SELECT u from user u").where("u.id = ?").bind(id));
+    }
+
+    User::pointer User::find(Session& session, std::string_view name)
+    {
+        return utils::fetchQuerySingleResult(session.getDboSession()->query<Wt::Dbo::ptr<User>>("SELECT u from user u").where("u.login_name = ?").bind(name));
+    }
+
+    void User::setSubsonicDefaultTranscodingOutputBitrate(Bitrate bitrate)
+    {
+        assert(isAudioBitrateAllowed(bitrate));
+        _subsonicDefaultTranscodingOutputBitrate = bitrate;
     }
 } // namespace lms::db
-

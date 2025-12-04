@@ -1,28 +1,50 @@
+/*
+ * Copyright (C) 2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "Config.hpp"
 
-#include <filesystem>
-#include <stdexcept>
-#include <sstream>
-#include <string>
+#include "core/Exception.hpp"
 
 namespace lms::core
 {
-    Config::Config(const std::filesystem::path& configPath)
-        : _configFilePath(configPath.string())
+    std::unique_ptr<IConfig> createConfig(const std::filesystem::path& p)
+    {
+        return std::make_unique<Config>(p);
+    }
+
+    Config::Config(const std::filesystem::path& p)
     {
         try
         {
-            _config.readFile(configPath.string().c_str());
+            _config.readFile(p.c_str());
         }
-        catch (const libconfig::FileIOException& e)
+        catch (libconfig::FileIOException& e)
         {
-            throw std::runtime_error("无法读取配置文件: " + _configFilePath + " - " + e.what());
+            throw LmsException{ "Cannot open config file '" + p.string() + "'" };
         }
-        catch (const libconfig::ParseException& e)
+        catch (libconfig::ParseException& e)
         {
-            std::ostringstream oss;
-            oss << "配置文件解析错误: " << e.getFile() << ":" << e.getLine() << " - " << e.getError();
-            throw std::runtime_error(oss.str());
+            throw LmsException{ "Cannot parse config file '" + p.string() + "', line = " + std::to_string(e.getLine()) + ", error = '" + e.getError() + "'" };
+        }
+        catch (libconfig::ConfigException& e)
+        {
+            throw LmsException{ "Cannot open config file '" + p.string() + "': " + e.what() };
         }
     }
 
@@ -32,48 +54,40 @@ namespace lms::core
         {
             return static_cast<const char*>(_config.lookup(std::string{ setting }));
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
             return def;
         }
     }
 
-    void Config::visitStrings(std::string_view setting, 
-                              std::function<void(std::string_view)> func, 
-                              std::initializer_list<std::string_view> def)
+    void Config::visitStrings(std::string_view setting, std::function<void(std::string_view)> _func, std::initializer_list<std::string_view> defs)
     {
         try
         {
-            const libconfig::Setting& values = _config.lookup(std::string{ setting });
-            for (int i = 0; i < values.getLength(); ++i)
-            {
-                func(static_cast<const char*>(values[i]));
-            }
+            const libconfig::Setting& values{ _config.lookup(std::string{ setting }) };
+            for (int i{}; i < values.getLength(); ++i)
+                _func(static_cast<const char*>(values[i]));
         }
         catch (const libconfig::SettingNotFoundException&)
         {
-            // 配置项不存在，使用默认值
-            for (std::string_view defValue : def)
-            {
-                func(defValue);
-            }
+            for (std::string_view def : defs)
+                _func(def);
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
-            // 其他配置异常，忽略
         }
     }
 
-    std::filesystem::path Config::getPath(std::string_view setting, const std::filesystem::path& def)
+    std::filesystem::path Config::getPath(std::string_view setting, const std::filesystem::path& path)
     {
         try
         {
-            const char* res = _config.lookup(std::string{ setting });
+            const char* res{ _config.lookup(std::string{ setting }) };
             return std::filesystem::path{ std::string(res) };
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
-            return def;
+            return path;
         }
     }
 
@@ -81,9 +95,9 @@ namespace lms::core
     {
         try
         {
-            return static_cast<unsigned long>(_config.lookup(std::string{ setting }));
+            return static_cast<unsigned int>(_config.lookup(std::string{ setting }));
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
             return def;
         }
@@ -95,7 +109,7 @@ namespace lms::core
         {
             return _config.lookup(std::string{ setting });
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
             return def;
         }
@@ -107,16 +121,9 @@ namespace lms::core
         {
             return _config.lookup(std::string{ setting });
         }
-        catch (const libconfig::ConfigException&)
+        catch (libconfig::ConfigException&)
         {
             return def;
         }
     }
-
-    // 工厂函数
-    std::unique_ptr<IConfig> createConfig(const std::filesystem::path& configPath)
-    {
-        return std::make_unique<Config>(configPath);
-    }
 } // namespace lms::core
-

@@ -1,3 +1,4 @@
+
 add_library(lmssubsonic STATIC
 	impl/endpoints/AlbumSongLists.cpp
 	impl/endpoints/Bookmarks.cpp
@@ -35,16 +36,16 @@ add_library(lmssubsonic STATIC
 	impl/SubsonicResource.cpp
 	impl/SubsonicResourceConfig.cpp
 	impl/SubsonicResponse.cpp
-)
+	)
 
 target_include_directories(lmssubsonic INTERFACE
 	include
-)
+	)
 
 target_include_directories(lmssubsonic PRIVATE
 	impl
 	include
-)
+	)
 
 target_link_libraries(lmssubsonic PRIVATE
 	lmsartwork
@@ -59,14 +60,16 @@ target_link_libraries(lmssubsonic PRIVATE
 	lmstranscoding
 	lmscore
 	std::filesystem
-)
+	)
 
 target_link_libraries(lmssubsonic PUBLIC
 	Wt::Wt
-)
+	)
 
 if(BUILD_TESTING)
 	add_subdirectory(test)
 endif()
 
-
+if (BUILD_BENCHMARKS)
+       add_subdirectory(bench)
+endif()

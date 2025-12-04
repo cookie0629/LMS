@@ -1,74 +1,67 @@
+/*
+ * Copyright (C) 2025 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
+
+#include <mutex>
 
 #include <Wt/Dbo/Transaction.h>
 
+#include "core/ITraceLogger.hpp"
+
+namespace lms::core
+{
+    class RecursiveSharedMutex;
+}
+
 namespace lms::db
 {
-    class Session;
-
-    /**
-     * @brief 写事务类
-     */
     class WriteTransaction
     {
     public:
-        /**
-         * @brief 构造函数，开始写事务
-         * @param session 数据库会话
-         */
-        explicit WriteTransaction(Session& session);
-
-        /**
-         * @brief 析构函数，自动提交或回滚
-         */
         ~WriteTransaction();
 
-        /**
-         * @brief 提交事务
-         */
-        void commit();
-
-        /**
-         * @brief 回滚事务
-         */
-        void rollback();
+    private:
+        friend class Session;
+        WriteTransaction(core::RecursiveSharedMutex& mutex, Wt::Dbo::Session& session);
 
         WriteTransaction(const WriteTransaction&) = delete;
         WriteTransaction& operator=(const WriteTransaction&) = delete;
 
-    private:
+        const std::unique_lock<core::RecursiveSharedMutex> _lock;
+        const core::tracing::ScopedTrace _trace; // before actual transaction
         Wt::Dbo::Transaction _transaction;
-        bool _committed;
     };
 
-    /**
-     * @brief 读事务类
-     */
     class ReadTransaction
     {
     public:
-        /**
-         * @brief 构造函数，开始读事务
-         * @param session 数据库会话
-         */
-        explicit ReadTransaction(Session& session);
-
-        /**
-         * @brief 析构函数，自动提交
-         */
         ~ReadTransaction();
 
-        /**
-         * @brief 提交事务
-         */
-        void commit();
+    private:
+        friend class Session;
+        ReadTransaction(Wt::Dbo::Session& session);
 
         ReadTransaction(const ReadTransaction&) = delete;
         ReadTransaction& operator=(const ReadTransaction&) = delete;
 
-    private:
+        const core::tracing::ScopedTrace _trace; // before actual transaction
         Wt::Dbo::Transaction _transaction;
-        bool _committed;
     };
 } // namespace lms::db
-

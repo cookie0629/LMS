@@ -14,6 +14,9 @@
 # EXTERNAL cache entries
 ########################
 
+//Build benchmarks
+BUILD_BENCHMARKS:BOOL=OFF
+
 //The directory containing a CMake configuration file for Boost.
 Boost_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0
 
@@ -22,9 +25,11 @@ Boost_FILESYSTEM_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_files
 //Path to a file.
 Boost_INCLUDE_DIR:PATH=/usr/include
 
+Boost_IOSTREAMS_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_iostreams.so.1.83.0
+
 Boost_PROGRAM_OPTIONS_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_program_options.so.1.83.0
 
-Boost_SYSTEM_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_system.so.1.83.0
+Boost_THREAD_LIBRARY_RELEASE:STRING=/usr/lib/x86_64-linux-gnu/libboost_thread.so.1.83.0
 
 //Path to a program.
 CMAKE_ADDR2LINE:FILEPATH=/usr/bin/addr2line
@@ -34,7 +39,7 @@ CMAKE_AR:FILEPATH=/usr/bin/ar
 
 //Choose the type of build, options are: None Debug Release RelWithDebInfo
 // MinSizeRel ...
-CMAKE_BUILD_TYPE:STRING=Release
+CMAKE_BUILD_TYPE:STRING=
 
 //Enable/Disable color output during build.
 CMAKE_COLOR_MAKEFILE:BOOL=ON
@@ -64,6 +69,32 @@ CMAKE_CXX_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
 
 //Flags used by the CXX compiler during RELWITHDEBINFO builds.
 CMAKE_CXX_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
+
+//C compiler
+CMAKE_C_COMPILER:FILEPATH=/usr/bin/cc
+
+//A wrapper around 'ar' adding the appropriate '--plugin' option
+// for the GCC compiler
+CMAKE_C_COMPILER_AR:FILEPATH=/usr/bin/gcc-ar-12
+
+//A wrapper around 'ranlib' adding the appropriate '--plugin' option
+// for the GCC compiler
+CMAKE_C_COMPILER_RANLIB:FILEPATH=/usr/bin/gcc-ranlib-12
+
+//Flags used by the C compiler during all build types.
+CMAKE_C_FLAGS:STRING=
+
+//Flags used by the C compiler during DEBUG builds.
+CMAKE_C_FLAGS_DEBUG:STRING=-g
+
+//Flags used by the C compiler during MINSIZEREL builds.
+CMAKE_C_FLAGS_MINSIZEREL:STRING=-Os -DNDEBUG
+
+//Flags used by the C compiler during RELEASE builds.
+CMAKE_C_FLAGS_RELEASE:STRING=-O3 -DNDEBUG
+
+//Flags used by the C compiler during RELWITHDEBINFO builds.
+CMAKE_C_FLAGS_RELWITHDEBINFO:STRING=-O2 -g -DNDEBUG
 
 //Path to a program.
 CMAKE_DLLTOOL:FILEPATH=CMAKE_DLLTOOL-NOTFOUND
@@ -134,19 +165,19 @@ CMAKE_PROJECT_DESCRIPTION:STATIC=
 CMAKE_PROJECT_HOMEPAGE_URL:STATIC=
 
 //Value Computed by CMake
-CMAKE_PROJECT_NAME:STATIC=LMS
+CMAKE_PROJECT_NAME:STATIC=lms
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION:STATIC=1.0.0
+CMAKE_PROJECT_VERSION:STATIC=3.72.1
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MAJOR:STATIC=1
+CMAKE_PROJECT_VERSION_MAJOR:STATIC=3
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_MINOR:STATIC=0
+CMAKE_PROJECT_VERSION_MINOR:STATIC=72
 
 //Value Computed by CMake
-CMAKE_PROJECT_VERSION_PATCH:STATIC=0
+CMAKE_PROJECT_VERSION_PATCH:STATIC=1
 
 //Value Computed by CMake
 CMAKE_PROJECT_VERSION_TWEAK:STATIC=
@@ -216,17 +247,26 @@ CMAKE_TAPI:FILEPATH=CMAKE_TAPI-NOTFOUND
 // Studio IDE projects all commands are done without /nologo.
 CMAKE_VERBOSE_MAKEFILE:BOOL=FALSE
 
-//Enable Core library tests
-ENABLE_CORE_TESTS:BOOL=ON
+//TRUE if we have the C++ filesystem headers
+CXX_FILESYSTEM_HAVE_FS:BOOL=TRUE
 
-//Value Computed by CMake
-LMS_BINARY_DIR:STATIC=/mnt/e/LightweightMusicServer/build
+//The header that should be included to obtain the filesystem APIs
+CXX_FILESYSTEM_HEADER:STRING=filesystem
 
-//Value Computed by CMake
-LMS_IS_TOP_LEVEL:STATIC=ON
+//The C++ namespace that contains the filesystem APIs
+CXX_FILESYSTEM_NAMESPACE:STRING=std::filesystem
 
-//Value Computed by CMake
-LMS_SOURCE_DIR:STATIC=/mnt/e/LightweightMusicServer
+//Path to a library.
+DL_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libdl.a
+
+//Enable tests
+ENABLE_TESTS:BOOL=OFF
+
+//TRUE if we can compile and link a program using std::filesystem
+Filesystem_FOUND:BOOL=TRUE
+
+//Image library
+LMS_IMAGE_BACKEND:STRING=stb
 
 //Path to a library.
 OPENSSL_CRYPTO_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libcrypto.so
@@ -237,20 +277,35 @@ OPENSSL_INCLUDE_DIR:PATH=/usr/include
 //Path to a library.
 OPENSSL_SSL_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libssl.so
 
+//Path to a file.
+PAM_INCLUDE_DIR:PATH=/usr/include
+
+//Path to a library.
+PAM_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libpam.so
+
 //Arguments to supply to pkg-config
 PKG_CONFIG_ARGN:STRING=
 
 //pkg-config executable
 PKG_CONFIG_EXECUTABLE:FILEPATH=/usr/bin/pkg-config
 
+//The directory containing a CMake configuration file for Pugixml.
+Pugixml_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/pugixml
+
 //Path to a file.
-SQLite3_INCLUDE_DIR:PATH=/usr/include
+STB_IMAGE_INCLUDE_DIR:PATH=/usr/include/stb
 
-//Path to a library.
-SQLite3_LIBRARY:FILEPATH=/usr/lib/x86_64-linux-gnu/libsqlite3.so
+//Path to a file.
+STB_IMAGE_RESIZE2_INCLUDE_DIR:PATH=STB_IMAGE_RESIZE2_INCLUDE_DIR-NOTFOUND
 
-//The directory containing a CMake configuration file for TagLib.
-TagLib_DIR:PATH=TagLib_DIR-NOTFOUND
+//Path to a file.
+STB_IMAGE_RESIZE_INCLUDE_DIR:PATH=/usr/include/stb
+
+//Use the PAM backend authentication API
+USE_PAM:BOOL=ON
+
+//The directory containing a CMake configuration file for Wt.
+Wt_DIR:PATH=/usr/local/lib/cmake/wt
 
 //The directory containing a CMake configuration file for boost_atomic.
 boost_atomic_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_atomic-1.83.0
@@ -261,44 +316,47 @@ boost_filesystem_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_filesystem-1.83.
 //The directory containing a CMake configuration file for boost_headers.
 boost_headers_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_headers-1.83.0
 
+//The directory containing a CMake configuration file for boost_iostreams.
+boost_iostreams_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_iostreams-1.83.0
+
 //The directory containing a CMake configuration file for boost_program_options.
 boost_program_options_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_program_options-1.83.0
 
-//The directory containing a CMake configuration file for boost_system.
-boost_system_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_system-1.83.0
+//The directory containing a CMake configuration file for boost_thread.
+boost_thread_DIR:PATH=/usr/lib/x86_64-linux-gnu/cmake/boost_thread-1.83.0
+
+//Value Computed by CMake
+lms_BINARY_DIR:STATIC=/mnt/e/LightweightMusicServer/build
+
+//Value Computed by CMake
+lms_IS_TOP_LEVEL:STATIC=ON
+
+//Value Computed by CMake
+lms_SOURCE_DIR:STATIC=/mnt/e/LightweightMusicServer
 
 //Path to a library.
-pkgcfg_lib_AVCODEC_avcodec:FILEPATH=/usr/lib/x86_64-linux-gnu/libavcodec.so
+pkgcfg_lib_Archive_archive:FILEPATH=/usr/lib/x86_64-linux-gnu/libarchive.so
 
 //Path to a library.
-pkgcfg_lib_AVFORMAT_avformat:FILEPATH=/usr/lib/x86_64-linux-gnu/libavformat.so
+pkgcfg_lib_Config++_config++:FILEPATH=/usr/lib/x86_64-linux-gnu/libconfig++.so
 
 //Path to a library.
-pkgcfg_lib_AVUTIL_avutil:FILEPATH=/usr/lib/x86_64-linux-gnu/libavutil.so
+pkgcfg_lib_LIBAV_avcodec:FILEPATH=/usr/lib/x86_64-linux-gnu/libavcodec.so
 
 //Path to a library.
-pkgcfg_lib_CONFIGPP_config++:FILEPATH=/usr/lib/x86_64-linux-gnu/libconfig++.so
+pkgcfg_lib_LIBAV_avformat:FILEPATH=/usr/lib/x86_64-linux-gnu/libavformat.so
 
 //Path to a library.
-pkgcfg_lib_PUGIXML_pugixml:FILEPATH=/usr/lib/x86_64-linux-gnu/libpugixml.so
+pkgcfg_lib_LIBAV_avutil:FILEPATH=/usr/lib/x86_64-linux-gnu/libavutil.so
 
 //Path to a library.
-pkgcfg_lib_TAGLIB_tag:FILEPATH=/usr/lib/x86_64-linux-gnu/libtag.so
+pkgcfg_lib_Taglib_tag:FILEPATH=/usr/lib/x86_64-linux-gnu/libtag.so
 
 //Path to a library.
-pkgcfg_lib_TAGLIB_z:FILEPATH=/usr/lib/x86_64-linux-gnu/libz.so
+pkgcfg_lib_Taglib_z:FILEPATH=/usr/lib/x86_64-linux-gnu/libz.so
 
 //Path to a library.
-pkgcfg_lib_WT_wt:FILEPATH=/usr/local/lib/libwt.so
-
-//Path to a library.
-pkgcfg_lib_WT_wtdbo:FILEPATH=/usr/local/lib/libwtdbo.so
-
-//Path to a library.
-pkgcfg_lib_WT_wtdbosqlite3:FILEPATH=/usr/local/lib/libwtdbosqlite3.so
-
-//Path to a library.
-pkgcfg_lib_WT_wthttp:FILEPATH=/usr/local/lib/libwthttp.so
+pkgcfg_lib_XXHASH_xxhash:FILEPATH=/usr/lib/x86_64-linux-gnu/libxxhash.so
 
 //Path to a library.
 pkgcfg_lib__OPENSSL_crypto:FILEPATH=/usr/lib/x86_64-linux-gnu/libcrypto.so
@@ -311,111 +369,41 @@ pkgcfg_lib__OPENSSL_ssl:FILEPATH=/usr/lib/x86_64-linux-gnu/libssl.so
 # INTERNAL cache entries
 ########################
 
-AVCODEC_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVCODEC_CFLAGS_I:INTERNAL=
-AVCODEC_CFLAGS_OTHER:INTERNAL=
-AVCODEC_FOUND:INTERNAL=1
-AVCODEC_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
-AVCODEC_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVCODEC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavcodec
-AVCODEC_LDFLAGS_OTHER:INTERNAL=
-AVCODEC_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVCODEC_LIBRARIES:INTERNAL=avcodec
-AVCODEC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVCODEC_LIBS:INTERNAL=
-AVCODEC_LIBS_L:INTERNAL=
-AVCODEC_LIBS_OTHER:INTERNAL=
-AVCODEC_LIBS_PATHS:INTERNAL=
-AVCODEC_MODULE_NAME:INTERNAL=libavcodec
-AVCODEC_PREFIX:INTERNAL=/usr
-AVCODEC_STATIC_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVCODEC_STATIC_CFLAGS_I:INTERNAL=
-AVCODEC_STATIC_CFLAGS_OTHER:INTERNAL=
-AVCODEC_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVCODEC_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavcodec;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lwebpmux;-pthread;-lm;-latomic;-llzma;-ldav1d;-lrsvg-2;-lm;-lgio-2.0;-lgdk_pixbuf-2.0;-lgobject-2.0;-lglib-2.0;-lcairo;-lzvbi;-lpthread;-lm;-lpng;-lz;-lsnappy;-lstdc++;-laom;-lcodec2;-lgsm;-ljxl;-ljxl_threads;-lmp3lame;-lm;-lopenjp2;-lopus;-lrav1e;-lm;-lshine;-lspeex;-lSvtAv1Enc;-ltheoraenc;-ltheoradec;-logg;-ltwolame;-lvorbis;-lvorbisenc;-lwebp;-lx264;-lx265;-lxvidcore;-lz;-lva;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-L/usr/lib/x86_64-linux-gnu;-lswresample;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11
-AVCODEC_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread;-pthread;-pthread
-AVCODEC_STATIC_LIBDIR:INTERNAL=
-AVCODEC_STATIC_LIBRARIES:INTERNAL=avcodec;vpx;m;vpx;m;vpx;m;vpx;m;webpmux;m;atomic;lzma;dav1d;rsvg-2;m;gio-2.0;gdk_pixbuf-2.0;gobject-2.0;glib-2.0;cairo;zvbi;pthread;m;png;z;snappy;stdc++;aom;codec2;gsm;jxl;jxl_threads;mp3lame;m;openjp2;opus;rav1e;m;shine;speex;SvtAv1Enc;theoraenc;theoradec;ogg;twolame;vorbis;vorbisenc;webp;x264;x265;xvidcore;z;va;vpl;dl;stdc++;swresample;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11
-AVCODEC_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../
-AVCODEC_STATIC_LIBS:INTERNAL=
-AVCODEC_STATIC_LIBS_L:INTERNAL=
-AVCODEC_STATIC_LIBS_OTHER:INTERNAL=
-AVCODEC_STATIC_LIBS_PATHS:INTERNAL=
-AVCODEC_VERSION:INTERNAL=60.31.102
-AVCODEC_libavcodec_INCLUDEDIR:INTERNAL=
-AVCODEC_libavcodec_LIBDIR:INTERNAL=
-AVCODEC_libavcodec_PREFIX:INTERNAL=
-AVCODEC_libavcodec_VERSION:INTERNAL=
-AVFORMAT_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVFORMAT_CFLAGS_I:INTERNAL=
-AVFORMAT_CFLAGS_OTHER:INTERNAL=
-AVFORMAT_FOUND:INTERNAL=1
-AVFORMAT_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
-AVFORMAT_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVFORMAT_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavformat
-AVFORMAT_LDFLAGS_OTHER:INTERNAL=
-AVFORMAT_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVFORMAT_LIBRARIES:INTERNAL=avformat
-AVFORMAT_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVFORMAT_LIBS:INTERNAL=
-AVFORMAT_LIBS_L:INTERNAL=
-AVFORMAT_LIBS_OTHER:INTERNAL=
-AVFORMAT_LIBS_PATHS:INTERNAL=
-AVFORMAT_MODULE_NAME:INTERNAL=libavformat
-AVFORMAT_PREFIX:INTERNAL=/usr
-AVFORMAT_STATIC_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVFORMAT_STATIC_CFLAGS_I:INTERNAL=
-AVFORMAT_STATIC_CFLAGS_OTHER:INTERNAL=
-AVFORMAT_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVFORMAT_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavformat;-lm;-latomic;-lxml2;-lbz2;-lgme;-lopenmpt;-lstdc++;-lchromaprint;-lbluray;-lz;-lgnutls;-lrabbitmq;-lrist;-lsrt-gnutls;-lssh;-lzmq;-L/usr/lib/x86_64-linux-gnu;-lavcodec;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lwebpmux;-pthread;-lm;-latomic;-llzma;-ldav1d;-lrsvg-2;-lm;-lgio-2.0;-lgdk_pixbuf-2.0;-lgobject-2.0;-lglib-2.0;-lcairo;-lzvbi;-lpthread;-lm;-lpng;-lz;-lsnappy;-lstdc++;-laom;-lcodec2;-lgsm;-ljxl;-ljxl_threads;-lmp3lame;-lm;-lopenjp2;-lopus;-lrav1e;-lm;-lshine;-lspeex;-lSvtAv1Enc;-ltheoraenc;-ltheoradec;-logg;-ltwolame;-lvorbis;-lvorbisenc;-lwebp;-lx264;-lx265;-lxvidcore;-lz;-lva;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-L/usr/lib/x86_64-linux-gnu;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lswresample;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11
-AVFORMAT_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread;-pthread;-pthread;-pthread;-pthread
-AVFORMAT_STATIC_LIBDIR:INTERNAL=
-AVFORMAT_STATIC_LIBRARIES:INTERNAL=avformat;m;atomic;xml2;bz2;gme;openmpt;stdc++;chromaprint;bluray;z;gnutls;rabbitmq;rist;srt-gnutls;ssh;zmq;avcodec;vpx;m;vpx;m;vpx;m;vpx;m;webpmux;m;atomic;lzma;dav1d;rsvg-2;m;gio-2.0;gdk_pixbuf-2.0;gobject-2.0;glib-2.0;cairo;zvbi;pthread;m;png;z;snappy;stdc++;aom;codec2;gsm;jxl;jxl_threads;mp3lame;m;openjp2;opus;rav1e;m;shine;speex;SvtAv1Enc;theoraenc;theoradec;ogg;twolame;vorbis;vorbisenc;webp;x264;x265;xvidcore;z;va;vpl;dl;stdc++;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;swresample;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11
-AVFORMAT_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../
-AVFORMAT_STATIC_LIBS:INTERNAL=
-AVFORMAT_STATIC_LIBS_L:INTERNAL=
-AVFORMAT_STATIC_LIBS_OTHER:INTERNAL=
-AVFORMAT_STATIC_LIBS_PATHS:INTERNAL=
-AVFORMAT_VERSION:INTERNAL=60.16.100
-AVFORMAT_libavformat_INCLUDEDIR:INTERNAL=
-AVFORMAT_libavformat_LIBDIR:INTERNAL=
-AVFORMAT_libavformat_PREFIX:INTERNAL=
-AVFORMAT_libavformat_VERSION:INTERNAL=
-AVUTIL_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVUTIL_CFLAGS_I:INTERNAL=
-AVUTIL_CFLAGS_OTHER:INTERNAL=
-AVUTIL_FOUND:INTERNAL=1
-AVUTIL_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
-AVUTIL_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVUTIL_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavutil
-AVUTIL_LDFLAGS_OTHER:INTERNAL=
-AVUTIL_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVUTIL_LIBRARIES:INTERNAL=avutil
-AVUTIL_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-AVUTIL_LIBS:INTERNAL=
-AVUTIL_LIBS_L:INTERNAL=
-AVUTIL_LIBS_OTHER:INTERNAL=
-AVUTIL_LIBS_PATHS:INTERNAL=
-AVUTIL_MODULE_NAME:INTERNAL=libavutil
-AVUTIL_PREFIX:INTERNAL=/usr
-AVUTIL_STATIC_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
-AVUTIL_STATIC_CFLAGS_I:INTERNAL=
-AVUTIL_STATIC_CFLAGS_OTHER:INTERNAL=
-AVUTIL_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
-AVUTIL_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11
-AVUTIL_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread
-AVUTIL_STATIC_LIBDIR:INTERNAL=
-AVUTIL_STATIC_LIBRARIES:INTERNAL=avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11
-AVUTIL_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../
-AVUTIL_STATIC_LIBS:INTERNAL=
-AVUTIL_STATIC_LIBS_L:INTERNAL=
-AVUTIL_STATIC_LIBS_OTHER:INTERNAL=
-AVUTIL_STATIC_LIBS_PATHS:INTERNAL=
-AVUTIL_VERSION:INTERNAL=58.29.100
-AVUTIL_libavutil_INCLUDEDIR:INTERNAL=
-AVUTIL_libavutil_LIBDIR:INTERNAL=
-AVUTIL_libavutil_PREFIX:INTERNAL=
-AVUTIL_libavutil_VERSION:INTERNAL=
+Archive_CFLAGS:INTERNAL=-I/usr/include
+Archive_CFLAGS_I:INTERNAL=
+Archive_CFLAGS_OTHER:INTERNAL=
+Archive_FOUND:INTERNAL=1
+Archive_INCLUDEDIR:INTERNAL=/usr/include
+Archive_INCLUDE_DIRS:INTERNAL=/usr/include
+Archive_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-larchive
+Archive_LDFLAGS_OTHER:INTERNAL=
+Archive_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+Archive_LIBRARIES:INTERNAL=archive
+Archive_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Archive_LIBS:INTERNAL=
+Archive_LIBS_L:INTERNAL=
+Archive_LIBS_OTHER:INTERNAL=
+Archive_LIBS_PATHS:INTERNAL=
+Archive_MODULE_NAME:INTERNAL=libarchive
+Archive_PREFIX:INTERNAL=/usr
+Archive_STATIC_CFLAGS:INTERNAL=-I/usr/include;-DLIBARCHIVE_STATIC
+Archive_STATIC_CFLAGS_I:INTERNAL=
+Archive_STATIC_CFLAGS_OTHER:INTERNAL=-DLIBARCHIVE_STATIC
+Archive_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
+Archive_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-larchive;-lnettle;-lacl;-llzma;-lzstd;-llz4;-lbz2;-lz;-lxml2
+Archive_STATIC_LDFLAGS_OTHER:INTERNAL=
+Archive_STATIC_LIBDIR:INTERNAL=
+Archive_STATIC_LIBRARIES:INTERNAL=archive;nettle;acl;lzma;zstd;lz4;bz2;z;xml2
+Archive_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Archive_STATIC_LIBS:INTERNAL=
+Archive_STATIC_LIBS_L:INTERNAL=
+Archive_STATIC_LIBS_OTHER:INTERNAL=
+Archive_STATIC_LIBS_PATHS:INTERNAL=
+Archive_VERSION:INTERNAL=3.7.2
+Archive_libarchive_INCLUDEDIR:INTERNAL=
+Archive_libarchive_LIBDIR:INTERNAL=
+Archive_libarchive_PREFIX:INTERNAL=
+Archive_libarchive_VERSION:INTERNAL=
 //ADVANCED property for variable: Boost_DIR
 Boost_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_ADDR2LINE
@@ -454,6 +442,22 @@ CMAKE_CXX_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
 CMAKE_CXX_FLAGS_RELEASE-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_CXX_FLAGS_RELWITHDEBINFO
 CMAKE_CXX_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER
+CMAKE_C_COMPILER-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER_AR
+CMAKE_C_COMPILER_AR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_COMPILER_RANLIB
+CMAKE_C_COMPILER_RANLIB-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS
+CMAKE_C_FLAGS-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_DEBUG
+CMAKE_C_FLAGS_DEBUG-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_MINSIZEREL
+CMAKE_C_FLAGS_MINSIZEREL-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_RELEASE
+CMAKE_C_FLAGS_RELEASE-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: CMAKE_C_FLAGS_RELWITHDEBINFO
+CMAKE_C_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_DLLTOOL
 CMAKE_DLLTOOL-ADVANCED:INTERNAL=1
 //Executable file format
@@ -480,6 +484,8 @@ CMAKE_GENERATOR_INSTANCE:INTERNAL=
 CMAKE_GENERATOR_PLATFORM:INTERNAL=
 //Name of generator toolset.
 CMAKE_GENERATOR_TOOLSET:INTERNAL=
+//Test CMAKE_HAVE_LIBC_PTHREAD
+CMAKE_HAVE_LIBC_PTHREAD:INTERNAL=1
 //Source directory with the top level CMakeLists.txt file for this
 // project
 CMAKE_HOME_DIRECTORY:INTERNAL=/mnt/e/LightweightMusicServer
@@ -502,7 +508,7 @@ CMAKE_MODULE_LINKER_FLAGS_RELWITHDEBINFO-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_NM
 CMAKE_NM-ADVANCED:INTERNAL=1
 //number of local generators
-CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=13
+CMAKE_NUMBER_OF_MAKEFILES:INTERNAL=23
 //ADVANCED property for variable: CMAKE_OBJCOPY
 CMAKE_OBJCOPY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: CMAKE_OBJDUMP
@@ -547,170 +553,197 @@ CMAKE_TAPI-ADVANCED:INTERNAL=1
 CMAKE_UNAME:INTERNAL=/usr/bin/uname
 //ADVANCED property for variable: CMAKE_VERBOSE_MAKEFILE
 CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
-CONFIGPP_CFLAGS:INTERNAL=-I/usr/include
-CONFIGPP_CFLAGS_I:INTERNAL=
-CONFIGPP_CFLAGS_OTHER:INTERNAL=
-CONFIGPP_FOUND:INTERNAL=1
-CONFIGPP_INCLUDEDIR:INTERNAL=/usr/include
-CONFIGPP_INCLUDE_DIRS:INTERNAL=/usr/include
-CONFIGPP_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lconfig++
-CONFIGPP_LDFLAGS_OTHER:INTERNAL=
-CONFIGPP_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-CONFIGPP_LIBRARIES:INTERNAL=config++
-CONFIGPP_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-CONFIGPP_LIBS:INTERNAL=
-CONFIGPP_LIBS_L:INTERNAL=
-CONFIGPP_LIBS_OTHER:INTERNAL=
-CONFIGPP_LIBS_PATHS:INTERNAL=
-CONFIGPP_MODULE_NAME:INTERNAL=libconfig++
-CONFIGPP_PREFIX:INTERNAL=/usr
-CONFIGPP_STATIC_CFLAGS:INTERNAL=-I/usr/include
-CONFIGPP_STATIC_CFLAGS_I:INTERNAL=
-CONFIGPP_STATIC_CFLAGS_OTHER:INTERNAL=
-CONFIGPP_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
-CONFIGPP_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lconfig++
-CONFIGPP_STATIC_LDFLAGS_OTHER:INTERNAL=
-CONFIGPP_STATIC_LIBDIR:INTERNAL=
-CONFIGPP_STATIC_LIBRARIES:INTERNAL=config++
-CONFIGPP_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-CONFIGPP_STATIC_LIBS:INTERNAL=
-CONFIGPP_STATIC_LIBS_L:INTERNAL=
-CONFIGPP_STATIC_LIBS_OTHER:INTERNAL=
-CONFIGPP_STATIC_LIBS_PATHS:INTERNAL=
-CONFIGPP_VERSION:INTERNAL=1.5
-CONFIGPP_libconfig++_INCLUDEDIR:INTERNAL=
-CONFIGPP_libconfig++_LIBDIR:INTERNAL=
-CONFIGPP_libconfig++_PREFIX:INTERNAL=
-CONFIGPP_libconfig++_VERSION:INTERNAL=
+//Test CXX_FILESYSTEM_NO_LINK_NEEDED
+CXX_FILESYSTEM_NO_LINK_NEEDED:INTERNAL=1
+Config++_CFLAGS:INTERNAL=-I/usr/include
+Config++_CFLAGS_I:INTERNAL=
+Config++_CFLAGS_OTHER:INTERNAL=
+Config++_FOUND:INTERNAL=1
+Config++_INCLUDEDIR:INTERNAL=/usr/include
+Config++_INCLUDE_DIRS:INTERNAL=/usr/include
+Config++_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lconfig++
+Config++_LDFLAGS_OTHER:INTERNAL=
+Config++_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+Config++_LIBRARIES:INTERNAL=config++
+Config++_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Config++_LIBS:INTERNAL=
+Config++_LIBS_L:INTERNAL=
+Config++_LIBS_OTHER:INTERNAL=
+Config++_LIBS_PATHS:INTERNAL=
+Config++_MODULE_NAME:INTERNAL=libconfig++
+Config++_PREFIX:INTERNAL=/usr
+Config++_STATIC_CFLAGS:INTERNAL=-I/usr/include
+Config++_STATIC_CFLAGS_I:INTERNAL=
+Config++_STATIC_CFLAGS_OTHER:INTERNAL=
+Config++_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
+Config++_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lconfig++
+Config++_STATIC_LDFLAGS_OTHER:INTERNAL=
+Config++_STATIC_LIBDIR:INTERNAL=
+Config++_STATIC_LIBRARIES:INTERNAL=config++
+Config++_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Config++_STATIC_LIBS:INTERNAL=
+Config++_STATIC_LIBS_L:INTERNAL=
+Config++_STATIC_LIBS_OTHER:INTERNAL=
+Config++_STATIC_LIBS_PATHS:INTERNAL=
+Config++_VERSION:INTERNAL=1.5
+Config++_libconfig++_INCLUDEDIR:INTERNAL=
+Config++_libconfig++_LIBDIR:INTERNAL=
+Config++_libconfig++_PREFIX:INTERNAL=
+Config++_libconfig++_VERSION:INTERNAL=
+//ADVANCED property for variable: DL_LIBRARY
+DL_LIBRARY-ADVANCED:INTERNAL=1
 //Details about finding Boost
-FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: system filesystem program_options ][v1.83.0()]
+FIND_PACKAGE_MESSAGE_DETAILS_Boost:INTERNAL=[/usr/lib/x86_64-linux-gnu/cmake/Boost-1.83.0/BoostConfig.cmake][cfound components: program_options iostreams ][v1.83.0()]
 //Details about finding OpenSSL
 FIND_PACKAGE_MESSAGE_DETAILS_OpenSSL:INTERNAL=[/usr/lib/x86_64-linux-gnu/libcrypto.so][/usr/include][c ][v3.0.13()]
 //Details about finding PkgConfig
 FIND_PACKAGE_MESSAGE_DETAILS_PkgConfig:INTERNAL=[/usr/bin/pkg-config][v1.8.1()]
-//Details about finding SQLite3
-FIND_PACKAGE_MESSAGE_DETAILS_SQLite3:INTERNAL=[/usr/include][/usr/lib/x86_64-linux-gnu/libsqlite3.so][v3.45.1()]
+//Details about finding StbImage
+FIND_PACKAGE_MESSAGE_DETAILS_StbImage:INTERNAL=[/usr/include/stb][1][v()]
+//Details about finding Threads
+FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
+LIBAV_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
+LIBAV_CFLAGS_I:INTERNAL=
+LIBAV_CFLAGS_OTHER:INTERNAL=
+LIBAV_FOUND:INTERNAL=1
+LIBAV_INCLUDEDIR:INTERNAL=
+LIBAV_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
+LIBAV_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavcodec;-lavutil;-lavformat
+LIBAV_LDFLAGS_OTHER:INTERNAL=
+LIBAV_LIBDIR:INTERNAL=
+LIBAV_LIBRARIES:INTERNAL=avcodec;avutil;avformat
+LIBAV_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+LIBAV_LIBS:INTERNAL=
+LIBAV_LIBS_L:INTERNAL=
+LIBAV_LIBS_OTHER:INTERNAL=
+LIBAV_LIBS_PATHS:INTERNAL=
+LIBAV_MODULE_NAME:INTERNAL=
+LIBAV_PREFIX:INTERNAL=
+LIBAV_STATIC_CFLAGS:INTERNAL=-I/usr/include/x86_64-linux-gnu
+LIBAV_STATIC_CFLAGS_I:INTERNAL=
+LIBAV_STATIC_CFLAGS_OTHER:INTERNAL=
+LIBAV_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include/x86_64-linux-gnu
+LIBAV_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lavcodec;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lwebpmux;-pthread;-lm;-latomic;-llzma;-ldav1d;-lrsvg-2;-lm;-lgio-2.0;-lgdk_pixbuf-2.0;-lgobject-2.0;-lglib-2.0;-lcairo;-lzvbi;-lpthread;-lm;-lpng;-lz;-lsnappy;-lstdc++;-laom;-lcodec2;-lgsm;-ljxl;-ljxl_threads;-lmp3lame;-lm;-lopenjp2;-lopus;-lrav1e;-lm;-lshine;-lspeex;-lSvtAv1Enc;-ltheoraenc;-ltheoradec;-logg;-ltwolame;-lvorbis;-lvorbisenc;-lwebp;-lx264;-lx265;-lxvidcore;-lz;-lva;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-L/usr/lib/x86_64-linux-gnu;-lswresample;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavformat;-lm;-latomic;-lxml2;-lbz2;-lgme;-lopenmpt;-lstdc++;-lchromaprint;-lbluray;-lz;-lgnutls;-lrabbitmq;-lrist;-lsrt-gnutls;-lssh;-lzmq;-L/usr/lib/x86_64-linux-gnu;-lavcodec;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lvpx;-lm;-lwebpmux;-pthread;-lm;-latomic;-llzma;-ldav1d;-lrsvg-2;-lm;-lgio-2.0;-lgdk_pixbuf-2.0;-lgobject-2.0;-lglib-2.0;-lcairo;-lzvbi;-lpthread;-lm;-lpng;-lz;-lsnappy;-lstdc++;-laom;-lcodec2;-lgsm;-ljxl;-ljxl_threads;-lmp3lame;-lm;-lopenjp2;-lopus;-lrav1e;-lm;-lshine;-lspeex;-lSvtAv1Enc;-ltheoraenc;-ltheoradec;-logg;-ltwolame;-lvorbis;-lvorbisenc;-lwebp;-lx264;-lx265;-lxvidcore;-lz;-lva;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-L/usr/lib/x86_64-linux-gnu;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lswresample;-lm;-lsoxr;-latomic;-L/usr/lib/x86_64-linux-gnu;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11;-lavutil;-pthread;-lva-drm;-lva;-lva-x11;-lva;-lvdpau;-lX11;-lm;-ldrm;-L/usr/lib/x86_64-linux-gnu/pkgconfig/../;-lvpl;-ldl;-lstdc++;-lOpenCL;-lva;-latomic;-lX11
+LIBAV_STATIC_LDFLAGS_OTHER:INTERNAL=-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread;-pthread
+LIBAV_STATIC_LIBDIR:INTERNAL=
+LIBAV_STATIC_LIBRARIES:INTERNAL=avcodec;vpx;m;vpx;m;vpx;m;vpx;m;webpmux;m;atomic;lzma;dav1d;rsvg-2;m;gio-2.0;gdk_pixbuf-2.0;gobject-2.0;glib-2.0;cairo;zvbi;pthread;m;png;z;snappy;stdc++;aom;codec2;gsm;jxl;jxl_threads;mp3lame;m;openjp2;opus;rav1e;m;shine;speex;SvtAv1Enc;theoraenc;theoradec;ogg;twolame;vorbis;vorbisenc;webp;x264;x265;xvidcore;z;va;vpl;dl;stdc++;swresample;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avformat;m;atomic;xml2;bz2;gme;openmpt;stdc++;chromaprint;bluray;z;gnutls;rabbitmq;rist;srt-gnutls;ssh;zmq;avcodec;vpx;m;vpx;m;vpx;m;vpx;m;webpmux;m;atomic;lzma;dav1d;rsvg-2;m;gio-2.0;gdk_pixbuf-2.0;gobject-2.0;glib-2.0;cairo;zvbi;pthread;m;png;z;snappy;stdc++;aom;codec2;gsm;jxl;jxl_threads;mp3lame;m;openjp2;opus;rav1e;m;shine;speex;SvtAv1Enc;theoraenc;theoradec;ogg;twolame;vorbis;vorbisenc;webp;x264;x265;xvidcore;z;va;vpl;dl;stdc++;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;swresample;m;soxr;atomic;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11;avutil;va-drm;va;va-x11;va;vdpau;X11;m;drm;vpl;dl;stdc++;OpenCL;va;atomic;X11
+LIBAV_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu;/usr/lib/x86_64-linux-gnu/pkgconfig/../;/usr/lib/x86_64-linux-gnu/pkgconfig/../
+LIBAV_STATIC_LIBS:INTERNAL=
+LIBAV_STATIC_LIBS_L:INTERNAL=
+LIBAV_STATIC_LIBS_OTHER:INTERNAL=
+LIBAV_STATIC_LIBS_PATHS:INTERNAL=
+LIBAV_VERSION:INTERNAL=
+LIBAV_libavcodec_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
+LIBAV_libavcodec_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+LIBAV_libavcodec_MODULE_NAME:INTERNAL=libavcodec
+LIBAV_libavcodec_PREFIX:INTERNAL=/usr
+LIBAV_libavcodec_VERSION:INTERNAL=60.31.102
+LIBAV_libavformat_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
+LIBAV_libavformat_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+LIBAV_libavformat_MODULE_NAME:INTERNAL=libavformat
+LIBAV_libavformat_PREFIX:INTERNAL=/usr
+LIBAV_libavformat_VERSION:INTERNAL=60.16.100
+LIBAV_libavutil_INCLUDEDIR:INTERNAL=/usr/include/x86_64-linux-gnu
+LIBAV_libavutil_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+LIBAV_libavutil_MODULE_NAME:INTERNAL=libavutil
+LIBAV_libavutil_PREFIX:INTERNAL=/usr
+LIBAV_libavutil_VERSION:INTERNAL=58.29.100
+//STRINGS property for variable: LMS_IMAGE_BACKEND
+LMS_IMAGE_BACKEND-STRINGS:INTERNAL=stb;graphicsmagick
 //ADVANCED property for variable: OPENSSL_CRYPTO_LIBRARY
 OPENSSL_CRYPTO_LIBRARY-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENSSL_INCLUDE_DIR
 OPENSSL_INCLUDE_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: OPENSSL_SSL_LIBRARY
 OPENSSL_SSL_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PAM_INCLUDE_DIR
+PAM_INCLUDE_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PAM_LIBRARY
+PAM_LIBRARY-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: PAM_MESSAGE_CONST
+PAM_MESSAGE_CONST-ADVANCED:INTERNAL=1
+//Test PAM_MESSAGE_CONST
+PAM_MESSAGE_CONST:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_ARGN
 PKG_CONFIG_ARGN-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: PKG_CONFIG_EXECUTABLE
 PKG_CONFIG_EXECUTABLE-ADVANCED:INTERNAL=1
-PUGIXML_CFLAGS:INTERNAL=-I/usr/include
-PUGIXML_CFLAGS_I:INTERNAL=
-PUGIXML_CFLAGS_OTHER:INTERNAL=
-PUGIXML_FOUND:INTERNAL=1
-PUGIXML_INCLUDEDIR:INTERNAL=/usr/include
-PUGIXML_INCLUDE_DIRS:INTERNAL=/usr/include
-PUGIXML_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lpugixml
-PUGIXML_LDFLAGS_OTHER:INTERNAL=
-PUGIXML_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-PUGIXML_LIBRARIES:INTERNAL=pugixml
-PUGIXML_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-PUGIXML_LIBS:INTERNAL=
-PUGIXML_LIBS_L:INTERNAL=
-PUGIXML_LIBS_OTHER:INTERNAL=
-PUGIXML_LIBS_PATHS:INTERNAL=
-PUGIXML_MODULE_NAME:INTERNAL=pugixml
-PUGIXML_PREFIX:INTERNAL=/usr
-PUGIXML_STATIC_CFLAGS:INTERNAL=-I/usr/include
-PUGIXML_STATIC_CFLAGS_I:INTERNAL=
-PUGIXML_STATIC_CFLAGS_OTHER:INTERNAL=
-PUGIXML_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
-PUGIXML_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lpugixml
-PUGIXML_STATIC_LDFLAGS_OTHER:INTERNAL=
-PUGIXML_STATIC_LIBDIR:INTERNAL=
-PUGIXML_STATIC_LIBRARIES:INTERNAL=pugixml
-PUGIXML_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-PUGIXML_STATIC_LIBS:INTERNAL=
-PUGIXML_STATIC_LIBS_L:INTERNAL=
-PUGIXML_STATIC_LIBS_OTHER:INTERNAL=
-PUGIXML_STATIC_LIBS_PATHS:INTERNAL=
-PUGIXML_VERSION:INTERNAL=1.14
-PUGIXML_pugixml_INCLUDEDIR:INTERNAL=
-PUGIXML_pugixml_LIBDIR:INTERNAL=
-PUGIXML_pugixml_PREFIX:INTERNAL=
-PUGIXML_pugixml_VERSION:INTERNAL=
-//ADVANCED property for variable: SQLite3_INCLUDE_DIR
-SQLite3_INCLUDE_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: SQLite3_LIBRARY
-SQLite3_LIBRARY-ADVANCED:INTERNAL=1
-TAGLIB_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/taglib
-TAGLIB_CFLAGS_I:INTERNAL=
-TAGLIB_CFLAGS_OTHER:INTERNAL=
-TAGLIB_FOUND:INTERNAL=1
-TAGLIB_INCLUDEDIR:INTERNAL=/usr/include
-TAGLIB_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/taglib
-TAGLIB_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ltag;-lz
-TAGLIB_LDFLAGS_OTHER:INTERNAL=
-TAGLIB_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
-TAGLIB_LIBRARIES:INTERNAL=tag;z
-TAGLIB_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-TAGLIB_LIBS:INTERNAL=
-TAGLIB_LIBS_L:INTERNAL=
-TAGLIB_LIBS_OTHER:INTERNAL=
-TAGLIB_LIBS_PATHS:INTERNAL=
-TAGLIB_MODULE_NAME:INTERNAL=taglib
-TAGLIB_PREFIX:INTERNAL=/usr
-TAGLIB_STATIC_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/taglib
-TAGLIB_STATIC_CFLAGS_I:INTERNAL=
-TAGLIB_STATIC_CFLAGS_OTHER:INTERNAL=
-TAGLIB_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/taglib
-TAGLIB_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ltag;-lz
-TAGLIB_STATIC_LDFLAGS_OTHER:INTERNAL=
-TAGLIB_STATIC_LIBDIR:INTERNAL=
-TAGLIB_STATIC_LIBRARIES:INTERNAL=tag;z
-TAGLIB_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
-TAGLIB_STATIC_LIBS:INTERNAL=
-TAGLIB_STATIC_LIBS_L:INTERNAL=
-TAGLIB_STATIC_LIBS_OTHER:INTERNAL=
-TAGLIB_STATIC_LIBS_PATHS:INTERNAL=
-TAGLIB_VERSION:INTERNAL=1.13.1
-TAGLIB_taglib_INCLUDEDIR:INTERNAL=
-TAGLIB_taglib_LIBDIR:INTERNAL=
-TAGLIB_taglib_PREFIX:INTERNAL=
-TAGLIB_taglib_VERSION:INTERNAL=
-WT_CFLAGS:INTERNAL=-I/usr/local/include;-std=c++11
-WT_CFLAGS_I:INTERNAL=
-WT_CFLAGS_OTHER:INTERNAL=-std=c++11
-WT_FOUND:INTERNAL=1
-WT_INCLUDEDIR:INTERNAL=/usr/local/include
-WT_INCLUDE_DIRS:INTERNAL=/usr/local/include
-WT_LDFLAGS:INTERNAL=-L/usr/local/lib;-lwt;-lwthttp;-lwtdbo;-lwtdbosqlite3
-WT_LDFLAGS_OTHER:INTERNAL=
-WT_LIBDIR:INTERNAL=/usr/local/lib
-WT_LIBRARIES:INTERNAL=wt;wthttp;wtdbo;wtdbosqlite3
-WT_LIBRARY_DIRS:INTERNAL=/usr/local/lib
-WT_LIBS:INTERNAL=
-WT_LIBS_L:INTERNAL=
-WT_LIBS_OTHER:INTERNAL=
-WT_LIBS_PATHS:INTERNAL=
-WT_MODULE_NAME:INTERNAL=wt
-WT_PREFIX:INTERNAL=/usr/local
-WT_STATIC_CFLAGS:INTERNAL=-I/usr/local/include;-std=c++11
-WT_STATIC_CFLAGS_I:INTERNAL=
-WT_STATIC_CFLAGS_OTHER:INTERNAL=-std=c++11
-WT_STATIC_INCLUDE_DIRS:INTERNAL=/usr/local/include
-WT_STATIC_LDFLAGS:INTERNAL=-L/usr/local/lib;-lwt;-lwthttp;-lwtdbo;-lwtdbosqlite3
-WT_STATIC_LDFLAGS_OTHER:INTERNAL=
-WT_STATIC_LIBDIR:INTERNAL=
-WT_STATIC_LIBRARIES:INTERNAL=wt;wthttp;wtdbo;wtdbosqlite3
-WT_STATIC_LIBRARY_DIRS:INTERNAL=/usr/local/lib
-WT_STATIC_LIBS:INTERNAL=
-WT_STATIC_LIBS_L:INTERNAL=
-WT_STATIC_LIBS_OTHER:INTERNAL=
-WT_STATIC_LIBS_PATHS:INTERNAL=
-WT_VERSION:INTERNAL=4.12.1
-WT_wt_INCLUDEDIR:INTERNAL=
-WT_wt_LIBDIR:INTERNAL=
-WT_wt_PREFIX:INTERNAL=
-WT_wt_VERSION:INTERNAL=
+Taglib_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/taglib
+Taglib_CFLAGS_I:INTERNAL=
+Taglib_CFLAGS_OTHER:INTERNAL=
+Taglib_FOUND:INTERNAL=1
+Taglib_INCLUDEDIR:INTERNAL=/usr/include
+Taglib_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/taglib
+Taglib_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ltag;-lz
+Taglib_LDFLAGS_OTHER:INTERNAL=
+Taglib_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+Taglib_LIBRARIES:INTERNAL=tag;z
+Taglib_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Taglib_LIBS:INTERNAL=
+Taglib_LIBS_L:INTERNAL=
+Taglib_LIBS_OTHER:INTERNAL=
+Taglib_LIBS_PATHS:INTERNAL=
+Taglib_MODULE_NAME:INTERNAL=taglib
+Taglib_PREFIX:INTERNAL=/usr
+Taglib_STATIC_CFLAGS:INTERNAL=-I/usr/include;-I/usr/include/taglib
+Taglib_STATIC_CFLAGS_I:INTERNAL=
+Taglib_STATIC_CFLAGS_OTHER:INTERNAL=
+Taglib_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include;/usr/include/taglib
+Taglib_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-ltag;-lz
+Taglib_STATIC_LDFLAGS_OTHER:INTERNAL=
+Taglib_STATIC_LIBDIR:INTERNAL=
+Taglib_STATIC_LIBRARIES:INTERNAL=tag;z
+Taglib_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+Taglib_STATIC_LIBS:INTERNAL=
+Taglib_STATIC_LIBS_L:INTERNAL=
+Taglib_STATIC_LIBS_OTHER:INTERNAL=
+Taglib_STATIC_LIBS_PATHS:INTERNAL=
+Taglib_VERSION:INTERNAL=1.13.1
+Taglib_taglib_INCLUDEDIR:INTERNAL=
+Taglib_taglib_LIBDIR:INTERNAL=
+Taglib_taglib_PREFIX:INTERNAL=
+Taglib_taglib_VERSION:INTERNAL=
+XXHASH_CFLAGS:INTERNAL=-I/usr/include
+XXHASH_CFLAGS_I:INTERNAL=
+XXHASH_CFLAGS_OTHER:INTERNAL=
+XXHASH_FOUND:INTERNAL=1
+XXHASH_INCLUDEDIR:INTERNAL=/usr/include
+XXHASH_INCLUDE_DIRS:INTERNAL=/usr/include
+XXHASH_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lxxhash
+XXHASH_LDFLAGS_OTHER:INTERNAL=
+XXHASH_LIBDIR:INTERNAL=/usr/lib/x86_64-linux-gnu
+XXHASH_LIBRARIES:INTERNAL=xxhash
+XXHASH_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+XXHASH_LIBS:INTERNAL=
+XXHASH_LIBS_L:INTERNAL=
+XXHASH_LIBS_OTHER:INTERNAL=
+XXHASH_LIBS_PATHS:INTERNAL=
+XXHASH_MODULE_NAME:INTERNAL=libxxhash
+XXHASH_PREFIX:INTERNAL=/usr
+XXHASH_STATIC_CFLAGS:INTERNAL=-I/usr/include
+XXHASH_STATIC_CFLAGS_I:INTERNAL=
+XXHASH_STATIC_CFLAGS_OTHER:INTERNAL=
+XXHASH_STATIC_INCLUDE_DIRS:INTERNAL=/usr/include
+XXHASH_STATIC_LDFLAGS:INTERNAL=-L/usr/lib/x86_64-linux-gnu;-lxxhash
+XXHASH_STATIC_LDFLAGS_OTHER:INTERNAL=
+XXHASH_STATIC_LIBDIR:INTERNAL=
+XXHASH_STATIC_LIBRARIES:INTERNAL=xxhash
+XXHASH_STATIC_LIBRARY_DIRS:INTERNAL=/usr/lib/x86_64-linux-gnu
+XXHASH_STATIC_LIBS:INTERNAL=
+XXHASH_STATIC_LIBS_L:INTERNAL=
+XXHASH_STATIC_LIBS_OTHER:INTERNAL=
+XXHASH_STATIC_LIBS_PATHS:INTERNAL=
+XXHASH_VERSION:INTERNAL=0.8.2
+XXHASH_libxxhash_INCLUDEDIR:INTERNAL=
+XXHASH_libxxhash_LIBDIR:INTERNAL=
+XXHASH_libxxhash_PREFIX:INTERNAL=
+XXHASH_libxxhash_VERSION:INTERNAL=
 //linker supports push/pop state
 _CMAKE_LINKER_PUSHPOP_STATE_SUPPORTED:INTERNAL=TRUE
+//ADVANCED property for variable: _CXX_FILESYSTEM_HAVE_HEADER
+_CXX_FILESYSTEM_HAVE_HEADER-ADVANCED:INTERNAL=1
+//Have include filesystem
+_CXX_FILESYSTEM_HAVE_HEADER:INTERNAL=1
 _OPENSSL_CFLAGS:INTERNAL=-I/usr/include
 _OPENSSL_CFLAGS_I:INTERNAL=
 _OPENSSL_CFLAGS_OTHER:INTERNAL=
@@ -746,21 +779,17 @@ _OPENSSL_openssl_INCLUDEDIR:INTERNAL=
 _OPENSSL_openssl_LIBDIR:INTERNAL=
 _OPENSSL_openssl_PREFIX:INTERNAL=
 _OPENSSL_openssl_VERSION:INTERNAL=
-__pkg_config_arguments_AVCODEC:INTERNAL=REQUIRED;libavcodec
-__pkg_config_arguments_AVFORMAT:INTERNAL=REQUIRED;libavformat
-__pkg_config_arguments_AVUTIL:INTERNAL=REQUIRED;libavutil
-__pkg_config_arguments_CONFIGPP:INTERNAL=REQUIRED;libconfig++
-__pkg_config_arguments_PUGIXML:INTERNAL=REQUIRED;pugixml
-__pkg_config_arguments_TAGLIB:INTERNAL=REQUIRED;taglib
-__pkg_config_arguments_WT:INTERNAL=REQUIRED;wt
+__pkg_config_arguments_Archive:INTERNAL=REQUIRED;IMPORTED_TARGET;libarchive
+__pkg_config_arguments_Config++:INTERNAL=REQUIRED;IMPORTED_TARGET;libconfig++
+__pkg_config_arguments_LIBAV:INTERNAL=IMPORTED_TARGET;libavcodec;libavutil;libavformat
+__pkg_config_arguments_Taglib:INTERNAL=REQUIRED;IMPORTED_TARGET;taglib
+__pkg_config_arguments_XXHASH:INTERNAL=REQUIRED;IMPORTED_TARGET;libxxhash
 __pkg_config_arguments__OPENSSL:INTERNAL=QUIET;openssl
-__pkg_config_checked_AVCODEC:INTERNAL=1
-__pkg_config_checked_AVFORMAT:INTERNAL=1
-__pkg_config_checked_AVUTIL:INTERNAL=1
-__pkg_config_checked_CONFIGPP:INTERNAL=1
-__pkg_config_checked_PUGIXML:INTERNAL=1
-__pkg_config_checked_TAGLIB:INTERNAL=1
-__pkg_config_checked_WT:INTERNAL=1
+__pkg_config_checked_Archive:INTERNAL=1
+__pkg_config_checked_Config++:INTERNAL=1
+__pkg_config_checked_LIBAV:INTERNAL=1
+__pkg_config_checked_Taglib:INTERNAL=1
+__pkg_config_checked_XXHASH:INTERNAL=1
 __pkg_config_checked__OPENSSL:INTERNAL=1
 //ADVANCED property for variable: boost_atomic_DIR
 boost_atomic_DIR-ADVANCED:INTERNAL=1
@@ -768,32 +797,28 @@ boost_atomic_DIR-ADVANCED:INTERNAL=1
 boost_filesystem_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: boost_headers_DIR
 boost_headers_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_iostreams_DIR
+boost_iostreams_DIR-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: boost_program_options_DIR
 boost_program_options_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: boost_system_DIR
-boost_system_DIR-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_AVCODEC_avcodec
-pkgcfg_lib_AVCODEC_avcodec-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_AVFORMAT_avformat
-pkgcfg_lib_AVFORMAT_avformat-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_AVUTIL_avutil
-pkgcfg_lib_AVUTIL_avutil-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_CONFIGPP_config++
-pkgcfg_lib_CONFIGPP_config++-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_PUGIXML_pugixml
-pkgcfg_lib_PUGIXML_pugixml-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_TAGLIB_tag
-pkgcfg_lib_TAGLIB_tag-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_TAGLIB_z
-pkgcfg_lib_TAGLIB_z-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_WT_wt
-pkgcfg_lib_WT_wt-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_WT_wtdbo
-pkgcfg_lib_WT_wtdbo-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_WT_wtdbosqlite3
-pkgcfg_lib_WT_wtdbosqlite3-ADVANCED:INTERNAL=1
-//ADVANCED property for variable: pkgcfg_lib_WT_wthttp
-pkgcfg_lib_WT_wthttp-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: boost_thread_DIR
+boost_thread_DIR-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_Archive_archive
+pkgcfg_lib_Archive_archive-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_Config++_config++
+pkgcfg_lib_Config++_config++-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_LIBAV_avcodec
+pkgcfg_lib_LIBAV_avcodec-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_LIBAV_avformat
+pkgcfg_lib_LIBAV_avformat-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_LIBAV_avutil
+pkgcfg_lib_LIBAV_avutil-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_Taglib_tag
+pkgcfg_lib_Taglib_tag-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_Taglib_z
+pkgcfg_lib_Taglib_z-ADVANCED:INTERNAL=1
+//ADVANCED property for variable: pkgcfg_lib_XXHASH_xxhash
+pkgcfg_lib_XXHASH_xxhash-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib__OPENSSL_crypto
 pkgcfg_lib__OPENSSL_crypto-ADVANCED:INTERNAL=1
 //ADVANCED property for variable: pkgcfg_lib__OPENSSL_ssl

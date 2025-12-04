@@ -116,5 +116,3 @@ namespace lms::api::subsonic
         std::byte* _currentAddr{};
     };
 } // namespace lms::api::subsonic
-
-

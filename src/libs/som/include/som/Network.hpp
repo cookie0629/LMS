@@ -102,5 +102,3 @@ namespace lms::som
         NeighbourhoodFunc _neighbourhoodFunc;
     };
 } // namespace lms::som
-
-

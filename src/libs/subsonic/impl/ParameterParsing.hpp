@@ -86,5 +86,3 @@ namespace lms::api::subsonic
     bool hasParameter(const Wt::Http::ParameterMap& parameterMap, const std::string& param);
     std::string decodePasswordIfNeeded(const std::string& password);
 } // namespace lms::api::subsonic
-
-

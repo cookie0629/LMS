@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2019 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <Wt/WDateTime.h>
@@ -5,107 +24,83 @@
 #include <memory>
 #include <vector>
 
+#include "database/objects/TrackId.hpp"
+
 #include "ScanErrors.hpp"
 
 namespace lms::scanner
 {
-    /**
-     * @brief 重复原因
-     */
     enum class DuplicateReason
     {
-        SameHash,      // 相同哈希值
-        SameTrackMBID, // 相同 MusicBrainz ID
+        SameHash,
+        SameTrackMBID,
     };
 
-    /**
-     * @brief 扫描发现的重复文件
-     */
     struct ScanDuplicate
     {
-        // 注意：这里暂时不使用 TrackId，因为 Track 对象还未实现
-        // db::TrackId trackId;
-        std::int64_t trackId{};
+        db::TrackId trackId;
         DuplicateReason reason;
     };
 
-    /**
-     * @brief 扫描步骤
-     */
+    // Alphabetical order
     enum class ScanStep
     {
-        ScanFiles,               // 扫描文件
-        AssociateExternalLyrics, // 关联外部歌词
-        CheckForRemovedFiles,    // 检查已删除的文件
-        CheckForDuplicatedFiles, // 检查重复文件
-        UpdateLibraryFields,     // 更新媒体库字段
-        RemoveOrphanedDbEntries, // 删除孤立的数据库条目
-        Optimize,                // 优化数据库
-        Compact,                 // 压缩数据库
+        AssociateArtistImages,
+        AssociateExternalLyrics,
+        AssociatePlayListTracks,
+        AssociateReleaseImages,
+        AssociateTrackImages,
+        CheckForDuplicatedFiles,
+        CheckForRemovedFiles,
+        ComputeClusterStats,
+        Compact,
+        FetchTrackFeatures,
+        Optimize,
+        ReconciliateArtists,
+        ReloadSimilarityEngine,
+        RemoveOrphanedDbEntries,
+        ScanFiles,
+        UpdateLibraryFields,
     };
 
-    /**
-     * @brief 扫描步骤统计
-     */
+    // reduced scan stats
     struct ScanStepStats
     {
         Wt::WDateTime startTime;
 
-        std::size_t stepCount{};    // 总步骤数
-        std::size_t stepIndex{};    // 当前步骤索引
-        ScanStep currentStep;       // 当前步骤
+        std::size_t stepCount{};
+        std::size_t stepIndex{};
+        ScanStep currentStep;
 
-        std::size_t totalElems{};   // 总元素数
-        std::size_t processedElems{}; // 已处理元素数
+        std::size_t totalElems{};
+        std::size_t processedElems{};
 
-        /**
-         * @brief 计算进度百分比
-         */
-        unsigned progress() const
-        {
-            if (totalElems == 0)
-                return 0;
-            return static_cast<unsigned>((processedElems * 100) / totalElems);
-        }
+        unsigned progress() const;
     };
 
-    /**
-     * @brief 扫描统计信息
-     */
     struct ScanStats
     {
         Wt::WDateTime startTime;
         Wt::WDateTime stopTime;
 
-        std::size_t totalFileCount{}; // 总文件数（仅在文件扫描步骤后有效）
+        std::size_t totalFileCount{}; // Total number of files (only valid after the file scan step)
 
-        std::size_t skips{};    // 跳过的文件数（自上次扫描后未更改）
-        std::size_t scans{};    // 扫描的文件数
-        std::size_t additions{}; // 添加到数据库的文件数
-        std::size_t deletions{}; // 从数据库删除的文件数
-        std::size_t updates{};   // 更新的文件数
-        std::size_t failures{};  // 扫描失败的文件数
+        std::size_t skips{}; // no change since last scan
+        std::size_t scans{}; // count of scanned files
 
-        static constexpr std::size_t maxStoredErrorCount{ 5000 };
+        std::size_t additions{}; // added in DB
+        std::size_t deletions{}; // removed from DB
+        std::size_t updates{};   // updated file in DB
+        std::size_t failures{};  // scan failure
+
+        std::size_t featuresFetched{}; // features fetched in DB
+
+        static constexpr std::size_t maxStoredErrorCount{ 5'000 }; // TODO make this configurable
         std::vector<std::shared_ptr<ScanError>> errors;
-        std::size_t errorsCount{}; // 可能大于 errors.size()，如果错误太多
+        std::size_t errorsCount{}; // maybe bigger than errors.size() if too many errors
         std::vector<ScanDuplicate> duplicates;
 
-        /**
-         * @brief 获取总文件数
-         */
-        std::size_t getTotalFileCount() const
-        {
-            return totalFileCount;
-        }
-
-        /**
-         * @brief 获取变更总数
-         */
-        std::size_t getChangesCount() const
-        {
-            return additions + deletions + updates;
-        }
+        std::size_t getTotalFileCount() const;
+        std::size_t getChangesCount() const;
     };
 } // namespace lms::scanner
-

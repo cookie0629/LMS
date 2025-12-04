@@ -226,10 +226,10 @@ namespace lms::som
         if (neighboursInfo.empty())
             return std::nullopt;
 
-        auto min = std::min_element(std::cbegin(neighboursInfo), std::cend(neighboursInfo),
-                                    [&](const auto& a, const auto& b) {
-                                        return a.distance < b.distance;
-                                    });
+        auto min{ std::min_element(std::cbegin(neighboursInfo), std::cend(neighboursInfo),
+                                   [&](const auto& a, const auto& b) {
+                                       return a.distance < b.distance;
+                                   }) };
 
         return min->position;
     }
@@ -297,21 +297,4 @@ namespace lms::som
     {
         return _refVectors[position];
     }
-
-    void Network::setDistanceFunc(DistanceFunc distanceFunc)
-    {
-        _distanceFunc = std::move(distanceFunc);
-    }
-
-    void Network::setLearningFactorFunc(LearningFactorFunc learningFactorFunc)
-    {
-        _learningFactorFunc = std::move(learningFactorFunc);
-    }
-
-    void Network::setNeighbourhoodFunc(NeighbourhoodFunc neighbourhoodFunc)
-    {
-        _neighbourhoodFunc = std::move(neighbourhoodFunc);
-    }
 } // namespace lms::som
-
-

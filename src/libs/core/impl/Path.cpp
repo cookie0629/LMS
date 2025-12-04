@@ -1,87 +1,102 @@
+/*
+ * Copyright (C) 2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "core/Path.hpp"
 
-#include <filesystem>
 #include <algorithm>
 #include <array>
+#include <cassert>
+#include <unistd.h>
+
+#include "core/String.hpp"
 
 namespace lms::core::pathUtils
 {
-    bool exists(const std::filesystem::path& path)
+    bool hasFileAnyExtension(const std::filesystem::path& file, std::span<const std::filesystem::path> supportedExtensions)
     {
-        std::error_code ec;
-        return std::filesystem::exists(path, ec);
+        const std::filesystem::path extension{ stringUtils::stringToLower(file.extension().c_str()) };
+
+        return (std::find(std::cbegin(supportedExtensions), std::cend(supportedExtensions), extension) != std::cend(supportedExtensions));
     }
 
-    bool isDirectory(const std::filesystem::path& path)
+    bool isPathInRootPath(const std::filesystem::path& path, const std::filesystem::path& rootPathArg, const std::filesystem::path* excludeDirFileName)
     {
-        std::error_code ec;
-        return std::filesystem::is_directory(path, ec);
-    }
+        std::filesystem::path curPath{ path };
+        std::filesystem::path rootPath{ rootPathArg.has_filename() ? rootPathArg : rootPathArg.parent_path() };
 
-    bool isFile(const std::filesystem::path& path)
-    {
-        std::error_code ec;
-        return std::filesystem::is_regular_file(path, ec);
-    }
-
-    std::string getFilename(const std::filesystem::path& path)
-    {
-        return path.filename().string();
-    }
-
-    std::string getExtension(const std::filesystem::path& path)
-    {
-        return path.extension().string();
-    }
-
-    std::filesystem::path getParent(const std::filesystem::path& path)
-    {
-        return path.parent_path();
-    }
-
-    std::filesystem::path combine(const std::filesystem::path& p1, const std::filesystem::path& p2)
-    {
-        return p1 / p2;
-    }
-
-    bool hasFileAnyExtension(const std::filesystem::path& file, std::span<const std::filesystem::path> extensions)
-    {
-        const std::filesystem::path fileExtension = file.extension();
-        
-        for (const auto& ext : extensions)
+        while (true)
         {
-            // 转换为小写比较（跨平台兼容）
-            std::string fileExtLower = fileExtension.string();
-            std::string extLower = ext.string();
-            
-            std::transform(fileExtLower.begin(), fileExtLower.end(), fileExtLower.begin(), ::tolower);
-            std::transform(extLower.begin(), extLower.end(), extLower.begin(), ::tolower);
-            
-            if (fileExtLower == extLower)
+            if (excludeDirFileName && !excludeDirFileName->empty())
+            {
+                assert(!excludeDirFileName->has_parent_path());
+
+                std::error_code ec;
+                if (std::filesystem::exists(curPath / *excludeDirFileName, ec))
+                    return false;
+            }
+
+            if (curPath == rootPath)
                 return true;
+
+            if (curPath == curPath.root_path())
+                break;
+
+            curPath = curPath.parent_path();
         }
-        
+
         return false;
     }
 
-    std::string sanitizeFileStem(std::string_view fileStem)
+    std::filesystem::path getLongestCommonPath(const std::filesystem::path& path1, const std::filesystem::path& path2)
     {
-        // 非法字符列表（Windows和Linux都不允许的字符）
-        constexpr std::array<char, 9> illegalChars = {'/', '\\', ':', '*', '?', '"', '<', '>', '|'};
-        
+        std::filesystem::path longestCommonPath;
+
+        auto it1{ path1.begin() };
+        auto it2{ path2.begin() };
+
+        while (it1 != std::cend(path1) && it2 != std::cend(path2) && *it1 == *it2)
+        {
+            longestCommonPath /= *it1;
+            ++it1;
+            ++it2;
+        }
+
+        return longestCommonPath;
+    }
+
+    std::string sanitizeFileStem(const std::string_view fileStem)
+    {
+        // Keep UTF8-encoded characters, but skip illegal ASCII characters
+        constexpr std::array<unsigned char, 9> illegalChars{ '/', '\\', ':', '*', '?', '"', '<', '>', '|' };
+        static_assert(std::all_of(std::begin(illegalChars), std::end(illegalChars), [](unsigned char c) { return c < 128; }), "Illegal characters must be ASCII");
+
         std::string sanitized;
         sanitized.reserve(fileStem.size());
-        
-        for (char c : fileStem)
+
+        for (const char c : fileStem)
         {
-            // 检查是否为非法字符
-            if (std::find(illegalChars.begin(), illegalChars.end(), c) == illegalChars.end())
-            {
-                sanitized.push_back(c);
-            }
+            if (std::any_of(std::begin(illegalChars), std::end(illegalChars), [c](char illegalChar) { return c == illegalChar; }))
+                continue;
+
+            sanitized.push_back(c);
         }
-        
+
         return sanitized;
     }
 } // namespace lms::core::pathUtils
-

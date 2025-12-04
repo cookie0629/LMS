@@ -1,74 +1,97 @@
+/*
+ * Copyright (C) 2025 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <cstddef>
+#include <functional>
 #include <span>
 #include <string>
-#include <string_view>
-#include <vector>
+
+#include "core/LiteralString.hpp"
 
 namespace lms::audio
 {
-    /**
-     * @brief 图像读取器接口（简化版）
-     */
+    struct Image
+    {
+        // See TagLib types (based on ID3v2 APIC types)
+        enum class Type
+        {
+            // No information
+            Unknown,
+            // A type not enumerated below
+            Other,
+            // 32x32 PNG image that should be used as the file icon
+            FileIcon,
+            // File icon of a different size or format
+            OtherFileIcon,
+            // Front cover image of the album
+            FrontCover,
+            // Back cover image of the album
+            BackCover,
+            // Inside leaflet page of the album
+            LeafletPage,
+            // Image from the album itself
+            Media,
+            // Picture of the lead artist or soloist
+            LeadArtist,
+            // Picture of the artist or performer
+            Artist,
+            // Picture of the conductor
+            Conductor,
+            // Picture of the band or orchestra
+            Band,
+            // Picture of the composer
+            Composer,
+            // Picture of the lyricist or text writer
+            Lyricist,
+            // Picture of the recording location or studio
+            RecordingLocation,
+            // Picture of the artists during recording
+            DuringRecording,
+            // Picture of the artists during performance
+            DuringPerformance,
+            // Picture from a movie or video related to the track
+            MovieScreenCapture,
+            // Picture of a large, coloured fish
+            ColouredFish,
+            // Illustration related to the track
+            Illustration,
+            // Logo of the band or performer
+            BandLogo,
+            // Logo of the publisher (record company)
+            PublisherLogo
+        };
+
+        Type type{ Type::Unknown };
+        std::string mimeType{ "application/octet-stream" };
+        std::string description;
+        std::span<const std::byte> data;
+    };
+
+    core::LiteralString imageTypeToString(Image::Type type);
+
     class IImageReader
     {
     public:
         virtual ~IImageReader() = default;
 
-        /**
-         * @brief 获取嵌入图像数据
-         * @return 图像数据（如果存在）
-         */
-        virtual std::span<const std::byte> getImageData() const = 0;
-
-        /**
-         * @brief 检查是否有嵌入图像
-         */
-        virtual bool hasImage() const = 0;
-
-        /**
-         * @brief 返回图像的 MIME 类型
-         */
-        virtual std::string_view getMimeType() const = 0;
-    };
-
-    /**
-     * @brief 图像读取器简化实现（空实现）
-     */
-    class ImageReader : public IImageReader
-    {
-    public:
-        void setImage(std::vector<std::byte> data, std::string mimeType = "application/octet-stream")
-        {
-            _data = std::move(data);
-            _mimeType = mimeType.empty() ? "application/octet-stream" : std::move(mimeType);
-        }
-
-        void clear()
-        {
-            _data.clear();
-            _mimeType = "application/octet-stream";
-        }
-
-        std::span<const std::byte> getImageData() const override
-        {
-            return _data;
-        }
-
-        bool hasImage() const override
-        {
-            return !_data.empty();
-        }
-
-        std::string_view getMimeType() const override
-        {
-            return _mimeType;
-        }
-
-    private:
-        std::vector<std::byte> _data;
-        std::string _mimeType{ "application/octet-stream" };
+        using ImageVisitor = std::function<void(const Image& image)>;
+        virtual void visitImages(const ImageVisitor& visitor) const = 0;
     };
 } // namespace lms::audio
-

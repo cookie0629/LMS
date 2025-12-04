@@ -1,25 +1,49 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ArtworkService.hpp"
 
+#include <algorithm>
+
+#include "core/IConfig.hpp"
 #include "core/ILogger.hpp"
-#include "core/Service.hpp"
+
+#include "audio/IAudioFileInfo.hpp"
+#include "audio/IImageReader.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
-#include <fstream>
-
+#include "database/objects/Artist.hpp"
 #include "database/objects/Artwork.hpp"
 #include "database/objects/Image.hpp"
 #include "database/objects/ImageId.hpp"
+#include "database/objects/Release.hpp"
+#include "database/objects/Track.hpp"
 #include "database/objects/TrackEmbeddedImage.hpp"
-#include "database/objects/TrackEmbeddedImageId.hpp"
-#include "image/EncodedImage.hpp"
-#include "services/artwork/IArtworkService.hpp"
+#include "database/objects/TrackEmbeddedImageLink.hpp"
+#include "database/objects/TrackList.hpp"
+#include "image/Exception.hpp"
+#include "image/IEncodedImage.hpp"
+#include "image/Image.hpp"
 
 namespace lms::artwork
 {
-    std::unique_ptr<IArtworkService> createArtworkService(db::IDb& db,
-                                                          const std::filesystem::path& defaultReleaseCoverSvgPath,
-                                                          const std::filesystem::path& defaultArtistImageSvgPath)
+    std::unique_ptr<IArtworkService> createArtworkService(db::IDb& db, const std::filesystem::path& defaultReleaseCoverSvgPath, const std::filesystem::path& defaultArtistImageSvgPath)
     {
         return std::make_unique<ArtworkService>(db, defaultReleaseCoverSvgPath, defaultArtistImageSvgPath);
     }
@@ -28,120 +52,42 @@ namespace lms::artwork
                                    const std::filesystem::path& defaultReleaseCoverSvgPath,
                                    const std::filesystem::path& defaultArtistImageSvgPath)
         : _db{ db }
-        , _cache{ 50 * 1024 * 1024 } // 50MB 缓存大小
+        , _cache{ core::Service<core::IConfig>::get()->getULong("cover-max-cache-size", 30) * 1000 * 1000 }
     {
-        if (auto* logger = lms::core::Service<lms::core::logging::ILogger>::get())
-        {
-            LMS_LOG(COVER, INFO, "Default release cover path = " << defaultReleaseCoverSvgPath);
-            LMS_LOG(COVER, INFO, "Default artist image path = " << defaultArtistImageSvgPath);
-        }
+        setJpegQuality(core::Service<core::IConfig>::get()->getULong("cover-jpeg-quality", 75));
 
-        try
-        {
-            if (std::filesystem::exists(defaultReleaseCoverSvgPath))
-            {
-                _defaultReleaseCover = std::make_shared<image::EncodedImage>(defaultReleaseCoverSvgPath, "image/svg+xml");
-            }
-        }
-        catch (const std::exception& e)
-        {
-            if (auto* logger = lms::core::Service<lms::core::logging::ILogger>::get())
-            {
-                LMS_LOG(COVER, WARNING, "Cannot load default release cover: " << e.what());
-            }
-        }
+        LMS_LOG(COVER, INFO, "Default release cover path = " << defaultReleaseCoverSvgPath);
+        LMS_LOG(COVER, INFO, "Max cache size = " << _cache.getMaxCacheSize());
 
-        try
-        {
-            if (std::filesystem::exists(defaultArtistImageSvgPath))
-            {
-                _defaultArtistImage = std::make_shared<image::EncodedImage>(defaultArtistImageSvgPath, "image/svg+xml");
-            }
-        }
-        catch (const std::exception& e)
-        {
-            if (auto* logger = lms::core::Service<lms::core::logging::ILogger>::get())
-            {
-                LMS_LOG(COVER, WARNING, "Cannot load default artist image: " << e.what());
-            }
-        }
+        _defaultReleaseCover = image::readImage(defaultReleaseCoverSvgPath); // may throw
+        _defaultArtistImage = image::readImage(defaultArtistImageSvgPath);   // may throw
     }
 
-    std::shared_ptr<image::IEncodedImage> ArtworkService::getImage(db::ArtworkId artworkId)
+    ArtworkService::~ArtworkService() = default;
+
+    std::unique_ptr<image::IEncodedImage> ArtworkService::getFromImageFile(const std::filesystem::path& p, std::string_view mimeType, std::optional<image::ImageSize> width) const
     {
-        if (artworkId.getValue() == 0)
+        std::unique_ptr<image::IEncodedImage> image;
+
+        try
         {
-            return nullptr;
-        }
-
-        // 先尝试从缓存获取
-        ImageCache::EntryDesc cacheKey{ artworkId, std::nullopt };
-        if (auto cachedImage = _cache.getImage(cacheKey))
-        {
-            return cachedImage;
-        }
-
-        db::Artwork::UnderlyingId underlyingArtworkId;
-
-        {
-            db::Session& session = _db.getTLSSession();
-            auto transaction = session.createReadTransaction();
-
-            db::Artwork::pointer artwork = db::Artwork::find(session, artworkId);
-            if (!artwork)
+            if (!width)
             {
-                return nullptr;
+                image = image::readImage(p, mimeType);
             }
-
-            underlyingArtworkId = artwork->getUnderlyingId();
+            else
+            {
+                auto rawImage{ image::decodeImage(p) };
+                rawImage->resize(*width);
+                image = image::encodeToJPEG(*rawImage, _jpegQuality);
+            }
         }
-
-        std::shared_ptr<image::IEncodedImage> image;
-        if (const auto* trackEmbeddedImageId = std::get_if<db::TrackEmbeddedImageId>(&underlyingArtworkId))
+        catch (const image::Exception& e)
         {
-            image = getTrackEmbeddedImage(*trackEmbeddedImageId, std::nullopt);
-        }
-        else if (const auto* imageId = std::get_if<db::ImageId>(&underlyingArtworkId))
-        {
-            image = getImageFile(*imageId, std::nullopt);
-        }
-
-        // 如果获取到图像，添加到缓存
-        if (image)
-        {
-            _cache.addImage(cacheKey, image);
+            LMS_LOG(COVER, ERROR, "Cannot read cover in file " << p << ": " << e.what());
         }
 
         return image;
-    }
-
-    std::shared_ptr<image::IEncodedImage> ArtworkService::getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId, std::optional<image::ImageSize> width)
-    {
-        std::string imageData;
-        std::string mimeType;
-
-        {
-            db::Session& session = _db.getTLSSession();
-            auto transaction = session.createReadTransaction();
-
-            db::TrackEmbeddedImage::pointer image = db::TrackEmbeddedImage::find(session, trackEmbeddedImageId);
-            if (!image)
-            {
-                return nullptr;
-            }
-
-            imageData = image->getData();
-            mimeType = image->getMimeType();
-        }
-
-        if (imageData.empty())
-        {
-            return nullptr;
-        }
-
-        // 将字符串数据转换为 std::byte span
-        std::span<const std::byte> dataSpan{ reinterpret_cast<const std::byte*>(imageData.data()), imageData.size() };
-        return std::make_shared<image::EncodedImage>(dataSpan, mimeType);
     }
 
     std::shared_ptr<image::IEncodedImage> ArtworkService::getDefaultReleaseArtwork()
@@ -154,65 +100,157 @@ namespace lms::artwork
         return _defaultArtistImage;
     }
 
-    std::shared_ptr<image::IEncodedImage> ArtworkService::getImageFile(db::ImageId imageId, std::optional<image::ImageSize> width)
+    std::unique_ptr<image::IEncodedImage> ArtworkService::getTrackImage(const std::filesystem::path& p, std::size_t index, std::optional<image::ImageSize> width) const
     {
-        if (imageId.getValue() == 0)
+        std::unique_ptr<image::IEncodedImage> image;
+
+        try
         {
-            return nullptr;
+            std::size_t currentIndex{};
+
+            audio::ParserOptions options;
+            options.readStyle = audio::ParserOptions::AudioPropertiesReadStyle::Fast; // only for images
+
+            auto audioFile{ audio::parseAudioFile(p) };
+            audioFile->getImageReader().visitImages([&](const audio::Image& parsedImage) {
+                if (currentIndex++ != index)
+                    return;
+
+                try
+                {
+                    if (!width)
+                    {
+                        image = image::readImage(parsedImage.data, parsedImage.mimeType);
+                    }
+                    else
+                    {
+                        auto rawImage{ image::decodeImage(parsedImage.data) };
+                        rawImage->resize(*width);
+                        image = image::encodeToJPEG(*rawImage, _jpegQuality);
+                    }
+                }
+                catch (const image::Exception& e)
+                {
+                    LMS_LOG(COVER, ERROR, "Cannot decode image from track " << p << ": " << e.what());
+                }
+            });
+        }
+        catch (const audio::Exception& e)
+        {
+            LMS_LOG(COVER, ERROR, "Cannot parse images from track " << p << ": " << e.what());
         }
 
-        std::filesystem::path imagePath;
+        return image;
+    }
 
+    db::ArtworkId ArtworkService::findTrackListImage(db::TrackListId trackListId)
+    {
+        db::ArtworkId artworkId;
+
+        // Iterate over all tracks and stop when we find an artwork
+        db::Session& session{ _db.getTLSSession() };
+        auto transaction{ session.createReadTransaction() };
+
+        db::TrackList::pointer trackList{ db::TrackList::find(session, trackListId) };
+        if (!trackList)
+            return artworkId;
+
+        const auto entries{ trackList->getEntries(db::Range{ 0, 10 }) };
+        for (const auto& entry : entries.results)
         {
-            db::Session& session = _db.getTLSSession();
-            auto transaction = session.createReadTransaction();
-
-            db::Image::pointer image = db::Image::find(session, imageId);
-            if (!image)
+            const auto track{ entry->getTrack() };
+            if (track->getPreferredMediaArtworkId().isValid())
             {
-                return nullptr;
+                artworkId = track->getPreferredMediaArtworkId();
+                break; // stop iteration
             }
 
-            imagePath = image->getAbsoluteFilePath();
+            if (track->getPreferredArtworkId().isValid())
+            {
+                artworkId = track->getPreferredArtworkId();
+                break; // stop iteration
+            }
         }
 
-        if (imagePath.empty() || !std::filesystem::exists(imagePath))
+        return artworkId;
+    }
+
+    std::shared_ptr<image::IEncodedImage> ArtworkService::getImage(db::ArtworkId artworkId, std::optional<image::ImageSize> width)
+    {
+        const ImageCache::EntryDesc cacheEntryDesc{ artworkId, width };
+
+        std::shared_ptr<image::IEncodedImage> image{ _cache.getImage(cacheEntryDesc) };
+        if (image)
+            return image;
+
+        db::Artwork::UnderlyingId underlyingArtworkId;
+
         {
-            return nullptr;
+            db::Session& session{ _db.getTLSSession() };
+            auto transaction{ session.createReadTransaction() };
+
+            db::Artwork::pointer artwork{ db::Artwork::find(session, artworkId) };
+            if (artwork)
+                underlyingArtworkId = artwork->getUnderlyingId();
         }
 
-        // For now, we just read the file. Resizing logic will be added later.
-        std::ifstream file(imagePath, std::ios::binary);
-        if (!file)
+        if (const auto* trackEmbeddedImageId = std::get_if<db::TrackEmbeddedImageId>(&underlyingArtworkId))
+            image = getTrackEmbeddedImage(*trackEmbeddedImageId, width);
+        else if (const auto* imageId = std::get_if<db::ImageId>(&underlyingArtworkId))
+            image = getImage(*imageId, width);
+
+        if (image)
+            _cache.addImage(cacheEntryDesc, image);
+
+        return image;
+    }
+
+    std::shared_ptr<image::IEncodedImage> ArtworkService::getImage(db::ImageId imageId, std::optional<image::ImageSize> width)
+    {
+        std::filesystem::path imageFile;
+        std::string mimeType;
         {
-            return nullptr;
+            db::Session& session{ _db.getTLSSession() };
+            auto transaction{ session.createReadTransaction() };
+
+            const db::Image::pointer image{ db::Image::find(session, imageId) };
+            if (!image)
+                return nullptr;
+
+            imageFile = image->getAbsoluteFilePath();
+            mimeType = image->getMimeType();
         }
 
-        std::vector<char> charData((std::istreambuf_iterator<char>(file)), std::istreambuf_iterator<char>());
-        std::vector<std::byte> data;
-        data.reserve(charData.size());
-        for (char c : charData)
+        return getFromImageFile(imageFile, mimeType, width);
+    }
+
+    std::shared_ptr<image::IEncodedImage> ArtworkService::getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId, std::optional<image::ImageSize> width)
+    {
+        std::shared_ptr<image::IEncodedImage> image;
+
         {
-            data.push_back(static_cast<std::byte>(c));
+            db::Session& session{ _db.getTLSSession() };
+            auto transaction{ session.createReadTransaction() };
+
+            // TODO: could be put outside transaction
+            db::TrackEmbeddedImageLink::find(session, trackEmbeddedImageId, [&](const db::TrackEmbeddedImageLink::pointer& link) {
+                if (!image)
+                    image = getTrackImage(link->getTrack()->getAbsoluteFilePath(), link->getIndex(), width);
+            });
         }
-        std::span<const std::byte> dataSpan{ data.data(), data.size() };
 
-        // Try to determine MIME type from file extension
-        std::string mimeType = "image/jpeg"; // default
-        std::string ext = imagePath.extension().string();
-        if (ext == ".png")
-            mimeType = "image/png";
-        else if (ext == ".gif")
-            mimeType = "image/gif";
-        else if (ext == ".webp")
-            mimeType = "image/webp";
-
-        return std::make_shared<image::EncodedImage>(dataSpan, mimeType);
+        return image;
     }
 
     void ArtworkService::flushCache()
     {
         _cache.flush();
     }
-} // namespace lms::artwork
 
+    void ArtworkService::setJpegQuality(unsigned quality)
+    {
+        _jpegQuality = std::clamp<unsigned>(quality, 1, 100);
+
+        LMS_LOG(COVER, INFO, "JPEG export quality = " << _jpegQuality);
+    }
+} // namespace lms::artwork

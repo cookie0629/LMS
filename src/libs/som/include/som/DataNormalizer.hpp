@@ -56,5 +56,3 @@ namespace lms::som
         std::vector<MinMax> _minmax; // Indexed min/max used to normalize data
     };
 } // namespace lms::som
-
-

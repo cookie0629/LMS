@@ -28,5 +28,3 @@ namespace lms::api::subsonic
     Response handleGetLicenseRequest(RequestContext& context);
     Response handleGetOpenSubsonicExtensions(RequestContext& context);
 } // namespace lms::api::subsonic
-
-

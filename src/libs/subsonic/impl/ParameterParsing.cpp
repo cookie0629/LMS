@@ -40,5 +40,3 @@ namespace lms::api::subsonic
         return password;
     }
 } // namespace lms::api::subsonic
-
-

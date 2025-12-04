@@ -1,85 +1,69 @@
+/*
+ * Copyright (C) 2018 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <optional>
+#include <set>
 #include <string>
-#include <vector>
 
+#include "audio/IAudioFileInfo.hpp"
 #include "audio/ITagReader.hpp"
+
+#include "types/TrackMetadata.hpp"
 
 namespace lms::scanner
 {
-    /**
-     * @brief 轨道元数据结构（简化版）
-     */
-    struct TrackMetadata
-    {
-        std::optional<std::string> title;
-        std::optional<std::string> artist;
-        std::vector<std::string> artists;
-        std::optional<std::string> album;
-        std::optional<std::string> albumArtist;
-        std::vector<std::string> albumArtists;
-        std::optional<std::string> genre;
-        std::vector<std::string> genres;
-        std::optional<std::string> date;
-        std::optional<int> trackNumber;
-        std::optional<int> discNumber;
-        std::optional<std::string> comment;
-    };
-
-    /**
-     * @brief 轨道元数据解析器（简化版）
-     * 
-     * 从音频标签中提取元数据信息
-     */
     class TrackMetadataParser
     {
     public:
-        /**
-         * @brief 解析参数
-         */
-        struct Parameters
+        struct SortByLengthDesc
         {
-            std::vector<std::string> artistTagDelimiters; // 艺术家标签分隔符
-            std::vector<std::string> defaultTagDelimiters;  // 默认标签分隔符
-            std::vector<std::string> artistsToNotSplit; // 不进行拆分的艺术家列表
-
-            Parameters()
-                : artistTagDelimiters{ ";", ",", "/" }
-                , defaultTagDelimiters{ ";", ",", "/" }
+            bool operator()(const std::string& a, const std::string& b) const
             {
+                if (a.length() != b.length())
+                    return a.length() > b.length();
+                return a < b; // Break ties using lexicographical order
             }
         };
 
-        TrackMetadataParser(const Parameters& params = Parameters{});
+        using WhiteList = std::set<std::string, SortByLengthDesc>;
+        struct Parameters
+        {
+            std::vector<std::string> artistTagDelimiters;
+            WhiteList artistsToNotSplit;
+            std::vector<std::string> defaultTagDelimiters;
+            std::vector<std::string> userExtraTags;
+        };
 
-        ~TrackMetadataParser() = default;
+        TrackMetadataParser(const Parameters& params = {});
+        ~TrackMetadataParser();
         TrackMetadataParser(const TrackMetadataParser&) = delete;
         TrackMetadataParser& operator=(const TrackMetadataParser&) = delete;
 
-        /**
-         * @brief 从标签读取器解析轨道元数据
-         */
-        TrackMetadata parseTrackMetadata(const audio::ITagReader& reader) const;
+        Track parseTrackMetaData(const audio::ITagReader& reader) const;
 
     private:
-        /**
-         * @brief 处理标签并填充元数据
-         */
-        void processTags(const audio::ITagReader& reader, TrackMetadata& metadata) const;
-        std::vector<std::string> extractValues(const audio::ITagReader& reader,
-                                               audio::TagType tagType,
-                                               const std::vector<std::string>& delimiters,
-                                               const std::vector<std::string>* whitelist = nullptr) const;
-        std::vector<std::string> splitAndNormalizeValue(std::string value,
-                                                        const std::vector<std::string>& delimiters,
-                                                        const std::vector<std::string>* whitelist = nullptr) const;
-        std::optional<std::string> getTagValue(const audio::ITagReader& reader, audio::TagType tagType) const;
-        std::optional<int> getTagValueAsInt(const audio::ITagReader& reader, audio::TagType tagType) const;
-        std::optional<int> parseNumberValue(const std::optional<std::string>& value) const;
-        std::optional<std::string> normalizeDate(const std::optional<std::string>& value) const;
+        void processTags(const audio::ITagReader& reader, Track& track) const;
+
+        std::optional<Medium> getMedium(const audio::ITagReader& tagReader) const;
+        std::optional<Release> getRelease(const audio::ITagReader& tagReader) const;
 
         const Parameters _params;
     };
 } // namespace lms::scanner
-

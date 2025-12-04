@@ -41,6 +41,7 @@ namespace lms::api::subsonic
         std::unordered_set<std::string> readOpenSubsonicDisabledClients(core::IConfig& config)
         {
             std::unordered_set<std::string> res;
+
             config.visitStrings("api-open-subsonic-disabled-clients",
                                 [&](std::string_view client) {
                                     res.emplace(std::string{ client });
@@ -60,5 +61,3 @@ namespace lms::api::subsonic
         };
     }
 } // namespace lms::api::subsonic
-
-

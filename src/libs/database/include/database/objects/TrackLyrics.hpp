@@ -1,20 +1,39 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <chrono>
 #include <filesystem>
 #include <map>
 #include <optional>
+#include <span>
 #include <string>
-#include <string_view>
-#include <vector>
 
 #include <Wt/Dbo/Field.h>
-#include <Wt/WDateTime.h>
 
+#include "database/IdType.hpp"
 #include "database/Object.hpp"
 #include "database/Types.hpp"
 #include "database/objects/TrackId.hpp"
-#include "database/objects/TrackLyricsId.hpp"
+
+LMS_DECLARE_IDTYPE(TrackLyricsId)
 
 namespace lms::db
 {
@@ -22,9 +41,6 @@ namespace lms::db
     class Session;
     class Track;
 
-    /**
-     * @brief 歌词对象（简化版）
-     */
     class TrackLyrics final : public Object<TrackLyrics, TrackLyricsId>
     {
     public:
@@ -59,17 +75,19 @@ namespace lms::db
             }
         };
 
-        // 同步歌词行（时间戳 -> 歌词文本）
+        // Find utilities
+        static std::size_t getCount(Session& session);
+        static std::size_t getExternalLyricsCount(Session& session);
+        static pointer find(Session& session, TrackLyricsId id);
+        static pointer find(Session& session, const std::filesystem::path& file);
+        static void find(Session& session, const FindParameters& params, const std::function<void(const TrackLyrics::pointer&)>& func);
+        static void find(Session& session, TrackLyricsId& lastRetrievedId, std::size_t count, const std::function<void(const TrackLyrics::pointer&)>& func);
+        static RangeResults<TrackLyricsId> findOrphanIds(Session& session, std::optional<Range> range);
+        static void findAbsoluteFilePath(Session& session, TrackLyricsId& lastRetrievedId, std::size_t count, const std::function<void(TrackLyricsId trackLyricsId, const std::filesystem::path& absoluteFilePath)>& func);
+
         using SynchronizedLines = std::map<std::chrono::milliseconds, std::string>;
 
-        // find
-        static std::size_t getCount(Session& session);
-        static pointer find(Session& session, TrackLyricsId id);
-        static pointer find(Session& session, TrackId trackId);
-        static pointer find(Session& session, const std::filesystem::path& absolutePath);
-        static void find(Session& session, const FindParameters& params, const std::function<void(const pointer&)>& func);
-
-        // accessors
+        // Readers
         const std::filesystem::path& getAbsoluteFilePath() const { return _fileAbsolutePath; }
         std::string_view getFileStem() const { return _fileStem; }
         const Wt::WDateTime& getLastWriteTime() const { return _fileLastWrite; }
@@ -79,13 +97,12 @@ namespace lms::db
         std::string_view getDisplayTitle() const { return _displayTitle; }
         std::chrono::milliseconds getOffset() const { return _offset; }
         bool isSynchronized() const { return _synchronized; }
-        bool isExternal() const { return !_fileAbsolutePath.empty(); }
         SynchronizedLines getSynchronizedLines() const;
         std::vector<std::string> getUnsynchronizedLines() const;
-        ObjectPtr<Track> getTrack() const;
-        ObjectPtr<Directory> getDirectory() const;
+        Wt::Dbo::ptr<Track> getTrack() const { return _track; }
+        Wt::Dbo::ptr<Directory> getDirectory() const { return _directory; }
 
-        // modifiers
+        // Writers
         void setAbsoluteFilePath(const std::filesystem::path& path);
         void setLastWriteTime(const Wt::WDateTime& fileLastWrite) { _fileLastWrite = fileLastWrite; }
         void setFileSize(std::size_t fileSize) { _fileSize = fileSize; }
@@ -94,9 +111,9 @@ namespace lms::db
         void setDisplayArtist(std::string_view displayArtist) { _displayArtist = displayArtist; }
         void setDisplayTitle(std::string_view displayTitle) { _displayTitle = displayTitle; }
         void setSynchronizedLines(const SynchronizedLines& lines);
-        void setUnsynchronizedLines(const std::vector<std::string>& lines);
-        void setTrack(ObjectPtr<Track> track);
-        void setDirectory(ObjectPtr<Directory> directory);
+        void setUnsynchronizedLines(std::span<const std::string> lines);
+        void setTrack(const ObjectPtr<Track>& track) { _track = getDboPtr(track); }
+        void setDirectory(const ObjectPtr<Directory>& directory) { _directory = getDboPtr(directory); }
 
         template<class Action>
         void persist(Action& a)
@@ -119,19 +136,18 @@ namespace lms::db
         friend class Session;
         static pointer create(Session& session);
 
-        std::filesystem::path _fileAbsolutePath; // 外部歌词文件路径（如果为空则表示嵌入式歌词）
-        std::string _fileStem;                   // 文件名（不含扩展名）
-        Wt::WDateTime _fileLastWrite;            // 文件最后修改时间
-        int _fileSize{};                         // 文件大小
-        std::string _lines;                      // JSON 编码的歌词行（可能包含时间戳）
-        std::string _language;                   // 语言代码
-        std::chrono::duration<int, std::milli> _offset{}; // 时间偏移
-        std::string _displayArtist;             // 显示艺术家
-        std::string _displayTitle;              // 显示标题
-        bool _synchronized{};                   // 是否为同步歌词
+        std::filesystem::path _fileAbsolutePath; // optional (if embedded in media file)
+        std::string _fileStem;                   // optional (if embedded in media file)
+        Wt::WDateTime _fileLastWrite;            // optional (if embedded in media file)
+        int _fileSize{};                         // optional (if embedded in media file)
+        std::string _lines;                      // a json encoded array of lines (with possibly offsets)
+        std::string _language;
+        std::chrono::duration<int, std::milli> _offset{};
+        std::string _displayArtist;
+        std::string _displayTitle;
+        bool _synchronized{};
 
         Wt::Dbo::ptr<Track> _track;
         Wt::Dbo::ptr<Directory> _directory;
     };
 } // namespace lms::db
-

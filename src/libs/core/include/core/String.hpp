@@ -1,114 +1,127 @@
+/*
+ * Copyright (C) 2020 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
+#include <chrono>
+#include <optional>
+#include <span>
+#include <sstream>
 #include <string>
 #include <string_view>
 #include <vector>
-#include <span>
+
+#define QUOTEME(x) QUOTEME_1(x)
+#define QUOTEME_1(x) #x
+
+namespace Wt
+{
+    class WDate;
+    class WDateTime;
+} // namespace Wt
 
 namespace lms::core::stringUtils
 {
-    /**
-     * @brief 分割字符串
-     * @param str 要分割的字符串
-     * @param separator 分隔符
-     * @return 分割后的字符串视图向量
-     */
-    std::vector<std::string_view> splitString(std::string_view str, char separator);
+    [[nodiscard]] std::vector<std::string_view> splitString(std::string_view string, char separator);
+    [[nodiscard]] std::vector<std::string_view> splitString(std::string_view string, std::string_view separator);
+    [[nodiscard]] std::vector<std::string_view> splitString(std::string_view string, std::span<const std::string_view> separators);
+    [[nodiscard]] std::vector<std::string_view> splitString(std::string_view string, std::span<const std::string> separators);
 
-    /**
-     * @brief 分割字符串（使用字符串分隔符）
-     * @param str 要分割的字符串
-     * @param separator 分隔符字符串
-     * @return 分割后的字符串视图向量
-     */
-    std::vector<std::string_view> splitString(std::string_view str, std::string_view separator);
+    [[nodiscard]] std::string joinStrings(std::span<const std::string> strings, std::string_view delimiter);
+    [[nodiscard]] std::string joinStrings(std::span<const std::string_view> strings, std::string_view delimiter);
+    [[nodiscard]] std::string joinStrings(std::span<const std::string> strings, char delimiter);
+    [[nodiscard]] std::string joinStrings(std::span<const std::string_view> strings, char delimiter);
 
-    /**
-     * @brief 连接字符串
-     * @param strings 字符串向量
-     * @param delimiter 分隔符
-     * @return 连接后的字符串
-     */
-    std::string joinStrings(std::span<const std::string> strings, std::string_view delimiter);
+    [[nodiscard]] std::string escapeAndJoinStrings(std::span<const std::string_view> strings, char delimiter, char escapeChar);
+    [[nodiscard]] std::vector<std::string> splitEscapedStrings(std::string_view string, char delimiter, char escapeChar);
 
-    /**
-     * @brief 连接字符串（使用字符分隔符）
-     * @param strings 字符串向量
-     * @param delimiter 分隔符字符
-     * @return 连接后的字符串
-     */
-    std::string joinStrings(std::span<const std::string> strings, char delimiter);
+    [[nodiscard]] std::string_view stringTrim(std::string_view str, std::string_view whitespaces = " \t\r");
+    [[nodiscard]] std::string_view stringTrimEnd(std::string_view str, std::string_view whitespaces = " \t\r");
 
-    /**
-     * @brief 去除字符串两端的空白字符
-     * @param str 要处理的字符串
-     * @param whitespaces 空白字符集合（默认为空格、制表符、回车符）
-     * @return 处理后的字符串视图
-     */
-    std::string_view stringTrim(std::string_view str, std::string_view whitespaces = " \t\r\n");
-
-    /**
-     * @brief 去除字符串左端的空白字符
-     * @param str 要处理的字符串
-     * @param whitespaces 空白字符集合
-     * @return 处理后的字符串视图
-     */
-    std::string_view stringTrimStart(std::string_view str, std::string_view whitespaces = " \t\r\n");
-
-    /**
-     * @brief 去除字符串右端的空白字符
-     * @param str 要处理的字符串
-     * @param whitespaces 空白字符集合
-     * @return 处理后的字符串视图
-     */
-    std::string_view stringTrimEnd(std::string_view str, std::string_view whitespaces = " \t\r\n");
-
-    /**
-     * @brief 将字符串转换为小写
-     * @param str 要转换的字符串
-     * @return 转换后的小写字符串
-     */
-    std::string stringToLower(std::string_view str);
-
-    /**
-     * @brief 将字符串转换为小写（原地修改）
-     * @param str 要转换的字符串（会被修改）
-     */
+    [[nodiscard]] std::string stringToLower(std::string_view str);
     void stringToLower(std::string& str);
+    [[nodiscard]] std::string stringToUpper(const std::string& str);
 
-    /**
-     * @brief 将字符串转换为大写
-     * @param str 要转换的字符串
-     * @return 转换后的大写字符串
-     */
-    std::string stringToUpper(std::string_view str);
+    [[nodiscard]] std::string bufferToString(std::span<const unsigned char> data);
 
-    /**
-     * @brief 将字符串转换为大写（原地修改）
-     * @param str 要转换的字符串（会被修改）
-     */
-    void stringToUpper(std::string& str);
+    [[nodiscard]] bool stringCaseInsensitiveEqual(std::string_view strA, std::string_view strB);
+    [[nodiscard]] std::string_view::size_type stringCaseInsensitiveContains(std::string_view str, std::string_view strtoFind);
 
-    /**
-     * @brief 不区分大小写的字符串比较
-     * @param strA 第一个字符串
-     * @param strB 第二个字符串
-     * @return true 如果字符串相等（忽略大小写），false 否则
-     */
-    bool stringCaseInsensitiveEqual(std::string_view strA, std::string_view strB);
-
-    /**
-     * @brief 检查字符串是否包含子字符串（不区分大小写）
-     * @param str 要搜索的字符串
-     * @param substr 要查找的子字符串
-     * @return true 如果包含，false 否则
-     */
-    bool stringCaseInsensitiveContains(std::string_view str, std::string_view substr);
-
-    /**
-     * @brief 首字母大写
-     * @param str 要处理的字符串（会被修改）
-     */
     void capitalize(std::string& str);
-} // namespace lms::core::stringUtils
 
+    template<typename T>
+    [[nodiscard]] std::optional<T> readAs(std::string_view str)
+    {
+        if constexpr (std::is_enum_v<T>)
+        {
+            using UnderlyingType = std::underlying_type_t<T>;
+            std::optional<UnderlyingType> underlyingValue{ readAs<UnderlyingType>(str) };
+            if (!underlyingValue)
+                return std::nullopt;
+
+            return static_cast<T>(*underlyingValue);
+        }
+        else
+        {
+            T res;
+            std::istringstream iss{ std::string{ str } };
+            iss >> res;
+            if (iss.fail())
+                return std::nullopt;
+
+            return res;
+        }
+    }
+
+    template<>
+    [[nodiscard]] std::optional<std::string> readAs(std::string_view str);
+
+    template<>
+    [[nodiscard]] std::optional<std::string_view> readAs(std::string_view str);
+
+    template<>
+    [[nodiscard]] std::optional<bool> readAs(std::string_view str);
+
+    [[nodiscard]] std::string replaceInString(std::string_view str, std::string_view from, std::string_view to);
+
+    [[nodiscard]] std::string jsEscape(std::string_view str);
+    [[nodiscard]] std::string jsonEscape(std::string_view str);
+    void writeJSEscapedString(std::ostream& os, std::string_view str);
+    void writeJsonEscapedString(std::ostream& os, std::string_view str);
+
+    [[nodiscard]] std::string xmlEscape(std::string_view str);
+    void writeXmlEscapedString(std::ostream& os, std::string_view str);
+
+    [[nodiscard]] std::string escapeString(std::string_view str, std::string_view charsToEscape, char escapeChar);
+    [[nodiscard]] std::string unescapeString(std::string_view str, char escapeChar);
+
+    [[nodiscard]] bool stringEndsWith(std::string_view str, std::string_view ending);
+
+    [[nodiscard]] std::optional<std::string> stringFromHex(std::string_view str);
+    [[nodiscard]] std::string toHexString(std::string_view str);
+
+    [[nodiscard]] std::string toISO8601String(const Wt::WDateTime& dateTime);
+    [[nodiscard]] std::string toISO8601String(const Wt::WDate& date);
+
+    [[nodiscard]] Wt::WDateTime fromISO8601String(std::string_view dateTime);
+    [[nodiscard]] Wt::WDateTime fromRFC822String(std::string_view dateTime);
+
+    // to "[minutes:seconds.milliseconds]"
+    std::string formatTimestamp(std::chrono::milliseconds timestamp);
+} // namespace lms::core::stringUtils

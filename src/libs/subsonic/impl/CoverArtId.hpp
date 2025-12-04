@@ -41,5 +41,3 @@ namespace lms::core::stringUtils
     template<>
     std::optional<api::subsonic::CoverArtId> readAs(std::string_view str);
 } // namespace lms::core::stringUtils
-
-

@@ -25,13 +25,11 @@
 
 namespace lms::core
 {
-    // 通用异常类型，供各模块（如 som、subsonic 等）复用
+    // TODO, rename to Exception
     class LmsException : public std::runtime_error
     {
     public:
-        explicit LmsException(std::string_view error = "")
+        LmsException(std::string_view error = "")
             : std::runtime_error{ std::string{ error } } {}
     };
 } // namespace lms::core
-
-

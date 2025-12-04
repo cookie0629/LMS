@@ -1,14 +1,32 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "Logger.hpp"
 
+#include <Wt/WDateTime.h>
+
 #include <algorithm>
-#include <chrono>
-#include <ctime>
 #include <fstream>
-#include <iomanip>
 #include <iostream>
-#include <sstream>
 #include <thread>
 
+#include "core/Exception.hpp"
 #include "core/String.hpp"
 
 namespace lms::core::logging
@@ -45,8 +63,6 @@ namespace lms::core::logging
             return "PODCAST";
         case Module::REMOTE:
             return "REMOTE";
-        case Module::SCANNER:
-            return "SCANNER";
         case Module::SCROBBLING:
             return "SCROBBLING";
         case Module::SERVICE:
@@ -77,7 +93,7 @@ namespace lms::core::logging
             return "warning";
         case Severity::INFO:
             return "info";
-        case Severity::DEBUG_LEVEL:
+        case Severity::DEBUG:
             return "debug";
         }
         return "";
@@ -87,6 +103,7 @@ namespace lms::core::logging
         : _logger{ logger }
         , _module{ module }
         , _severity{ severity }
+
     {
     }
 
@@ -113,49 +130,47 @@ namespace lms::core::logging
 
     Logger::Logger(Severity minSeverity, const std::filesystem::path& logFilePath)
     {
-        // 如果指定了日志文件，打开文件流
         if (!logFilePath.empty())
         {
             _logFileStream = std::make_unique<std::ofstream>(logFilePath, std::ios::out | std::ios::app);
             if (!_logFileStream->is_open())
             {
-                throw std::runtime_error("无法打开日志文件: " + logFilePath.string());
+                const std::error_code ec{ errno, std::generic_category() };
+                throw LmsException{ "Cannot open log file '" + logFilePath.string() + "' for writing: " + ec.message() };
             }
         }
 
-        // 根据最小严重级别设置输出流
-        // 使用 fallthrough 特性，从最小级别开始，所有更严重的级别都会输出
         switch (minSeverity)
         {
-        case Severity::DEBUG_LEVEL:
+        case core::logging::Severity::DEBUG:
             if (_logFileStream)
-                addOutputStream(*_logFileStream, Severity::DEBUG_LEVEL);
+                addOutputStream(*_logFileStream, { core::logging::Severity::DEBUG });
             else
-                addOutputStream(std::cout, Severity::DEBUG_LEVEL);
+                addOutputStream(std::cout, { core::logging::Severity::DEBUG });
             [[fallthrough]];
-        case Severity::INFO:
+        case core::logging::Severity::INFO:
             if (_logFileStream)
-                addOutputStream(*_logFileStream, Severity::INFO);
+                addOutputStream(*_logFileStream, { core::logging::Severity::INFO });
             else
-                addOutputStream(std::cout, Severity::INFO);
+                addOutputStream(std::cout, { core::logging::Severity::INFO });
             [[fallthrough]];
-        case Severity::WARNING:
+        case core::logging::Severity::WARNING:
             if (_logFileStream)
-                addOutputStream(*_logFileStream, Severity::WARNING);
+                addOutputStream(*_logFileStream, { core::logging::Severity::WARNING });
             else
-                addOutputStream(std::cerr, Severity::WARNING);
+                addOutputStream(std::cerr, { core::logging::Severity::WARNING });
             [[fallthrough]];
-        case Severity::ERROR:
+        case core::logging::Severity::ERROR:
             if (_logFileStream)
-                addOutputStream(*_logFileStream, Severity::ERROR);
+                addOutputStream(*_logFileStream, { core::logging::Severity::ERROR });
             else
-                addOutputStream(std::cerr, Severity::ERROR);
+                addOutputStream(std::cerr, { core::logging::Severity::ERROR });
             [[fallthrough]];
-        case Severity::FATAL:
+        case core::logging::Severity::FATAL:
             if (_logFileStream)
-                addOutputStream(*_logFileStream, Severity::FATAL);
+                addOutputStream(*_logFileStream, { core::logging::Severity::FATAL });
             else
-                addOutputStream(std::cerr, Severity::FATAL);
+                addOutputStream(std::cerr, { core::logging::Severity::FATAL });
             break;
         }
     }
@@ -164,25 +179,17 @@ namespace lms::core::logging
 
     void Logger::addOutputStream(std::ostream& os, Severity severity)
     {
-        // 查找是否已存在该输出流
-        auto it = std::find_if(_outputStreams.begin(), _outputStreams.end(),
-            [&os](const OutputStream& outputStream) {
-                return &outputStream.stream == &os;
-            });
-
-        // 如果不存在，创建新的输出流
+        auto it{ std::find_if(_outputStreams.begin(), _outputStreams.end(), [&os](const OutputStream& outputStream) { return &outputStream.stream == &os; }) };
         if (it == _outputStreams.end())
-        {
             it = _outputStreams.emplace(_outputStreams.end(), os);
-        }
 
-        // 将严重级别映射到输出流
+        assert(!_severityToOutputStreamMap.contains(severity));
         _severityToOutputStreamMap.emplace(severity, &(*it));
     }
 
     bool Logger::isSeverityActive(Severity severity) const
     {
-        return _severityToOutputStreamMap.find(severity) != _severityToOutputStreamMap.end();
+        return _severityToOutputStreamMap.contains(severity);
     }
 
     void Logger::processLog(const Log& log)
@@ -192,46 +199,12 @@ namespace lms::core::logging
 
     void Logger::processLog(Module module, Severity severity, std::string_view message)
     {
-        auto it = _severityToOutputStreamMap.find(severity);
-        if (it == _severityToOutputStreamMap.end())
-            return;
+        assert(isSeverityActive(severity)); // should have been filtered out by a isSeverityActive call
+        OutputStream* outputStream{ _severityToOutputStreamMap.at(severity) };
+        const Wt::WDateTime now{ Wt::WDateTime::currentDateTime() };
 
-        OutputStream* outputStream = it->second;
-        std::lock_guard<std::mutex> lock(outputStream->mutex);
-
-        // 获取当前时间
-        auto now = std::chrono::system_clock::now();
-        auto time_t = std::chrono::system_clock::to_time_t(now);
-        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
-            now.time_since_epoch()) % 1000;
-
-        // 格式化时间（使用线程安全的localtime）
-        std::tm tm_buf;
-        std::tm* tm_info = std::localtime(&time_t);
-        if (tm_info)
-        {
-            tm_buf = *tm_info;
-            tm_info = &tm_buf;
-        }
-        
-        std::ostringstream oss;
-        if (tm_info)
-        {
-            oss << std::put_time(tm_info, "%Y-%m-%d %H:%M:%S");
-        }
-        else
-        {
-            oss << "1970-01-01 00:00:00";
-        }
-        oss << "." << std::setfill('0') << std::setw(3) << ms.count();
-        
-        // 格式化日志消息
-        outputStream->stream 
-            << "[" << oss.str() << "] "
-            << "[" << lms::core::logging::getSeverityName(severity) << "] "
-            << "[" << lms::core::logging::getModuleName(module) << "] "
-            << message
-            << std::endl;
+        std::unique_lock lock{ outputStream->mutex };
+        outputStream->stream << stringUtils::toISO8601String(now) << " " << std::this_thread::get_id() << " [" << getSeverityName(severity) << "] [" << getModuleName(module) << "] " << message << std::endl;
     }
-} // namespace lms::core::logging
 
+} // namespace lms::core::logging

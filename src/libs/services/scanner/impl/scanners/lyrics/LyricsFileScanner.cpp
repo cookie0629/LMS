@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "LyricsFileScanner.hpp"
 
 #include <fstream>
@@ -7,16 +26,14 @@
 
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
-#include "database/Transaction.hpp"
 #include "database/objects/MediaLibrary.hpp"
 #include "database/objects/TrackLyrics.hpp"
-#include "database/objects/Directory.hpp"
 #include "services/scanner/ScanErrors.hpp"
 
 #include "ScannerSettings.hpp"
 #include "scanners/FileScanOperationBase.hpp"
 #include "scanners/Utils.hpp"
-#include "LyricsParser.hpp"
+#include "scanners/lyrics/LyricsParser.hpp"
 #include "types/Lyrics.hpp"
 
 namespace lms::scanner
@@ -29,7 +46,7 @@ namespace lms::scanner
             using FileScanOperationBase::FileScanOperationBase;
 
         private:
-            std::string_view getName() const override { return "ScanLyricsFile"; }
+            core::LiteralString getName() const override { return "ScanLyricsFile"; }
             void scan() override;
             OperationResult processResult() override;
 
@@ -43,7 +60,7 @@ namespace lms::scanner
             {
                 const std::error_code ec{ errno, std::generic_category() };
 
-                addError<FileScanError>(getFilePath(), "Unable to open lyrics file: " + ec.message());
+                addError<IOScanError>(getFilePath(), ec);
                 return;
             }
 
@@ -53,8 +70,6 @@ namespace lms::scanner
         LyricsFileScanOperation::OperationResult LyricsFileScanOperation::processResult()
         {
             db::Session& dbSession{ getDb().getTLSSession() };
-            auto transaction = dbSession.createWriteTransaction();
-
             db::TrackLyrics::pointer trackLyrics{ db::TrackLyrics::find(dbSession, getFilePath()) };
 
             if (!_parsedLyrics)
@@ -88,12 +103,8 @@ namespace lms::scanner
             else
                 trackLyrics.modify()->setUnsynchronizedLines(_parsedLyrics->unsynchronizedLines);
 
-            db::MediaLibrary::pointer mediaLibrary{ db::MediaLibrary::find(dbSession, getMediaLibrary().id) };
-            if (mediaLibrary)
-            {
-                db::Directory::pointer directory{ db::Directory::getOrCreate(dbSession, getFilePath().parent_path(), mediaLibrary) };
-                trackLyrics.modify()->setDirectory(directory);
-            }
+            db::MediaLibrary::pointer mediaLibrary{ db::MediaLibrary::find(dbSession, getMediaLibrary().id) }; // may be null if settings are updated in // => next scan will correct this
+            trackLyrics.modify()->setDirectory(utils::getOrCreateDirectory(dbSession, getFilePath().parent_path(), mediaLibrary));
 
             if (added)
             {
@@ -106,13 +117,13 @@ namespace lms::scanner
         }
     } // namespace
 
-    LyricsFileScanner::LyricsFileScanner(db::IDb& db, const ScannerSettings& settings)
+    LyricsFileScanner::LyricsFileScanner(db::IDb& db, ScannerSettings& _settings)
         : _db{ db }
-        , _settings{ settings }
+        , _settings{ _settings }
     {
     }
 
-    std::string_view LyricsFileScanner::getName() const
+    core::LiteralString LyricsFileScanner::getName() const
     {
         return "Lyrics scanner";
     }
@@ -130,7 +141,9 @@ namespace lms::scanner
     bool LyricsFileScanner::needsScan(const FileToScan& file) const
     {
         db::Session& dbSession{ _db.getTLSSession() };
-        db::TrackLyrics::pointer lyrics{ db::TrackLyrics::find(dbSession, file.filePath) };
+        auto transaction{ _db.getTLSSession().createReadTransaction() };
+
+        const db::TrackLyrics::pointer lyrics{ db::TrackLyrics::find(dbSession, file.filePath) };
         return !lyrics || lyrics->getLastWriteTime() != file.lastWriteTime;
     }
 
@@ -139,5 +152,3 @@ namespace lms::scanner
         return std::make_unique<LyricsFileScanOperation>(std::move(fileToScan), _db, _settings);
     }
 } // namespace lms::scanner
-
-

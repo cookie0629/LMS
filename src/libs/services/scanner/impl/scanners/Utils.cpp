@@ -1,100 +1,48 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "Utils.hpp"
 
-#include <algorithm>
-#include <filesystem>
 #include <system_error>
 
 #include "core/Path.hpp"
-#include "core/String.hpp"
+#include "database/Session.hpp"
+#include "database/objects/Directory.hpp"
+#include "database/objects/MediaLibrary.hpp"
 
 namespace lms::scanner::utils
 {
-    namespace
+    db::Directory::pointer getOrCreateDirectory(db::Session& session, const std::filesystem::path& path, const db::MediaLibrary::pointer& mediaLibrary)
     {
-        bool shouldSkipDirectory(const std::filesystem::path& directory, const std::filesystem::path* excludeDirFileName)
+        db::Directory::pointer directory{ db::Directory::find(session, path) };
+        if (!directory)
         {
-            if (!excludeDirFileName || excludeDirFileName->empty())
-            {
-                return false;
-            }
+            db::Directory::pointer parentDirectory;
+            if (path != mediaLibrary->getPath())
+                parentDirectory = getOrCreateDirectory(session, path.parent_path(), mediaLibrary);
 
-            std::error_code ec;
-            const auto marker = directory / *excludeDirFileName;
-            return std::filesystem::exists(marker, ec) && std::filesystem::is_regular_file(marker, ec);
+            directory = session.create<db::Directory>(path);
+            directory.modify()->setParent(parentDirectory);
+            directory.modify()->setMediaLibrary(mediaLibrary);
         }
-    } // namespace
+        // Don't update library if it does not match, will be updated elsewhere
 
-    std::vector<std::filesystem::path> discoverFiles(
-        const std::filesystem::path& rootPath,
-        const std::vector<std::string>& extensions,
-        const std::filesystem::path* excludeDirFileName)
-    {
-        std::vector<std::filesystem::path> files;
-
-        if (!std::filesystem::exists(rootPath) || !std::filesystem::is_directory(rootPath))
-        {
-            return files;
-        }
-
-        try
-        {
-            std::error_code ec;
-            std::filesystem::recursive_directory_iterator it(
-                rootPath,
-                std::filesystem::directory_options::skip_permission_denied,
-                ec);
-
-            if (ec)
-            {
-                return files;
-            }
-
-            const std::filesystem::recursive_directory_iterator end;
-            for (; it != end; ++it)
-            {
-                const auto& entry = *it;
-                ec.clear();
-                if (entry.is_directory(ec))
-                {
-                    if (shouldSkipDirectory(entry.path(), excludeDirFileName))
-                    {
-                        it.disable_recursion_pending();
-                    }
-                    continue;
-                }
-
-                ec.clear();
-                if (entry.is_regular_file(ec))
-                {
-                    const auto& path = entry.path();
-                    if (hasSupportedExtension(path, extensions))
-                    {
-                        files.push_back(path);
-                    }
-                }
-            }
-        }
-        catch (const std::filesystem::filesystem_error& e)
-        {
-            // 忽略权限错误等
-        }
-
-        return files;
-    }
-
-    bool hasSupportedExtension(
-        const std::filesystem::path& filePath,
-        const std::vector<std::string>& extensions)
-    {
-        if (extensions.empty())
-        {
-            return false;
-        }
-
-        std::string ext = core::pathUtils::getExtension(filePath);
-        core::stringUtils::stringToLower(ext); // 就地修改字符串
-
-        return std::find(extensions.begin(), extensions.end(), ext) != extensions.end();
+        return directory;
     }
 } // namespace lms::scanner::utils
-

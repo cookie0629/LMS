@@ -52,5 +52,3 @@ namespace lms::api::subsonic
         db::IDb& _db;
     };
 } // namespace lms::api::subsonic
-
-

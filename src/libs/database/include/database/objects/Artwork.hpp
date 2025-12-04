@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2025 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <filesystem>
@@ -17,9 +36,6 @@ namespace lms::db
     class Session;
     class TrackEmbeddedImage;
 
-    /**
-     * @brief Artwork 对象（支持 TrackEmbeddedImage 和 Image）
-     */
     class Artwork final : public Object<Artwork, ArtworkId>
     {
     public:
@@ -36,9 +52,7 @@ namespace lms::db
         UnderlyingId getUnderlyingId() const;
         Wt::WDateTime getLastWrittenTime() const;
         std::filesystem::path getAbsoluteFilePath() const;
-        ObjectPtr<TrackEmbeddedImage> getTrackEmbeddedImage() const;
         ObjectPtr<Image> getImage() const;
-        TrackEmbeddedImageId getTrackEmbeddedImageId() const;
         ImageId getImageId() const;
 
         template<class Action>
@@ -50,6 +64,8 @@ namespace lms::db
 
     private:
         friend class Session;
+        Artwork(ObjectPtr<TrackEmbeddedImage> trackEmbeddedImage);
+        Artwork(ObjectPtr<Image> image);
         static pointer create(Session& session, ObjectPtr<TrackEmbeddedImage> trackEmbeddedImage);
         static pointer create(Session& session, ObjectPtr<Image> image);
 
@@ -57,4 +73,3 @@ namespace lms::db
         Wt::Dbo::ptr<Image> _image;
     };
 } // namespace lms::db
-

@@ -37,5 +37,3 @@ namespace lms::api::subsonic
 
     Response::Node createAlbumNode(RequestContext& context, const db::ObjectPtr<db::Release>& release, bool id3, const db::ObjectPtr<db::Directory>& directory = {});
 } // namespace lms::api::subsonic
-
-

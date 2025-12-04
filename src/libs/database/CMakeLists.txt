@@ -1,62 +1,71 @@
-cmake_minimum_required(VERSION 3.20)
-
-# 创建 Database 库
 add_library(lmsdatabase STATIC
-    impl/Transaction.cpp
-    impl/Object.cpp
-    impl/Db.cpp
-    impl/Session.cpp
-    impl/Utils.cpp
-    impl/Migration.cpp
-	impl/objects/User.cpp
-	impl/objects/AuthToken.cpp
 	impl/objects/Artist.cpp
-	impl/objects/Release.cpp
+	impl/objects/ArtistInfo.cpp
+	impl/objects/Artwork.cpp
+	impl/objects/AuthToken.cpp
+	impl/objects/Cluster.cpp
+	impl/objects/Directory.cpp
+	impl/objects/Image.cpp
+	impl/objects/Listen.cpp
+	impl/objects/MediaLibrary.cpp
 	impl/objects/Medium.cpp
+	impl/objects/PlayListFile.cpp
+	impl/objects/PlayQueue.cpp
+	impl/objects/Podcast.cpp
+	impl/objects/PodcastEpisode.cpp
+	impl/objects/TrackArtistLink.cpp
+	impl/objects/TrackFeatures.cpp
+	impl/objects/TrackList.cpp
+	impl/objects/RatedArtist.cpp
+	impl/objects/RatedRelease.cpp
+	impl/objects/RatedTrack.cpp
+	impl/objects/Release.cpp
+	impl/objects/ScanSettings.cpp
+	impl/objects/StarredArtist.cpp
+	impl/objects/StarredRelease.cpp
+	impl/objects/StarredTrack.cpp
 	impl/objects/Track.cpp
+	impl/objects/TrackBookmark.cpp
 	impl/objects/TrackEmbeddedImage.cpp
 	impl/objects/TrackEmbeddedImageLink.cpp
-	impl/objects/TrackArtistLink.cpp
-	impl/objects/TrackList.cpp
 	impl/objects/TrackLyrics.cpp
-	impl/objects/Image.cpp
-	impl/objects/Artwork.cpp
-	impl/objects/MediaLibrary.cpp
-	impl/objects/Directory.cpp
-)
+	impl/objects/UIState.cpp
+	impl/objects/User.cpp
+	impl/Db.cpp
+	impl/IdType.cpp
+	impl/Migration.cpp
+	impl/Object.cpp
+	impl/QueryPlanRecorder.cpp
+	impl/Session.cpp
+	impl/SqlQuery.cpp
+	impl/Transaction.cpp
+	impl/Types.cpp
+	impl/Utils.cpp
+	)
+
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+	target_sources(lmsdatabase PRIVATE impl/TransactionChecker.cpp)
+endif()
 
 target_include_directories(lmsdatabase INTERFACE
-    include
-)
+	include
+	)
 
 target_include_directories(lmsdatabase PRIVATE
-    impl
-    include
-)
-
-# 链接依赖
-target_link_libraries(lmsdatabase PUBLIC
-    lmscore
-    ${WT_LIBRARIES}
-)
+	impl
+	include
+	)
 
 target_link_libraries(lmsdatabase PRIVATE
-    ${SQLite3_LIBRARIES}
-)
+	Wt::DboSqlite3
+	)
 
-# 设置 C++20 标准
-set_target_properties(lmsdatabase PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-)
+target_link_libraries(lmsdatabase PUBLIC
+	lmscore
+	std::filesystem
+	Wt::Dbo
+	)
 
-# 添加测试程序（简化版，直接编译）
-add_executable(test_database test/test_database.cpp)
-target_link_libraries(test_database PRIVATE 
-    lmsdatabase
-    lmscore
-)
-target_include_directories(test_database PRIVATE
-    include
-)
-
+if(BUILD_TESTING)
+	add_subdirectory(test)
+endif()

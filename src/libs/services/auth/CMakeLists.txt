@@ -1,59 +1,48 @@
-cmake_minimum_required(VERSION 3.20)
 
-# Auth Service 库
-
-# 创建 Auth Service 库
 add_library(lmsauth STATIC
-    impl/AuthServiceBase.cpp
-    impl/LoginThrottler.cpp
-    impl/PasswordServiceBase.cpp
-    impl/internal/InternalPasswordService.cpp
-    impl/AuthTokenService.cpp
-    impl/PasswordService.cpp
-    impl/AuthService.cpp
-)
+	impl/AuthTokenService.cpp
+	impl/AuthServiceBase.cpp
+	impl/EnvService.cpp
+	impl/LoginThrottler.cpp
+	impl/PasswordServiceBase.cpp
+	impl/http-headers/HttpHeadersEnvService.cpp
+	impl/internal/InternalPasswordService.cpp
+	)
 
-# 添加 AuthTokenService.hpp 到包含目录
-target_include_directories(lmsauth PRIVATE
-    impl
-)
-
-target_include_directories(lmsauth PUBLIC
-    include
-)
+target_include_directories(lmsauth INTERFACE
+	include
+	)
 
 target_include_directories(lmsauth PRIVATE
-    impl
-    include
-)
+	include
+	impl
+	)
 
-# 链接依赖
 target_link_libraries(lmsauth PUBLIC
-    lmscore
-    lmsdatabase
-    ${Boost_LIBRARIES}
-)
+	Wt::Wt
+	lmscore
+	lmsdatabase
+	)
+	
+# PAM
+option(USE_PAM "Use the PAM backend authentication API" ON)
+if (USE_PAM)
+	find_package(PAM QUIET)
+	if (USE_PAM AND NOT PAM_FOUND)
+		message(WARNING "PAM library not found: disabling")
+		set(USE_PAM OFF)
+	endif ()
+endif ()
 
-target_link_libraries(lmsauth PRIVATE
-    ${SQLite3_LIBRARIES}
-)
+if (USE_PAM)
+	message(STATUS "Using PAM authentication backend")
+else ()
+	message(STATUS "NOT using PAM authentication backend")
+endif ()
 
-# 设置 C++20 标准
-set_target_properties(lmsauth PROPERTIES
-    CXX_STANDARD 20
-    CXX_STANDARD_REQUIRED ON
-)
-
-# 添加测试程序
-add_executable(test_auth test/test_auth.cpp)
-target_link_libraries(test_auth PRIVATE 
-    lmsauth
-    lmscore
-    lmsdatabase
-    ${Boost_LIBRARIES}
-)
-target_include_directories(test_auth PRIVATE
-    include
-    impl
-)
-
+if (USE_PAM)
+	target_compile_options(lmsauth PRIVATE "-DLMS_SUPPORT_PAM")
+	target_sources(lmsauth PRIVATE impl/pam/PAMPasswordService.cpp)
+	target_include_directories(lmsauth PRIVATE  ${PAM_INCLUDE_DIR})
+	target_link_libraries(lmsauth PRIVATE ${PAM_LIBRARIES})
+endif (USE_PAM)

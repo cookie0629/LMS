@@ -1,46 +1,50 @@
+/*
+ * Copyright (C) 2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
 #pragma once
 
 #include "core/IConfig.hpp"
 
 #include <libconfig.h++>
-#include <filesystem>
 
 namespace lms::core
 {
-    /**
-     * @brief 配置实现类，使用 libconfig++ 解析配置文件
-     */
+    // Used to get config values from configuration files
     class Config final : public IConfig
     {
     public:
-        /**
-         * @brief 构造函数
-         * @param configPath 配置文件路径
-         * @throws std::runtime_error 如果配置文件无法读取
-         */
-        explicit Config(const std::filesystem::path& configPath);
-
+        Config(const std::filesystem::path& p);
         ~Config() override = default;
 
-        // 禁止拷贝和移动
         Config(const Config&) = delete;
         Config& operator=(const Config&) = delete;
         Config(Config&&) = delete;
         Config& operator=(Config&&) = delete;
 
     private:
-        // IConfig 接口实现
+        // Default values are returned in case of setting not found
         std::string_view getString(std::string_view setting, std::string_view def) override;
-        void visitStrings(std::string_view setting, 
-                         std::function<void(std::string_view)> func, 
-                         std::initializer_list<std::string_view> def) override;
+        void visitStrings(std::string_view setting, std::function<void(std::string_view)> _func, std::initializer_list<std::string_view> defs) override;
         std::filesystem::path getPath(std::string_view setting, const std::filesystem::path& def) override;
         unsigned long getULong(std::string_view setting, unsigned long def) override;
         long getLong(std::string_view setting, long def) override;
         bool getBool(std::string_view setting, bool def) override;
 
         libconfig::Config _config;
-        std::string _configFilePath;  // 保存配置文件路径用于错误信息
     };
 } // namespace lms::core
-

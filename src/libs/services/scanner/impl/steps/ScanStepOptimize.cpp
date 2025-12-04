@@ -1,47 +1,69 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "ScanStepOptimize.hpp"
 
 #include "core/ILogger.hpp"
-#include "core/Service.hpp"
 #include "database/IDb.hpp"
 #include "database/Session.hpp"
 
+#include "ScanContext.hpp"
+
 namespace lms::scanner
 {
-    ScanStepOptimize::ScanStepOptimize(db::IDb& db, const ScannerSettings& settings)
-        : ScanStepBase{ db, settings }
+    bool ScanStepOptimize::needProcess(const ScanContext& context) const
     {
-    }
+        if (context.scanOptions.forceOptimize)
+            return true;
 
-    bool ScanStepOptimize::execute(ScanStats& stats)
-    {
-        (void)stats;
-
-        if (!getScannerSettings().enableOptimize)
+        // Don't optimize if there are too few files: it may lead to some indexes not being used
+        // and will drastically slow down the scan process when adding more files later
+        if (context.stats.getChangesCount() > (context.stats.getTotalFileCount() / 5)
+            && context.stats.getTotalFileCount() >= 1'000)
         {
-            LMS_LOG(SCANNER, INFO, "Optimize step disabled, skipping");
             return true;
         }
 
-        LMS_LOG(SCANNER, INFO, "Starting optimize database step");
+        return false;
+    }
 
-        try
+    void ScanStepOptimize::process(ScanContext& context)
+    {
+        LMS_LOG(DBUPDATER, INFO, "Database analyze started");
+
+        auto& session{ _db.getTLSSession() };
+
+        std::vector<std::string> entries;
+        session.retrieveEntriesToAnalyze(entries);
+        context.currentStepStats.totalElems = entries.size();
+        _progressCallback(context.currentStepStats);
+
+        for (const std::string& entry : entries)
         {
-            auto& session = getDb().getTLSSession();
+            if (_abortScan)
+                break;
 
-            // PRAGMA optimize 在 SQLite 中会根据统计信息进行自动优化
-            session.execute("PRAGMA optimize;");
-            session.execute("ANALYZE;");
-
-            LMS_LOG(SCANNER, INFO, "Optimize database step completed");
-        }
-        catch (const std::exception& e)
-        {
-            LMS_LOG(SCANNER, ERROR, "Optimize database step failed: " << e.what());
-            return false;
+            _db.getTLSSession().analyzeEntry(entry);
+            context.currentStepStats.processedElems++;
+            _progressCallback(context.currentStepStats);
         }
 
-        return true;
+        LMS_LOG(DBUPDATER, INFO, "Database analyze complete");
     }
 } // namespace lms::scanner
-
-

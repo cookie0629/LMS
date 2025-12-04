@@ -1,3 +1,22 @@
+/*
+ * Copyright (C) 2020 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #include "core/UUID.hpp"
 
 #include <cassert>
@@ -10,18 +29,21 @@
 
 namespace lms::core
 {
+    namespace stringUtils
+    {
+        template<>
+        std::optional<UUID>
+        readAs(std::string_view str)
+        {
+            return UUID::fromString(str);
+        }
+    } // namespace stringUtils
     namespace
     {
-        /**
-         * @brief 检查字符串是否为有效的 UUID 格式
-         * @param str 要检查的字符串
-         * @return true 如果是有效的 UUID 格式，false 否则
-         */
         bool stringIsUUID(std::string_view str)
         {
-            // UUID 格式：xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx
             static const std::regex re{ R"([0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12})" };
-            
+
             return std::regex_match(std::cbegin(str), std::cend(str), re);
         }
     } // namespace
@@ -41,45 +63,28 @@ namespace lms::core
 
     UUID UUID::generate()
     {
-        // UUID v4 格式：xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx
-        // 其中第13位（第三部分的第一个字符）必须是 '4'
-        // 第17位（第四部分的第一个字符）必须是 '8', '9', 'a', 或 'b'
-        
+        // Form is "123e4567-e89b-12d3-a456-426614174000"
+        // TODO: store 128 bits and only convert to string when necessary
+
         std::ostringstream oss;
 
-        auto concatRandomHex = [](std::ostream& os, std::size_t charCount) {
-            for (std::size_t i = 0; i < charCount; ++i)
-            {
-                os << std::hex << random::getRandom<int>(0, 15);
-            }
-        };
+        auto concatRandomBytes{ [](std::ostream& os, std::size_t byteCount) {
+            for (std::size_t i{}; i < byteCount; ++i)
+                os << std::hex << std::setfill('0') << std::setw(2) << static_cast<int>(random::getRandom<std::uint8_t>(0, 255));
+        } };
 
-        // 第一部分：8 个十六进制字符
-        concatRandomHex(oss, 8);
+        concatRandomBytes(oss, 4);
         oss << "-";
-        
-        // 第二部分：4 个十六进制字符
-        concatRandomHex(oss, 4);
+        concatRandomBytes(oss, 2);
         oss << "-";
-        
-        // 第三部分：4 个十六进制字符，第一个字符必须是 '4'（UUID v4）
-        oss << "4";
-        concatRandomHex(oss, 3);
+        concatRandomBytes(oss, 2);
         oss << "-";
-        
-        // 第四部分：4 个十六进制字符，第一个字符必须是 '8', '9', 'a', 或 'b'
-        int variant = random::getRandom<int>(8, 11);  // 8, 9, 10(a), 11(b)
-        oss << std::hex << variant;
-        concatRandomHex(oss, 3);
+        concatRandomBytes(oss, 2);
         oss << "-";
-        
-        // 第五部分：12 个十六进制字符
-        concatRandomHex(oss, 12);
+        concatRandomBytes(oss, 6);
 
-        std::string uuidStr = oss.str();
-        const auto uuid = fromString(uuidStr);
-        assert(uuid.has_value());
+        const auto uuid{ fromString(oss.str()) };
+        assert(uuid);
         return uuid.value();
     }
 } // namespace lms::core
-

@@ -41,5 +41,3 @@ namespace lms::api::subsonic
 
     SubsonicResourceConfig readSubsonicResourceConfig(core::IConfig& _config);
 } // namespace lms::api::subsonic
-
-

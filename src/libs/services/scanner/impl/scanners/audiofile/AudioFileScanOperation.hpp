@@ -1,35 +1,79 @@
+/*
+ * Copyright (C) 2024 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
-#include <memory>
-#include <optional>
+#include <vector>
 
+#include "audio/AudioTypes.hpp"
 #include "audio/IAudioFileInfo.hpp"
-#include "../FileScanOperationBase.hpp"
+#include "audio/IImageReader.hpp"
+#include "image/Types.hpp"
+
+#include "scanners/FileScanOperationBase.hpp"
+#include "scanners/FileToScan.hpp"
+#include "scanners/IFileScanOperation.hpp"
+
+#include "types/TrackMetadata.hpp"
+
+namespace lms::db
+{
+    class IDb;
+} // namespace lms::db
 
 namespace lms::scanner
 {
-    /**
-     * @brief 音频文件扫描操作（简化版）
-     * 
-     * 注意：完整版本需要音频处理库（如 TagLib）支持
-     */
+    class TrackMetadataParser;
+
+    struct ImageInfo
+    {
+        std::size_t index;
+        audio::Image::Type type{ audio::Image::Type::Unknown };
+        std::uint64_t hash{};
+        std::size_t size{};
+        image::ImageProperties properties;
+        std::string mimeType;
+        std::string description;
+    };
+
     class AudioFileScanOperation : public FileScanOperationBase
     {
     public:
-        AudioFileScanOperation(FileToScan&& fileToScan, db::IDb& db, const ScannerSettings& settings);
-        ~AudioFileScanOperation() override = default;
+        AudioFileScanOperation(FileToScan&& fileToScan, db::IDb& db, const ScannerSettings& settings, const TrackMetadataParser& metadataParser, const audio::ParserOptions& parserOptions);
+        ~AudioFileScanOperation() override;
         AudioFileScanOperation(const AudioFileScanOperation&) = delete;
         AudioFileScanOperation& operator=(const AudioFileScanOperation&) = delete;
 
     private:
-        std::string_view getName() const override { return "ScanAudioFile"; }
+        core::LiteralString getName() const override { return "ScanAudioFile"; }
         void scan() override;
         OperationResult processResult() override;
 
-        // 简化版：暂时不存储元数据
-        // 完整版本需要存储：音频属性、轨道信息、图像等
-        bool _scanSuccess{ false };
-        std::unique_ptr<audio::IAudioFileInfo> _audioFileInfo; // 音频文件信息（如果解析成功）
+        const TrackMetadataParser& _metadataParser;
+        const audio::ParserOptions& _parserOptions;
+
+        struct AudioFileInfo
+        {
+            audio::AudioProperties audioProperties;
+            Track track;
+            std::vector<ImageInfo> images;
+        };
+        std::optional<AudioFileInfo> _file;
     };
 } // namespace lms::scanner
-

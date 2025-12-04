@@ -56,5 +56,3 @@ namespace lms::api::subsonic
         return response;
     };
 } // namespace lms::api::subsonic
-
-

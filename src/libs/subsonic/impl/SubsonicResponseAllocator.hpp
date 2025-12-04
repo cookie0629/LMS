@@ -75,5 +75,3 @@ namespace lms::api::subsonic
     template<typename T>
     using ResponseAllocator = Allocator<TLSMonotonicMemoryResource, T>;
 } // namespace lms::api::subsonic
-
-

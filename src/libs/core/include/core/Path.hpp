@@ -1,75 +1,56 @@
+/*
+ * Copyright (C) 2016 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <filesystem>
+#include <span>
 #include <string>
 #include <string_view>
-#include <span>
 
 namespace lms::core::pathUtils
 {
-    /**
-     * @brief 检查路径是否存在
-     * @param path 要检查的路径
-     * @return true 如果路径存在，false 否则
-     */
-    bool exists(const std::filesystem::path& path);
-
-    /**
-     * @brief 检查路径是否为目录
-     * @param path 要检查的路径
-     * @return true 如果是目录，false 否则
-     */
-    bool isDirectory(const std::filesystem::path& path);
-
-    /**
-     * @brief 检查路径是否为普通文件
-     * @param path 要检查的路径
-     * @return true 如果是普通文件，false 否则
-     */
-    bool isFile(const std::filesystem::path& path);
-
-    /**
-     * @brief 获取文件名（不含路径）
-     * @param path 文件路径
-     * @return 文件名
-     */
-    std::string getFilename(const std::filesystem::path& path);
-
-    /**
-     * @brief 获取文件扩展名（包含点号，如 .mp3）
-     * @param path 文件路径
-     * @return 扩展名，如果没有则返回空字符串
-     */
-    std::string getExtension(const std::filesystem::path& path);
-
-    /**
-     * @brief 获取父目录路径
-     * @param path 文件或目录路径
-     * @return 父目录路径
-     */
-    std::filesystem::path getParent(const std::filesystem::path& path);
-
-    /**
-     * @brief 拼接两个路径
-     * @param p1 第一个路径
-     * @param p2 第二个路径
-     * @return 拼接后的路径
-     */
-    std::filesystem::path combine(const std::filesystem::path& p1, const std::filesystem::path& p2);
-
-    /**
-     * @brief 检查文件是否有指定的扩展名之一
-     * @param file 文件路径
-     * @param extensions 扩展名列表（如 {".mp3", ".flac", ".ogg"}）
-     * @return true 如果文件有任一扩展名，false 否则
-     */
+    // Check if file's extension is one of provided extensions
     bool hasFileAnyExtension(const std::filesystem::path& file, std::span<const std::filesystem::path> extensions);
 
-    /**
-     * @brief 清理文件名，移除非法字符
-     * @param fileStem 文件名（不含扩展名）
-     * @return 清理后的文件名
-     */
+    // Check if a path is within a directory (excludeDirFileName is a relative can be used to exclude a whole directory and its subdirectory, must not have parent_path)
+    // Caller responsibility to call with normalized paths
+    bool isPathInRootPath(const std::filesystem::path& path, const std::filesystem::path& rootPath, const std::filesystem::path* excludeDirFileName = {});
+
+    std::filesystem::path getLongestCommonPath(const std::filesystem::path& path1, const std::filesystem::path& path2);
+
+    template<typename Iterator>
+    std::filesystem::path getLongestCommonPath(Iterator first, Iterator last)
+    {
+        std::filesystem::path longestCommonPath;
+
+        if (first == last)
+            return longestCommonPath;
+
+        longestCommonPath = *first++;
+
+        while (first != last)
+            longestCommonPath = core::pathUtils::getLongestCommonPath(*first++, longestCommonPath);
+
+        return longestCommonPath;
+    }
+
+    // A method that sanitize a file stem, removing any illegal chars
     std::string sanitizeFileStem(std::string_view fileStem);
 } // namespace lms::core::pathUtils
-

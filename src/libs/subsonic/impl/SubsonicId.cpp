@@ -180,5 +180,3 @@ namespace lms::core::stringUtils
         return std::nullopt;
     }
 } // namespace lms::core::stringUtils
-
-

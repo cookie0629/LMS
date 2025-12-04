@@ -77,5 +77,3 @@ namespace lms::core::stringUtils
         return res;
     }
 } // namespace lms::core::stringUtils
-
-

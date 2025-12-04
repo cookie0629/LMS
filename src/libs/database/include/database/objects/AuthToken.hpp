@@ -1,8 +1,26 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <optional>
 #include <string_view>
-#include <functional>
 
 #include <Wt/Dbo/Field.h>
 #include <Wt/WDateTime.h>
@@ -16,9 +34,6 @@ namespace lms::db
     class Session;
     class User;
 
-    /**
-     * @brief 认证令牌数据对象
-     */
     class AuthToken final : public Object<AuthToken, AuthTokenId>
     {
     public:
@@ -30,7 +45,7 @@ namespace lms::db
         static pointer find(Session& session, std::string_view domain, std::string_view value);
         static void find(Session& session, std::string_view domain, UserId userId, std::function<void(const AuthToken::pointer&)> visitor);
         static void removeExpiredTokens(Session& session, std::string_view domain, const Wt::WDateTime& now);
-        static void clearUserTokens(Session& session, std::string_view domain, UserId userId);
+        static void clearUserTokens(Session& session, std::string_view domain, UserId user);
 
         // Accessors
         const Wt::WDateTime& getExpiry() const { return _expiry; }
@@ -38,10 +53,7 @@ namespace lms::db
         const std::string& getValue() const { return _value; }
         std::size_t getUseCount() const { return _useCount; }
         Wt::WDateTime getLastUsed() const { return _lastUsed; }
-        std::optional<std::size_t> getMaxUseCount() const 
-        { 
-            return _maxUseCount ? std::optional<std::size_t>(static_cast<std::size_t>(*_maxUseCount)) : std::nullopt;
-        }
+        std::optional<std::size_t> getMaxUseCount() const { return _maxUseCount; }
 
         // Setters
         std::size_t incUseCount() { return ++_useCount; }
@@ -73,4 +85,3 @@ namespace lms::db
         Wt::Dbo::ptr<User> _user;
     };
 } // namespace lms::db
-

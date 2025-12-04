@@ -107,5 +107,3 @@ namespace lms::som
             os << "(" << _minmax[i].min << ", " << _minmax[i].max << ")";
     }
 } // namespace lms::som
-
-

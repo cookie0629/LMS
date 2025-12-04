@@ -1,101 +1,104 @@
+/*
+ * Copyright (C) 2013 Emeric Poupon
+ *
+ * This file is part of LMS.
+ *
+ * LMS is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * LMS is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 #pragma once
 
 #include <Wt/Dbo/Session.h>
+
 #include <span>
 #include <string>
 #include <string_view>
+#include <vector>
+
+#include "database/Transaction.hpp"
+#include "database/Types.hpp"
 
 namespace lms::db
 {
     class IDb;
-    class WriteTransaction;
-    class ReadTransaction;
-
-    /**
-     * @brief 数据库会话类，封装 Wt::Dbo::Session
-     */
     class Session
     {
     public:
-        /**
-         * @brief 构造函数
-         * @param db 数据库引用
-         */
-        explicit Session(IDb& db);
-        
+        Session(IDb& db);
         ~Session() = default;
         Session(const Session&) = delete;
         Session& operator=(const Session&) = delete;
 
-        /**
-         * @brief 创建写事务
-         * @return 写事务对象
-         */
-        WriteTransaction createWriteTransaction();
+        [[nodiscard]] WriteTransaction createWriteTransaction();
+        [[nodiscard]] ReadTransaction createReadTransaction();
 
-        /**
-         * @brief 创建读事务
-         * @return 读事务对象
-         */
-        ReadTransaction createReadTransaction();
-
-        /**
-         * @brief 检查是否有写事务
-         */
         void checkWriteTransaction() const;
-
-        /**
-         * @brief 检查是否有读事务
-         */
         void checkReadTransaction() const;
 
-        /**
-         * @brief 执行 SQL 语句
-         * @param statement SQL 语句
-         */
         void execute(std::string_view statement);
 
-        /**
-         * @brief 准备数据库表（如果不存在则创建）
-         */
-        void prepareTablesIfNeeded();
+        // All these methods will acquire transactions
+        void fullAnalyze(); // helper for retrieveEntriesToAnalyze + analyzeEntry
+        void retrieveEntriesToAnalyze(std::vector<std::string>& entryList);
+        void analyzeEntry(const std::string& entry);
 
-        /**
-         * @brief 迁移数据库架构（如果需要）
-         * @return true 如果执行了迁移，false 否则
-         */
-        bool migrateSchemaIfNeeded();
+        bool areAllTablesEmpty(); // need to acquire a read transaction
+        FileStats getFileStats(); // need to acquire a read transaction
 
-        /**
-         * @brief 获取 Wt::Dbo::Session 指针
-         */
+        void prepareTablesIfNeeded(); // need to run only once at startup
+        bool migrateSchemaIfNeeded(); // returns true if migration was performed
+        void createIndexesIfNeeded();
+        void vacuumIfNeeded();
+        void vacuum();
+
+        // returning a ptr here to ease further wrapping using operator->
         Wt::Dbo::Session* getDboSession() { return &_session; }
         const Wt::Dbo::Session* getDboSession() const { return &_session; }
 
-        /**
-         * @brief 获取数据库引用
-         */
         IDb& getDb() { return _db; }
 
-        /**
-         * @brief 创建数据对象
-         * @tparam Object 对象类型
-         * @tparam Args 参数类型
-         * @param args 构造参数
-         * @return 对象指针
-         */
         template<typename Object, typename... Args>
         typename Object::pointer create(Args&&... args)
         {
             checkWriteTransaction();
+
             typename Object::pointer res{ Object::create(*this, std::forward<Args>(args)...) };
-            _session.flush();
+            getDboSession()->flush();
+
             return res;
         }
 
+        template<typename Object>
+        void destroy(typename Object::IdType id)
+        {
+            destroy<Object>(std::span{ &id, 1 });
+        }
+
+        template<typename Object>
+        void destroy(std::span<const typename Object::IdType> ids)
+        {
+            checkWriteTransaction();
+
+            const std::string query{ std::string{ "DELETE FROM " } + _session.tableName<Object>() + " WHERE id = ?" };
+            for (typename Object::IdType id : ids)
+                execute(query, id.getValue());
+        }
+
     private:
+        void execute(std::string_view query, long long id);
+
         IDb& _db;
         Wt::Dbo::Session _session;
     };
 } // namespace lms::db
-
