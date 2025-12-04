@@ -51,6 +51,8 @@ namespace lms::scanner
     // Main goals to keepthe scanner fast:
     // - single pass on files: only 1 filesystem exploration must be done (no further reads triggered by parsed values)
     // - stable: 1 single scan (full or not) is enough: successive scans must have no effect if there is no change in the files
+    // ScannerService: 媒体库扫描服务的核心实现，负责调度定时/立即扫描并执行各个扫描步骤。
+    // ScannerService: основная реализация сервиса сканирования медиатеки, планирует периодические/ручные запуски и выполняет шаги сканирования.
     class ScannerService : public IScannerService
     {
     public:
@@ -69,13 +71,14 @@ namespace lms::scanner
         void start();
         void stop();
 
-        // Job handling
+        // Job 调度相关 / обработка фоновых задач
         void scheduleNextScan();
         void scheduleScan(const ScanOptions& scanOptions, const Wt::WDateTime& dateTime = {});
 
         void abortScan();
 
-        // Update database (scheduled callback)
+        // 定时回调：执行一次扫描并更新数据库。
+        // Плановый коллбек: запускает сканирование и обновляет БД.
         void scan(const ScanOptions& scanOptions);
         void processScanSteps(ScanContext& context);
 

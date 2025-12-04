@@ -26,6 +26,8 @@ namespace lms::scanner
 {
     struct ScanContext;
 
+    // IScanStep: 扫描流程中的一个步骤（如扫描文件、检查缺失文件等）的抽象接口。
+    // IScanStep: абстракция одного шага сканирования (скан файлов, проверка удалённых файлов и т.п.).
     class IScanStep
     {
     public:

@@ -190,7 +190,6 @@ namespace lms::scanner
 
     bool ScanStepCheckForRemovedFiles::needProcess([[maybe_unused]] const ScanContext& context) const
     {
-        // always check for removed files
         return true;
     }
 

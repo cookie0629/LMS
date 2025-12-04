@@ -37,14 +37,15 @@ namespace lms::scanner
     public:
         using ProcessFunction = std::function<void(std::span<std::unique_ptr<core::IJob>>)>;
 
-        // processBatchSize -> how many jobs done to notify at once using processJobsDoneFunc
-        // drainThreshold: fraction of maxQueueSize at which completed jobs are processed
+        // processBatchSize: 每次调用回调时最多处理多少已完成任务。
+        // drainThreshold: 触发“排水”的阈值（已完成任务数 / 队列容量）。
         JobQueue(core::IJobScheduler& scheduler, std::size_t maxQueueSize, ProcessFunction processJobsDoneFunc, std::size_t processBatchSize, float drainThreshold);
         ~JobQueue();
         JobQueue(const JobQueue&) = delete;
         JobQueue& operator=(const JobQueue&) = delete;
 
-        // push can wait and invoke the supplied ProcessFunction
+        // push 可能会阻塞并调用回调以处理已完成任务。
+        // push может блокироваться и вызывать ProcessFunction для обработки завершённых задач.
         void push(std::unique_ptr<core::IJob> job);
         void finish();
 

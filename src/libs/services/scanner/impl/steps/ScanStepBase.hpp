@@ -41,6 +41,8 @@ namespace lms::scanner
     struct ScanStepStats;
     struct ScanContext;
 
+    // ScanStepBase: 所有扫描步骤的公共基类，封装 Job 调度、错误记录以及文件扫描器访问。
+    // ScanStepBase: базовый класс для всех шагов сканера, инкапсулирует планировщик задач, логгер ошибок и доступ к FileScanners.
     class ScanStepBase : public IScanStep
     {
     public:

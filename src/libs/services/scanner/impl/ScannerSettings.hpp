@@ -31,8 +31,12 @@
 
 namespace lms::scanner
 {
+    // 在某个目录中放置该文件时，该目录会被扫描器忽略。
+    // Если в каталоге есть этот файл, сканер будет игнорировать этот каталог.
     static inline const std::filesystem::path excludeDirFileName{ ".lmsignore" };
 
+    // ScannerSettings: 从数据库/配置中聚合出来的扫描配置（时间、周期、标签分隔符、媒体库列表等）。
+    // ScannerSettings: агрегированные настройки сканера (время, период, разделители тегов, список медиатек и т.д.).
     struct ScannerSettings
     {
         std::size_t audioScanVersion{};

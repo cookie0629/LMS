@@ -41,6 +41,8 @@ namespace lms::scanner
     namespace
     {
         using ExploreFileCallback = std::function<bool(std::error_code, const std::filesystem::path& path, const std::filesystem::directory_entry*)>;
+        // exploreFilesRecursive: 递归遍历目录树，对每个文件/目录调用回调，支持通过 .lmsignore 排除目录。
+        // exploreFilesRecursive: рекурсивно обходит дерево каталогов, вызывает коллбек для каждого файла/каталога и поддерживает исключение по .lmsignore.
         bool exploreFilesRecursive(const std::filesystem::path& directory, ExploreFileCallback cb, const std::filesystem::path* excludeDirFileName)
         {
             std::error_code ec;
@@ -91,6 +93,8 @@ namespace lms::scanner
             return true;
         }
 
+        // FileScanJob: 在工作线程中分析一批文件并生成 IFileScanOperation 列表。
+        // FileScanJob: обрабатывает партию файлов в рабочем потоке и создаёт список IFileScanOperation.
         class FileScanJob : public core::IJob
         {
         public:
@@ -162,9 +166,8 @@ namespace lms::scanner
         };
     } // namespace
 
-    bool ScanStepScanFiles::needProcess([[maybe_unused]] const ScanContext& context) const
-    {
-        // Always need to scan files
+        bool ScanStepScanFiles::needProcess([[maybe_unused]] const ScanContext& context) const
+        {
         return true;
     }
 

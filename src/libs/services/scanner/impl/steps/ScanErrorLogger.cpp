@@ -27,7 +27,8 @@ namespace lms::scanner
 {
     void ScanErrorLogger::visit([[maybe_unused]] const scanner::ScanError& error)
     {
-        // There should never be a ScanError without a specific type
+        // 理论上不应出现“纯 ScanError”而没有具体子类型。
+        // Теоретически ScanError без конкретного подтипа возникать не должен.
         assert(false);
     }
 

@@ -35,6 +35,8 @@
 
 namespace lms::scanner
 {
+    // refreshTracingLoggerStats: 将与数据库规模相关的统计信息写入 TraceLogger，用于性能分析。
+    // refreshTracingLoggerStats: пишет в TraceLogger статистику по размеру БД для последующего анализа производительности.
     void ScannerService::refreshTracingLoggerStats()
     {
         auto* traceLogger{ core::Service<core::tracing::ITraceLogger>::get() };

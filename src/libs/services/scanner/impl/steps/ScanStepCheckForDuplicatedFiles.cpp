@@ -30,7 +30,6 @@ namespace lms::scanner
 {
     bool ScanStepCheckForDuplicatedFiles::needProcess([[maybe_unused]] const ScanContext& context) const
     {
-        // Always check for everything
         return true;
     }
 

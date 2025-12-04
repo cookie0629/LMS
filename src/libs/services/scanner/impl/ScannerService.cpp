@@ -154,12 +154,14 @@ namespace lms::scanner
 
     } // namespace
 
+    // 工厂函数：创建 ScannerService 实例。
+    // Фабричная функция: создаёт экземпляр ScannerService.
     std::unique_ptr<IScannerService> createScannerService(db::IDb& db, const std::filesystem::path& cachePath)
     {
         return std::make_unique<ScannerService>(db, cachePath);
     }
 
-    ScannerService::ScannerService(db::IDb& db, const std::filesystem::path& cachePath)
+        ScannerService::ScannerService(db::IDb& db, const std::filesystem::path& cachePath)
         : _db{ db }
         , _jobScheduler{ core::createJobScheduler("Scanner", getScannerThreadCount()) }
         , _cachePath{ cachePath }
@@ -176,8 +178,8 @@ namespace lms::scanner
             totalFileCount = session.getFileStats().getTotalFileCount();
         }
 
-        // Force optimize in case scanner aborted during a large import, but do this only if there are enough elements in the database
-        // Otherwise, indexes may be not used and queries may be slower and slower while adding more and more elements in the db
+        // 如果之前在大批量导入时被中止，则强制优化一次，以避免索引长期未使用导致查询越来越慢。
+        // При аварийном прерывании большого импорта делает дополнительную оптимизацию, чтобы индексы продолжали использоваться.
         LMS_LOG(DBUPDATER, INFO, "Scanned file count = " << totalFileCount);
         if (totalFileCount >= 1'000)
             _db.getTLSSession().fullAnalyze();
@@ -501,7 +503,8 @@ namespace lms::scanner
             .cachePath = _cachePath
         };
 
-        // Order is important: steps are sequential
+        // 扫描步骤顺序至关重要，后续步骤依赖前面步骤的结果。
+        // Порядок шагов критичен: каждый следующий шаг опирается на результаты предыдущих.
         _scanSteps.clear();
         _scanSteps.emplace_back(std::make_unique<ScanStepScanFiles>(params));
         _scanSteps.emplace_back(std::make_unique<ScanStepCheckForRemovedFiles>(params));
