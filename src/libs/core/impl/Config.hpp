@@ -24,10 +24,13 @@
 
 namespace lms::core
 {
-    // Used to get config values from configuration files
+    // Config: конкретная реализация IConfig, использующая libconfig++ для чтения файла.
+    // Config：IConfig 的具体实现，内部使用 libconfig++ 读取配置文件。
     class Config final : public IConfig
     {
     public:
+        // p: путь к конфигурационному файлу (например conf/lms.conf)。
+        // p：配置文件路径（例如 conf/lms.conf）。
         Config(const std::filesystem::path& p);
         ~Config() override = default;
 

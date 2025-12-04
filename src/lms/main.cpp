@@ -58,6 +58,8 @@ namespace lms
 {
     namespace
     {
+        // Compute how many threads should be used for background work (Wt HTTP server, IO, DB, etc.).
+        // 计算后台工作线程数量（Wt HTTP 服务器、IO、数据库等）。
         std::size_t getThreadCount()
         {
             const unsigned long configHttpServerThreadCount{ core::Service<core::IConfig>::get()->getULong("http-server-thread-count", 0) };
@@ -66,6 +68,12 @@ namespace lms
             return configHttpServerThreadCount ? configHttpServerThreadCount : std::max<unsigned long>(2, std::thread::hardware_concurrency());
         }
 
+        // Read UI authentication backend from config ("internal" / "pam" / "http-headers").
+        // 从配置中读取 UI 认证后端（"internal" / "pam" / "http-headers"）。
+        // 这个值直接影响登录方式：
+        // - internal: 内置用户名/密码；
+        // - pam:      使用系统 PAM 认证；
+        // - http-headers: 信任反向代理注入的 HTTP 头。
         ui::AuthenticationBackend getUIAuthenticationBackend()
         {
             const std::string backend{ core::stringUtils::stringToLower(core::Service<core::IConfig>::get()->getString("authentication-backend", "internal")) };
@@ -79,6 +87,8 @@ namespace lms
             throw core::LmsException{ "Invalid config value for 'authentication-backend'" };
         }
 
+        // Read tracing level for detailed performance tracing ("disabled" / "overview" / "detailed").
+        // 从配置中读取 tracing 级别：用于性能/行为跟踪（禁用 / 概览 / 详细）。
         std::optional<core::tracing::Level> getTracingLevel()
         {
             std::string_view tracingLevel{ core::Service<core::IConfig>::get()->getString("tracing-level", "disabled") };
@@ -93,6 +103,9 @@ namespace lms
             throw core::LmsException{ "Invalid config value for 'tracing-level'" };
         }
 
+        // Build command‑line arguments for Wt::WServer and generate wt_config.xml file.
+        // 为 Wt::WServer 生成命令行参数，并写出 wt_config.xml 配置文件。
+        // 演示功能：你在日志里看到的一串 ARG=... 就是这里生成的。
         std::vector<std::string> generateWtConfig(std::string execPath)
         {
             core::IConfig& config{ *core::Service<core::IConfig>::get() };

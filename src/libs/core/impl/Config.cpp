@@ -23,11 +23,15 @@
 
 namespace lms::core
 {
+    // createConfig: фабричная функция, скрывающая конкретный тип Config за интерфейсом IConfig。
+    // createConfig：工厂函数，通过 IConfig 接口隐藏具体的 Config 类型。
     std::unique_ptr<IConfig> createConfig(const std::filesystem::path& p)
     {
         return std::make_unique<Config>(p);
     }
 
+    // Конструктор Config: читает конфигурационный файл и поднимает исключения, если что‑то пошло не так。
+    // Config 构造函数：读取配置文件，如果出错则抛出异常。
     Config::Config(const std::filesystem::path& p)
     {
         try
