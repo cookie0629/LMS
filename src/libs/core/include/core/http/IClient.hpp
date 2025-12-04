@@ -27,8 +27,8 @@
 
 namespace lms::core::http
 {
-    // Very simple http client, will handle all requests sequentially.
-    // User callbacks are dispatched within a strand.
+    // IClient: абстракция над HTTP‑клиентом, отправляющим запросы последовательно.
+    // IClient：HTTP 客户端接口，按顺序（在同一个 strand 中）发送请求。
     class IClient
     {
     public:

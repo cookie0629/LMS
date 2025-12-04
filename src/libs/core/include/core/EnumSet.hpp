@@ -28,6 +28,8 @@
 namespace lms::core
 {
     template<typename T, typename underlying_type = std::uint32_t>
+    // EnumSet: компактное битовое множество для enum‑типов（基于位掩码存储枚举集合）。
+    // EnumSet：用于枚举类型的紧凑位集合（使用位掩码存储哪些枚举被置位）。
     class EnumSet
     {
         static_assert(std::is_enum<T>::value);

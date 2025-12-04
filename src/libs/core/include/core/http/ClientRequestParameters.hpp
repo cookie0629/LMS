@@ -28,6 +28,8 @@
 
 namespace lms::core::http
 {
+    // ClientRequestParameters: общие параметры HTTP‑запроса（优先级、路径、回调等）。
+    // ClientRequestParameters：HTTP 请求的通用参数（优先级、相对路径、回调等）。
     struct ClientRequestParameters
     {
         enum class Priority

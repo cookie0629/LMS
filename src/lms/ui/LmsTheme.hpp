@@ -24,6 +24,8 @@
 
 namespace lms::ui
 {
+    // LmsTheme: 基于 Bootstrap5 的自定义主题，配置全局 CSS/JS 和校验样式。
+    // LmsTheme: настраиваемая тема на базе Bootstrap5, подключает CSS/JS и управляет валидационными классами.
     class LmsTheme : public Wt::WTheme
     {
     private:
@@ -43,9 +45,9 @@ namespace lms::ui
                                   Wt::WFlags<Wt::ValidationStyleFlag> flags) const override;
         bool canBorderBoxElement(const Wt::DomElement&) const override { return true; }
 
-#if WT_VERSION >= 0x040C0100 // >= 4.12.1
+#if WT_VERSION >= 0x040C0100
         void applyFunctionalStyling(Wt::WWidget*, Wt::WWidget*, int) const override {}
         void applyOptionalStyling(Wt::WWidget*, Wt::WWidget*, int) const override {}
-#endif // WT_VERSION
+#endif
     };
 } // namespace lms::ui

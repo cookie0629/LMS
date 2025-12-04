@@ -19,10 +19,12 @@
 
 #pragma once
 
-#include <boost/crc.hpp> // for boost::crc_32_type
+#include <boost/crc.hpp>
 
 namespace lms::core
 {
+    // Crc32Calculator: простой обёрткой над boost::crc_32_type для计算 CRC32 校验和。
+    // Crc32Calculator：对 boost::crc_32_type 的简单封装，用于计算 CRC32 校验值。
     class Crc32Calculator
     {
     public:

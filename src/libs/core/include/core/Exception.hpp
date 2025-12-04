@@ -25,7 +25,8 @@
 
 namespace lms::core
 {
-    // TODO, rename to Exception
+    // LmsException: базовый тип исключений внутри LMS（继承自 std::runtime_error）。
+    // LmsException：LMS 内部使用的基础异常类型（继承自 std::runtime_error）。
     class LmsException : public std::runtime_error
     {
     public:

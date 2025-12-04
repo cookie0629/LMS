@@ -32,9 +32,15 @@
 
 namespace lms::core::http
 {
+    // SendQueue: очередь исходящих HTTP‑запросов, работающая поверх Wt::Http::Client.
+    // SendQueue：基于 Wt::Http::Client 的 HTTP 请求发送队列，负责排队、重试和限流。
     class SendQueue
     {
     public:
+        // ioContext: IO контекст, в котором будут выполняться все операции отправки/обработки。
+        // baseUrl:   базовый URL сервиса, например "https://api.listenbrainz.org"。
+        // ioContext：执行所有发送/回调的 IO 上下文。
+        // baseUrl：  服务基础地址，例如 "https://api.listenbrainz.org"。
         SendQueue(boost::asio::io_context& ioContext, std::string_view baseUrl);
         ~SendQueue();
 
@@ -43,7 +49,12 @@ namespace lms::core::http
         SendQueue& operator=(const SendQueue&) = delete;
         SendQueue& operator=(const SendQueue&&) = delete;
 
+        // sendRequest: добавить запрос в очередь, будет выполнен согласно приоритету。
+        // sendRequest：把请求加入队列，按优先级和限流策略发送。
         void sendRequest(std::unique_ptr<ClientRequest> request);
+
+        // abortAllRequests: отменяет все текущие и ожидающие запросы, вызывает соответствующие onAbort 回调。
+        // abortAllRequests：取消当前和队列中的所有请求，并触发它们的 onAbort 回调。
         void abortAllRequests();
 
     private:

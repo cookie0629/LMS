@@ -27,6 +27,8 @@
 
 namespace lms::core
 {
+    // IChildProcessManager: фабрика/менеджер子进程，负责在给定路径上启动外部程序。
+    // IChildProcessManager：子进程管理器，用于在指定路径启动外部命令。
     class IChildProcessManager
     {
     public:

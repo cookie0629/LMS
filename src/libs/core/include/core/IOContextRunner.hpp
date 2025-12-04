@@ -26,6 +26,8 @@
 
 namespace lms::core
 {
+    // IOContextRunner: запускает boost::asio::io_context в пуле потоков и управляет их жизненным циклом.
+    // IOContextRunner：在一组线程中运行 boost::asio::io_context，并负责其生命周期管理。
     class IOContextRunner
     {
     public:

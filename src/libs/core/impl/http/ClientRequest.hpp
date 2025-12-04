@@ -26,6 +26,8 @@
 
 namespace lms::core::http
 {
+    // ClientRequest: обёртка над параметрами GET/POST‑запроса.
+    // ClientRequest：对 GET/POST 请求参数的封装，内部用 std::variant 保存两种类型。
     class ClientRequest
     {
     public:

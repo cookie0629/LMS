@@ -64,6 +64,8 @@ namespace lms::core::http
         }
     } // namespace
 
+    // Конструктор: настраивает Wt::Http::Client и привязывает его коллбеки к strand‑у.
+    // 构造函数：配置 Wt::Http::Client，并把其回调投递到 strand 中串行执行。
     SendQueue::SendQueue(boost::asio::io_context& ioContext, std::string_view baseUrl)
         : _ioContext{ ioContext }
         , _baseUrl{ baseUrl }
@@ -73,9 +75,6 @@ namespace lms::core::http
     {
         _client.setFollowRedirect(true);
         _client.setTimeout(std::chrono::seconds{ 5 });
-
-        // not very efficient (response bodies are copied for each callback), but Wt's code already makes copies anyway
-
         _client.bodyDataReceived().connect([this](const std::string& data) {
             boost::asio::post(boost::asio::bind_executor(_strand, [this, data] {
                 onClientBodyDataReceived(data);
@@ -94,6 +93,8 @@ namespace lms::core::http
         abortAllRequests();
     }
 
+    // abortAllRequests: останавливает очередь и ждёт, пока все请求被安全取消。
+    // abortAllRequests：停止队列，等待所有请求被安全取消。
     void SendQueue::abortAllRequests()
     {
         LOG(DEBUG, "Aborting all requests...");
@@ -133,6 +134,8 @@ namespace lms::core::http
         LOG(DEBUG, "All requests aborted!");
     }
 
+    // sendRequest: асинхронно добавляет запрос в очередь（在 strand 中执行）。
+    // sendRequest：异步地把请求添加到队列中（在 strand 线程上下文里执行）。
     void SendQueue::sendRequest(std::unique_ptr<ClientRequest> request)
     {
         boost::asio::post(_strand, [this, request = std::move(request)]() mutable {
@@ -152,6 +155,8 @@ namespace lms::core::http
         });
     }
 
+    // sendNextQueuedRequest: 从最高优先级开始取下一个要发送的请求。
+    // sendNextQueuedRequest：从最高优先级开始取出下一个要发送的请求。
     void SendQueue::sendNextQueuedRequest()
     {
         assert(_strand.running_in_this_thread());
@@ -181,6 +186,8 @@ namespace lms::core::http
         setState(State::Idle);
     }
 
+    // sendRequest(const ClientRequest&): 实际调用 Wt::Http::Client 发送 HTTP 请求。
+    // sendRequest(const ClientRequest&): фактическая отправка HTTP‑запроса через Wt::Http::Client.
     bool SendQueue::sendRequest(const ClientRequest& request)
     {
         assert(_strand.running_in_this_thread());
@@ -210,6 +217,8 @@ namespace lms::core::http
         return res;
     }
 
+    // onClientBodyDataReceived: поток式接收响应体数据块，并转发给 onChunkReceived 回调。
+    // onClientBodyDataReceived: по мере прихода данных вызывает пользовательский коллбек onChunkReceived。
     void SendQueue::onClientBodyDataReceived(const std::string& data)
     {
         assert(_strand.running_in_this_thread());
@@ -223,6 +232,8 @@ namespace lms::core::http
         }
     }
 
+    // onClientDone: общий завершение回调，根据 error/status 分支到 abort / error / success。
+    // onClientDone: общий обработчик завершения запроса（успех/ошибка/отмена）。
     void SendQueue::onClientDone(Wt::AsioWrapper::error_code ec, const Wt::Http::Message& msg)
     {
         LMS_SCOPED_TRACE_DETAILED("SendQueue", "OnClientDone");
@@ -239,6 +250,8 @@ namespace lms::core::http
             onClientDoneSuccess(std::move(_currentRequest), msg);
     }
 
+    // onClientAborted: 触发请求的 onAbort 回调，然后继续下一个队列元素。
+    // onClientAborted: вызывает onAbort и сразу переходит к следующему запросу.
     void SendQueue::onClientAborted(std::unique_ptr<ClientRequest> request)
     {
         assert(_strand.running_in_this_thread());
@@ -249,6 +262,8 @@ namespace lms::core::http
         sendNextQueuedRequest();
     }
 
+    // onClientDoneError: 对网络/传输错误做指数式重试 + 限流。
+    // onClientDoneError: при сетевых ошибках повторяет запрос с задержкой и ограниченным числом попыток.
     void SendQueue::onClientDoneError(std::unique_ptr<ClientRequest> request, Wt::AsioWrapper::error_code ec)
     {
         assert(_strand.running_in_this_thread());
@@ -270,6 +285,8 @@ namespace lms::core::http
         }
     }
 
+    // onClientDoneSuccess: 处理 HTTP 状态码、限流头（X-RateLimit-*），并调用成功/失败回调。
+    // onClientDoneSuccess: анализирует HTTP‑статус, заголовки X-RateLimit-* и вызывает onSuccess/onFailure。
     void SendQueue::onClientDoneSuccess(std::unique_ptr<ClientRequest> request, const Wt::Http::Message& msg)
     {
         const ClientRequestParameters& requestParameters{ request->getParameters() };
@@ -307,6 +324,8 @@ namespace lms::core::http
             sendNextQueuedRequest();
     }
 
+    // throttle: 根据服务器返回的限流时间或默认时间，暂停发送新的请求。
+    // throttle: приостанавливает отправку запросов на указанное время（реакция на rate limiting）。
     void SendQueue::throttle(std::chrono::seconds requestedDuration)
     {
         const std::chrono::seconds duration{ std::clamp(requestedDuration, _minRetryWaitDuration, _maxRetryWaitDuration) };
@@ -327,6 +346,8 @@ namespace lms::core::http
         setState(State::Throttled);
     }
 
+    // setState: 更新内部状态，并在日志中打印状态转换，便于调试。
+    // setState: 更新内部状态，并在日志中打印状态变更，方便调试。
     void SendQueue::setState(State state)
     {
         assert(_strand.running_in_this_thread());

@@ -27,12 +27,16 @@
 
 namespace lms::core
 {
+    // ChildProcessException: ошибки, связанные с запуском或读取子进程。
+    // ChildProcessException: исключения, связанные со spawning/чтением дочерних процессов.
     class ChildProcessException : public LmsException
     {
     public:
         using LmsException::LmsException;
     };
 
+    // IChildProcess: абстракция над子进程，用于异步/同步读取其标准输出。
+    // IChildProcess：对子进程的抽象，用于异步/同步读取 stdout。
     class IChildProcess
     {
     public:

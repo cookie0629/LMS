@@ -26,6 +26,8 @@
 
 namespace lms::core
 {
+    // IOContextRunner: 构造时立即启动多个线程，每个线程都调用 io_context.run()。
+    // IOContextRunner: при создании сразу запускает несколько потоков, каждый крутит io_context.run().
     IOContextRunner::IOContextRunner(boost::asio::io_context& ioContext, std::size_t threadCount, std::string_view name)
         : _ioContext{ ioContext }
         , _work{ boost::asio::make_work_guard(ioContext) }
