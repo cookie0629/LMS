@@ -31,6 +31,8 @@
 
 namespace lms::artwork
 {
+    // ImageCache: 封面图缓存（按 ArtworkId + 尺寸键入），限制最大内存占用。
+    // ImageCache: кэш картинок по ArtworkId и размеру, ограничивает использование памяти.
     class ImageCache
     {
     public:
@@ -59,7 +61,7 @@ namespace lms::artwork
         {
             std::size_t operator()(const EntryDesc& entry) const
             {
-                assert(entry.size); // should not cache unresized images
+                assert(entry.size); // 只缓存已缩放的图片 / кэшируем только изменённые по размеру изображения
                 return std::hash<db::ArtworkId>{}(entry.id) ^ std::hash<std::size_t>{}(*entry.size);
             }
         };

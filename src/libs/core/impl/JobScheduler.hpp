@@ -27,6 +27,8 @@
 
 namespace lms::core
 {
+    // JobScheduler: 基于 boost::asio 的任务调度器实现，在独立线程中执行任务并支持等待/中止。
+    // JobScheduler: реализация IJobScheduler на базе boost::asio, выполняет задачи в отдельных потоках и позволяет ждать/отменять.
     class JobScheduler : public IJobScheduler
     {
     public:

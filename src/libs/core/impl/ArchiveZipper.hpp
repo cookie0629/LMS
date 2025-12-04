@@ -32,6 +32,8 @@ extern "C"
 
 namespace lms::zip
 {
+    // ArchiveZipper: 基于 libarchive 的 ZIP 压缩器实现，用于按块写出 ZIP 内容。
+    // ArchiveZipper: реализация IZipper на базе libarchive, пишет ZIP‑архив порциями.
     class ArchiveZipper : public IZipper
     {
     public:

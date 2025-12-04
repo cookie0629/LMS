@@ -28,6 +28,8 @@
 namespace lms::core
 {
     class IJob;
+    // IJobScheduler: 后台任务调度器接口，负责在线程池中调度 IJob 并跟踪完成情况。
+    // IJobScheduler: интерфейс планировщика фоновых задач, выполняет IJob в пуле потоков и отслеживает их завершение.
     class IJobScheduler
     {
     public:

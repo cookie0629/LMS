@@ -232,7 +232,6 @@ namespace lms::artwork
             db::Session& session{ _db.getTLSSession() };
             auto transaction{ session.createReadTransaction() };
 
-            // TODO: could be put outside transaction
             db::TrackEmbeddedImageLink::find(session, trackEmbeddedImageId, [&](const db::TrackEmbeddedImageLink::pointer& link) {
                 if (!image)
                     image = getTrackImage(link->getTrack()->getAbsoluteFilePath(), link->getIndex(), width);

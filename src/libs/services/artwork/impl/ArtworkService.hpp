@@ -35,6 +35,8 @@ namespace lms::db
 
 namespace lms::artwork
 {
+    // ArtworkService: IArtworkService 的具体实现，从数据库/音频文件中提取封面并做内存缓存。
+    // ArtworkService: конкретная реализация IArtworkService, получает обложки из БД/аудиофайлов и кэширует их.
     class ArtworkService : public IArtworkService
     {
     public:
@@ -57,7 +59,12 @@ namespace lms::artwork
         std::shared_ptr<image::IEncodedImage> getImage(db::ImageId imageId, std::optional<image::ImageSize> width);
         std::shared_ptr<image::IEncodedImage> getTrackEmbeddedImage(db::TrackEmbeddedImageId trackEmbeddedImageId, std::optional<image::ImageSize> width);
 
+        // 从普通图片文件加载封面，必要时按给定宽度缩放为 JPEG。
+        // Загружает обложку из обычного файла и при необходимости масштабирует в JPEG указанной ширины.
         std::unique_ptr<image::IEncodedImage> getFromImageFile(const std::filesystem::path& p, std::string_view mimeType, std::optional<image::ImageSize> width) const;
+
+        // 从音频文件中读取第 index 张嵌入式图片。
+        // Читает index‑ую встроенную картинку из аудиофайла.
         std::unique_ptr<image::IEncodedImage> getTrackImage(const std::filesystem::path& path, std::size_t index, std::optional<image::ImageSize> width) const;
 
         db::IDb& _db;
@@ -66,7 +73,7 @@ namespace lms::artwork
         std::shared_ptr<image::IEncodedImage> _defaultReleaseCover;
         std::shared_ptr<image::IEncodedImage> _defaultArtistImage;
 
-        static inline const std::vector<std::filesystem::path> _fileExtensions{ ".jpg", ".jpeg", ".png", ".bmp" }; // TODO parametrize
+        static inline const std::vector<std::filesystem::path> _fileExtensions{ ".jpg", ".jpeg", ".png", ".bmp" };
         unsigned _jpegQuality;
     };
 

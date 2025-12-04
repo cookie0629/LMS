@@ -33,7 +33,6 @@ namespace lms::artwork
 
     void ImageCache::addImage(const EntryDesc& entryDesc, std::shared_ptr<image::IEncodedImage> image)
     {
-        // cache only resized files
         if (!entryDesc.size)
             return;
 
@@ -52,7 +51,6 @@ namespace lms::artwork
 
     std::shared_ptr<image::IEncodedImage> ImageCache::getImage(const EntryDesc& entryDesc) const
     {
-        // cache only resized files
         if (!entryDesc.size)
             return {};
 
