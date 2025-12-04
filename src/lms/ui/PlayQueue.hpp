@@ -44,6 +44,8 @@ namespace lms::ui
 
     class InfiniteScrollingContainer;
 
+    // PlayQueue: 播放队列视图，负责管理当前排队的曲目、与播放器交互以及“电台”模式。
+    // PlayQueue: представление очереди воспроизведения, управляет треками, взаимодействует с плеером и режимом радио.
     class PlayQueue : public Template
     {
     public:
@@ -52,22 +54,17 @@ namespace lms::ui
         void play(const std::vector<db::TrackId>& trackIds);
         void playNext(const std::vector<db::TrackId>& trackIds);
         void playShuffled(const std::vector<db::TrackId>& trackIds);
-        void playOrAddLast(const std::vector<db::TrackId>& trackIds); // play if queue empty, otherwise just add last
+        void playOrAddLast(const std::vector<db::TrackId>& trackIds); // 队列空则播放，否则追加到末尾 / если очередь пуста – играть, иначе добавить в конец
         void playAtIndex(const std::vector<db::TrackId>& trackIds, std::size_t index);
 
-        // play the next track in the queue
         void playNext();
 
-        // play the previous track in the queue
         void playPrevious();
 
-        // Signal emitted when a track is to be load(and optionally played)
         Wt::Signal<db::TrackId, bool /*play*/, float /* replayGain */> trackSelected;
 
-        // Signal emitted when track is unselected (has to be stopped)
         Wt::Signal<> trackUnselected;
 
-        // Signal emitted when track count changed
         Wt::Signal<std::size_t> trackCountChanged;
 
         void onPlaybackEnded();

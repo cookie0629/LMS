@@ -35,15 +35,14 @@ namespace lms::ui
     class AudioFileResource;
     class AudioTranscodingResource;
 
+    // MediaPlayer: 前端音频播放器控件，负责与 JS 播放器交互、加载曲目和维护播放设置。
+    // MediaPlayer: виджет аудиоплеера, взаимодействует с JS‑плеером, загружает треки и хранит настройки воспроизведения.
     class MediaPlayer : public Wt::WTemplate
     {
     public:
         using Bitrate = db::Bitrate;
         using Format = db::TranscodingOutputFormat;
         using Gain = float;
-
-        // Do not change enum values as they may be stored locally in browser
-        // Keep it sync with LMS.mediaplayer js
 
         struct Settings
         {

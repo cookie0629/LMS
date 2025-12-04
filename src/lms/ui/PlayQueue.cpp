@@ -140,7 +140,6 @@ namespace lms::ui
         Wt::WPushButton* shuffleBtn{ bindNew<Wt::WPushButton>("shuffle-btn", Wt::WString::tr("Lms.PlayQueue.template.shuffle-btn"), Wt::TextFormat::XHTML) };
         shuffleBtn->clicked().connect([this] {
             {
-                // TODO write scope could be reduced
                 auto transaction{ LmsApp->getDbSession().createWriteTransaction() };
 
                 db::TrackList::pointer queue{ getQueue() };
@@ -256,7 +255,6 @@ namespace lms::ui
 
             const db::TrackList::pointer queue{ getQueue() };
 
-            // If out of range, stop playing
             if (pos >= queue->getCount())
             {
                 if (!isRepeatAllSet() || queue->getCount() == 0)
@@ -412,11 +410,10 @@ namespace lms::ui
         }
 
         if (_trackPos)
-        {
-            // entries may have been cleared
-            if (*_trackPos + 1 < _entriesContainer->getCount())
-                _entriesContainer->remove(*_trackPos + 1, _entriesContainer->getCount() - 1);
-        }
+            {
+                if (*_trackPos + 1 < _entriesContainer->getCount())
+                    _entriesContainer->remove(*_trackPos + 1, _entriesContainer->getCount() - 1);
+            }
         else
         {
             _entriesContainer->reset();

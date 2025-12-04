@@ -28,6 +28,8 @@
 
 namespace lms::ui
 {
+    // NotificationContainer: 页面右上角的通知区域，负责显示/自动移除 Toast 消息。
+    // NotificationContainer: контейнер уведомлений в UI, показывает и автоматически скрывает Toast‑сообщения.
     class NotificationContainer : public Wt::WContainerWidget
     {
     public:

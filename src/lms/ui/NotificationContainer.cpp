@@ -31,6 +31,8 @@ namespace lms::ui
 {
     namespace
     {
+        // NotificationWidget: 单条通知项，对应一个 Bootstrap Toast。
+        // NotificationWidget: один Toast‑элемент для уведомления.
         class NotificationWidget : public Wt::WTemplate
         {
         public:
@@ -39,7 +41,7 @@ namespace lms::ui
         };
     } // namespace
 
-    NotificationWidget::NotificationWidget(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
+        NotificationWidget::NotificationWidget(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
         : Wt::WTemplate{ Wt::WString::tr("Lms.notifications.template.entry") }
     {
         switch (type)
@@ -77,7 +79,7 @@ namespace lms::ui
         doJavaScript(oss.str());
     }
 
-    void NotificationContainer::add(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
+        void NotificationContainer::add(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
     {
         NotificationWidget* notification{ addNew<NotificationWidget>(type, message, duration) };
 

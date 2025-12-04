@@ -23,6 +23,8 @@
 
 namespace lms::ui
 {
+    // Template: Wt::WTemplate 的轻量包装，重写 applyArguments 以支持自定义参数处理。
+    // Template: тонкая обёртка над Wt::WTemplate с переопределением applyArguments для особой обработки аргументов.
     class Template : public Wt::WTemplate
     {
     public:

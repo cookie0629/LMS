@@ -47,6 +47,8 @@ namespace lms::ui
 {
     namespace
     {
+        // settingsToJSString: 将播放器设置序列化为 JSON 字符串，传给前端 JS。
+        // settingsToJSString: сериализует настройки плеера в JSON для передачи в JS.
         std::string settingsToJSString(const MediaPlayer::Settings& settings)
         {
             namespace Json = Wt::Json;
@@ -72,6 +74,8 @@ namespace lms::ui
             return Json::serialize(res);
         }
 
+        // transcodingModeFromString: 从字符串还原转码模式，非法值返回 std::nullopt。
+        // transcodingModeFromString: восстанавливает режим транскодирования из строки, при ошибке возвращает std::nullopt.
         std::optional<MediaPlayer::Settings::Transcoding::Mode> transcodingModeFromString(const std::string& str)
         {
             const auto value{ core::stringUtils::readAs<int>(str) };
@@ -90,6 +94,8 @@ namespace lms::ui
             return std::nullopt;
         }
 
+        // formatFromString: 从字符串还原输出格式，仅接受定义好的枚举值。
+        // formatFromString: восстанавливает формат вывода, принимая только корректные значения enum.
         std::optional<MediaPlayer::Format> formatFromString(const std::string& str)
         {
             const auto value{ core::stringUtils::readAs<int>(str) };
@@ -110,6 +116,8 @@ namespace lms::ui
             return std::nullopt;
         }
 
+        // bitrateFromInt: 检查比特率是否在允许范围内，否则返回 std::nullopt。
+        // bitrateFromInt: проверяет, разрешён ли данный битрейт, иначе возвращает std::nullopt.
         std::optional<MediaPlayer::Bitrate> bitrateFromInt(int bitRate)
         {
             if (!db::isAudioBitrateAllowed(bitRate))
@@ -118,6 +126,8 @@ namespace lms::ui
             return bitRate;
         }
 
+        // replayGainModeFromString: 解析重放增益模式字符串。
+        // replayGainModeFromString: парсит строку в режим ReplayGain.
         std::optional<MediaPlayer::Settings::ReplayGain::Mode> replayGainModeFromString(const std::string& str)
         {
             const auto value{ core::stringUtils::readAs<int>(str) };
@@ -137,6 +147,8 @@ namespace lms::ui
             return std::nullopt;
         }
 
+        // replayGainPreAmpGainFromString: 解析并钳制前级增益值到合法范围。
+        // replayGainPreAmpGainFromString: парсит и зажимает предусиление в допустимый диапазон.
         std::optional<float> replayGainPreAmpGainFromString(const std::string& str)
         {
             const auto value{ core::stringUtils::readAs<double>(str) };
@@ -146,6 +158,8 @@ namespace lms::ui
             return std::clamp(*value, (double)MediaPlayer::Settings::ReplayGain::minPreAmpGain, (double)MediaPlayer::Settings::ReplayGain::maxPreAmpGain);
         }
 
+        // settingsfromJSString: 从 JS 传回的 JSON 字符串重建 Settings 结构。
+        // settingsfromJSString: восстанавливает структуру Settings из JSON‑строки, пришедшей из JS.
         MediaPlayer::Settings settingsfromJSString(const std::string& strSettings)
         {
             using Settings = MediaPlayer::Settings;

@@ -51,7 +51,8 @@ namespace lms::ui
 {
     namespace
     {
-        // highly unefficient hack to make WSelectionBox work with Wt::WFormModel
+        // SelectionBox: 让 WSelectionBox 能够和 WFormModel 一起工作的“小黑科技”实现。
+        // SelectionBox: небольшой хак, позволяющий WSelectionBox работать с WFormModel.
         class SelectionBox : public Wt::WSelectionBox
         {
         public:
