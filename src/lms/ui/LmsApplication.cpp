@@ -72,6 +72,8 @@ namespace lms::ui
     {
         constexpr const char* defaultPath{ "/releases" };
 
+        // createMessageResourceBundle: 加载所有 UI 模板所需的多语言资源。
+        // createMessageResourceBundle: загружает все ресурсные файлы сообщений для UI‑шаблонов.
         std::shared_ptr<Wt::WMessageResourceBundle> createMessageResourceBundle()
         {
             const std::string appRoot{ Wt::WApplication::appRoot() };
@@ -109,12 +111,16 @@ namespace lms::ui
             return res;
         }
 
+        // getOrCreateMessageBundle: 全局缓存 message bundle，避免每个会话重复加载。
+        // getOrCreateMessageBundle: кэширует bundle сообщений, чтобы не загружать его для каждой сессии заново.
         std::shared_ptr<Wt::WMessageResourceBundle> getOrCreateMessageBundle()
         {
             static std::shared_ptr<Wt::WMessageResourceBundle> res{ createMessageResourceBundle() };
             return res;
         }
 
+        // createLocale: 从翻译资源中读取本地化格式，创建自定义 WLocale。
+        // createLocale: создаёт WLocale, заполняя формат дат/времени из ресурсов перевода.
         Wt::WLocale createLocale(const std::string& name)
         {
             Wt::WLocale locale{ name };
@@ -140,6 +146,8 @@ namespace lms::ui
             IdxAdminDebugTools,
         };
 
+        // handlePathChange: 根据 internalPath 切换主内容区的页，并更新导航高亮。
+        // handlePathChange: переключает текущую страницу в mainStack и обновляет активный пункт меню.
         void handlePathChange(Wt::WStackedWidget& stack, bool isAdmin)
         {
             static const struct
@@ -299,7 +307,6 @@ namespace lms::ui
         case AuthenticationBackend::Internal:
             [[fallthrough]];
         case AuthenticationBackend::PAM:
-            // Try to authenticate using auth token ("remember me" checkbox), may fail
             userId = processAuthToken(environment());
             break;
         }
@@ -312,7 +319,6 @@ namespace lms::ui
 
     void LmsApplication::processPasswordAuth()
     {
-        // If here is no account in the database, launch the first connection wizard
         bool firstConnection{};
         {
             auto transaction{ getDbSession().createReadTransaction() };

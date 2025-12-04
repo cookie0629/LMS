@@ -24,7 +24,8 @@
 
 namespace lms::ui
 {
-
+    // UsersView: 管理员用的“用户列表”视图，负责展示/刷新所有用户。
+    // UsersView: административное представление списка пользователей, умеет обновлять/перерисовывать список.
     class UsersView : public Wt::WTemplate
     {
     public:

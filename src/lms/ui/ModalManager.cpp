@@ -41,6 +41,8 @@ namespace lms::ui
         });
     }
 
+    // show: 把一个包含 .modal 元素的 widget 插入 DOM，并通过 Bootstrap JS 显示出来。
+    // show: добавляет виджет с .modal в DOM и показывает его через Bootstrap JS.
     void ModalManager::show(std::unique_ptr<Wt::WWidget> modalWidget)
     {
         LMS_LOG(UI, DEBUG, "Want to show, id = " << modalWidget->id());
@@ -60,7 +62,6 @@ namespace lms::ui
 
         LMS_LOG(UI, DEBUG, "Running JS '" << oss.str() << "'");
 
-        // Execute in the modal's context to make sure the DOM is properly updated
         modal->doJavaScript(oss.str());
     }
 

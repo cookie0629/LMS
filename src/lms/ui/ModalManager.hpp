@@ -25,6 +25,8 @@
 
 namespace lms::ui
 {
+    // ModalManager: 管理页面上的 Bootstrap 模态框（弹窗），负责展示和销毁。
+    // ModalManager: менеджер модальных окон Bootstrap на странице, показывает и удаляет модальные виджеты.
     class ModalManager : public Wt::WContainerWidget
     {
     public:

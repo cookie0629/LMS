@@ -50,6 +50,8 @@ namespace lms::ui
     class NotificationContainer;
     class ModalManager;
 
+    // LmsApplication: 单个浏览器会话对应的 LMS Web 应用实例，负责会话状态、路由和主界面。
+    // LmsApplication: экземпляр веб‑приложения LMS на одну сессию браузера, управляет состоянием, роутингом и главным UI.
     class LmsApplication : public Wt::WApplication
     {
     public:
@@ -59,34 +61,30 @@ namespace lms::ui
         static std::unique_ptr<Wt::WApplication> create(const Wt::WEnvironment& env, db::IDb& db, LmsApplicationManager& appManager, AuthenticationBackend authBackend);
         static LmsApplication* instance();
 
-        // Session application data
         std::shared_ptr<ArtworkResource> getArtworkResource() { return _artworkResource; }
         db::IDb& getDb();
-        db::Session& getDbSession(); // always thread safe
+        db::Session& getDbSession(); // 永远线程安全的会话获取接口 / всегда потокобезопасный доступ к сессии
 
         db::ObjectPtr<db::User> getUser();
         db::UserId getUserId() const;
-        bool isUserAuthStrong() const;             // user must be logged in prior this call
-        db::UserType getUserType() const;          // user must be logged in prior this call
-        std::string_view getUserLoginName() const; // user must be logged in prior this call
+        bool isUserAuthStrong() const;             // 调用前用户必须已登录 / пользователь должен быть залогинен
+        db::UserType getUserType() const;          // 调用前用户必须已登录 / пользователь должен быть залогинен
+        std::string_view getUserLoginName() const; // 调用前用户必须已登录 / пользователь должен быть залогинен
 
-        // Proxified scanner events
         scanner::Events& getScannerEvents() { return _scannerEvents; }
 
         AuthenticationBackend getAuthBackend() const { return _authBackend; }
 
-        // Utils
         void post(std::function<void()> func);
         void setTitle(const Wt::WString& title = "");
 
-        // Used to classify the message sent to the user
         void notifyMsg(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration = std::chrono::milliseconds{ 5000 });
 
         MediaPlayer& getMediaPlayer() const { return *_mediaPlayer; }
         PlayQueue& getPlayQueue() const { return *_playQueue; }
         ModalManager& getModalManager() const { return *_modalManager; }
 
-        // Signal emitted just before the session ends (user may already be logged out)
+        // 会话结束前发出的信号（用户可能已经退出登录）/ сигнал, испускаемый перед завершением сессии (пользователь может быть уже разлогинен)
         Wt::Signal<>& preQuit() { return _preQuit; }
 
     private:
@@ -125,7 +123,8 @@ namespace lms::ui
         ModalManager* _modalManager{};
     };
 
-    // Helper to get session instance
+    // LmsApp: 获取当前会话 LmsApplication 单例的便捷宏。
+    // LmsApp: удобный макрос для получения экземпляра LmsApplication текущей сессии.
 #define LmsApp lms::ui::LmsApplication::instance()
 
 } // namespace lms::ui

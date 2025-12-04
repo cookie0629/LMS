@@ -45,7 +45,7 @@ namespace lms::ui
     {
         static constexpr core::LiteralString authTokenDomain{ "ui" };
         static const std::string authCookieName{ "LmsAuth" };
-        static const std::string authCookieSalt{ Wt::Auth::SHA1HashFunction{}.compute(authCookieName, authTokenDomain.c_str()) }; // changing this will invalidate existing tokens
+        static const std::string authCookieSalt{ Wt::Auth::SHA1HashFunction{}.compute(authCookieName, authTokenDomain.c_str()) };
 
         void createAuthToken(db::UserId userId, const Wt::WDateTime& expiry)
         {
