@@ -644,6 +644,7 @@ make -j$(nproc)
 # 运行编译后的可执行文件
 # Запуск скомпилированного исполняемого файла
 ./build/src/lms/lms /path/to/lms.conf
+./build/src/lms/lms /mnt/e/LightweightMusicServer/conf/lms.conf
 ```
 
 ---
@@ -898,21 +899,6 @@ LightweightMusicServer/
 
 ---
 
-## 📄 许可证 / Лицензия
-
-LMS 基于 GNU General Public License v3.0 许可证发布。
-
-LMS распространяется под лицензией GNU General Public License v3.0.
-
----
-
-## 🙏 致谢 / Благодарности
-
-感谢所有为这个项目做出贡献的开发者和用户！
-
-Спасибо всем разработчикам и пользователям, внесшим вклад в этот проект!
-
----
 
 ## 📞 支持与反馈 / Поддержка и обратная связь
 

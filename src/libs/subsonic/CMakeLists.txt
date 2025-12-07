@@ -66,10 +66,10 @@ target_link_libraries(lmssubsonic PUBLIC
 	Wt::Wt
 	)
 
-if(BUILD_TESTING)
+if(BUILD_TESTING AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/test/CMakeLists.txt")
 	add_subdirectory(test)
 endif()
 
-if (BUILD_BENCHMARKS)
-       add_subdirectory(bench)
+if (BUILD_BENCHMARKS AND EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/bench/CMakeLists.txt")
+	add_subdirectory(bench)
 endif()
