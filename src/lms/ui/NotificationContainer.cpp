@@ -33,29 +33,35 @@ namespace lms::ui
     {
         // NotificationWidget: 单条通知项，对应一个 Bootstrap Toast。
         // NotificationWidget: один Toast‑элемент для уведомления.
+        // 功能：显示一条通知消息，根据类型设置不同的颜色样式，并在指定时间后自动关闭。
+        // Функции: отображает одно уведомление, устанавливает цвет в зависимости от типа и автоматически закрывает через указанное время.
         class NotificationWidget : public Wt::WTemplate
         {
         public:
             NotificationWidget(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration);
-            Wt::JSignal<> closed{ this, "closed" };
+            Wt::JSignal<> closed{ this, "closed" };  // 当 Toast 关闭时触发的信号 / сигнал, срабатывающий при закрытии Toast
         };
     } // namespace
 
-        NotificationWidget::NotificationWidget(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
+    // NotificationWidget 构造函数：创建 Toast 通知，设置样式并通过 JavaScript 显示。
+    // Конструктор NotificationWidget: создаёт Toast-уведомление, настраивает стиль и отображает через JavaScript.
+    NotificationWidget::NotificationWidget(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
         : Wt::WTemplate{ Wt::WString::tr("Lms.notifications.template.entry") }
     {
+        // 根据通知类型设置背景色和文字颜色
+        // Устанавливаем цвет фона и текста в зависимости от типа уведомления
         switch (type)
         {
         case Notification::Type::Info:
-            bindString("bg-color", "bg-primary");
+            bindString("bg-color", "bg-primary");      // 蓝色背景 / синий фон
             bindString("text-color", "white");
             break;
         case Notification::Type::Warning:
-            bindString("bg-color", "bg-warning");
+            bindString("bg-color", "bg-warning");        // 黄色背景 / жёлтый фон
             bindString("text-color", "dark");
             break;
         case Notification::Type::Danger:
-            bindString("bg-color", "bg-danger");
+            bindString("bg-color", "bg-danger");          // 红色背景 / красный фон
             bindString("text-color", "white");
             break;
         }
@@ -63,6 +69,8 @@ namespace lms::ui
         bindString("message", message);
         bindInt("duration", duration.count());
 
+        // 生成 JavaScript 代码来显示 Bootstrap Toast
+        // Генерируем JavaScript-код для отображения Bootstrap Toast
         std::ostringstream oss;
 
         oss
@@ -79,10 +87,14 @@ namespace lms::ui
         doJavaScript(oss.str());
     }
 
-        void NotificationContainer::add(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
+    // add: 添加一条新通知到容器中，当通知关闭时自动移除 widget。
+    // add: добавляет новое уведомление в контейнер, автоматически удаляет widget при закрытии уведомления.
+    void NotificationContainer::add(Notification::Type type, const Wt::WString& message, std::chrono::milliseconds duration)
     {
         NotificationWidget* notification{ addNew<NotificationWidget>(type, message, duration) };
 
+        // 当 Toast 关闭时，从容器中移除对应的 widget
+        // При закрытии Toast удаляем соответствующий widget из контейнера
         notification->closed.connect([this, notification] {
             removeWidget(notification);
         });

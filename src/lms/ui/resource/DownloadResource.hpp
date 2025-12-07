@@ -30,18 +30,37 @@
 
 namespace lms::ui
 {
+    // DownloadResource: 下载资源基类，提供将音乐文件打包为 ZIP 文件下载的功能。
+    // DownloadResource: базовый класс ресурсов загрузки, предоставляет функциональность упаковки музыкальных файлов в ZIP для загрузки.
+    //
+    // 功能：
+    // - 将多个音频文件打包成 ZIP 文件
+    // - 支持流式传输 ZIP 文件（不占用大量内存）
+    // - 使用模板方法模式，子类实现具体的打包逻辑
+    //
+    // Функции:
+    // - Упаковывает несколько аудиофайлов в ZIP-архив
+    // - Поддерживает потоковую передачу ZIP-файла (не занимает много памяти)
+    // - Использует паттерн Template Method, подклассы реализуют конкретную логику упаковки
     class DownloadResource : public Wt::WResource
     {
     public:
-        static constexpr std::size_t bufferSize{ 32768 };
+        static constexpr std::size_t bufferSize{ 32768 };  // 缓冲区大小（32 KB）/ размер буфера (32 КБ)
 
         ~DownloadResource() override;
 
     private:
+        // handleRequest: 处理下载请求，创建 ZIP 文件并流式传输。
+        // handleRequest: обрабатывает запрос загрузки, создаёт ZIP-файл и передаёт его потоком.
         void handleRequest(const Wt::Http::Request& request, Wt::Http::Response& response) override;
+        
+        // createZipper: 创建 ZIP 打包器（模板方法，由子类实现）。
+        // createZipper: создаёт упаковщик ZIP (шаблонный метод, реализуется подклассами).
         virtual std::unique_ptr<zip::IZipper> createZipper() = 0;
     };
 
+    // DownloadArtistResource: 下载艺术家的所有曲目。
+    // DownloadArtistResource: загружает все треки исполнителя.
     class DownloadArtistResource : public DownloadResource
     {
     public:
@@ -52,6 +71,8 @@ namespace lms::ui
         db::ArtistId _artistId;
     };
 
+    // DownloadReleaseResource: 下载专辑的所有曲目。
+    // DownloadReleaseResource: загружает все треки альбома.
     class DownloadReleaseResource : public DownloadResource
     {
     public:
@@ -62,6 +83,8 @@ namespace lms::ui
         db::ReleaseId _releaseId;
     };
 
+    // DownloadTrackResource: 下载单个曲目。
+    // DownloadTrackResource: загружает один трек.
     class DownloadTrackResource : public DownloadResource
     {
     public:
@@ -72,6 +95,8 @@ namespace lms::ui
         db::TrackId _trackId;
     };
 
+    // DownloadTrackListResource: 下载播放列表的所有曲目。
+    // DownloadTrackListResource: загружает все треки плейлиста.
     class DownloadTrackListResource : public DownloadResource
     {
     public:

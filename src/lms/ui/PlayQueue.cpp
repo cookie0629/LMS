@@ -56,6 +56,8 @@ namespace lms::ui
 {
     namespace
     {
+        // CreateTrackListModel: 创建新播放列表的表单模型，只包含名称字段。
+        // CreateTrackListModel: модель формы для создания нового плейлиста, содержит только поле имени.
         class CreateTrackListModel : public Wt::WFormModel
         {
         public:
@@ -70,6 +72,8 @@ namespace lms::ui
             Wt::WString getName() const { return valueText(NameField); }
         };
 
+        // ReplaceTrackListModel: 替换现有播放列表的表单模型，包含名称字段和播放列表选择器。
+        // ReplaceTrackListModel: модель формы для замены существующего плейлиста, содержит поле имени и селектор плейлиста.
         class ReplaceTrackListModel : public Wt::WFormModel
         {
         public:
@@ -82,12 +86,16 @@ namespace lms::ui
                 setValidator(NameField, createMandatoryValidator());
             }
 
+            // getTrackListId: 从表单中获取选中的播放列表 ID。
+            // getTrackListId: получает ID выбранного плейлиста из формы.
             db::TrackListId getTrackListId() const
             {
                 auto row{ trackListModel->getRowFromString(valueText(NameField)) };
                 return trackListModel->getValue(*row);
             }
 
+            // createTrackListModel: 创建播放列表模型，加载当前用户的所有播放列表。
+            // createTrackListModel: создаёт модель плейлистов, загружает все плейлисты текущего пользователя.
             static std::shared_ptr<TrackListModel> createTrackListModel()
             {
                 using namespace db;
@@ -112,31 +120,43 @@ namespace lms::ui
         };
     } // namespace
 
+    // PlayQueue 构造函数：初始化播放队列界面，设置按钮、事件处理和状态恢复。
+    // Конструктор PlayQueue: инициализирует интерфейс очереди воспроизведения, настраивает кнопки, обработку событий и восстановление состояния.
     PlayQueue::PlayQueue()
         : Template{ Wt::WString::tr("Lms.PlayQueue.template") }
         , _capacity{ core::Service<core::IConfig>::get()->getULong("playqueue-max-entry-count", 1000) }
     {
+        // 初始化播放列表（创建或获取用户队列）
+        // Инициализируем плейлист (создаём или получаем очередь пользователя)
         initTrackLists();
 
         addFunction("id", &Wt::WTemplate::Functions::id);
         addFunction("tr", &Wt::WTemplate::Functions::tr);
 
+        // 清空按钮：清除队列中的所有曲目
+        // Кнопка очистки: удаляет все треки из очереди
         Wt::WPushButton* clearBtn{ bindNew<Wt::WPushButton>("clear-btn", Wt::WString::tr("Lms.PlayQueue.template.clear-btn"), Wt::TextFormat::XHTML) };
         clearBtn->clicked().connect([this] {
             clearTracks();
         });
 
+        // 保存按钮：将当前队列保存为播放列表
+        // Кнопка сохранения: сохраняет текущую очередь как плейлист
         Wt::WPushButton* saveBtn{ bindNew<Wt::WPushButton>("save-btn", Wt::WString::tr("Lms.PlayQueue.template.save-btn"), Wt::TextFormat::XHTML) };
         saveBtn->clicked().connect([this] {
             saveAsTrackList();
         });
 
+        // 无限滚动容器：当用户滚动到底部时自动加载更多曲目
+        // Контейнер с бесконечной прокруткой: автоматически загружает больше треков при прокрутке до конца
         _entriesContainer = bindNew<InfiniteScrollingContainer>("entries", Wt::WString::tr("Lms.PlayQueue.template.entry-container"));
         _entriesContainer->onRequestElements.connect([this] {
             addSome();
             updateCurrentTrack(true);
         });
 
+        // 随机播放按钮：打乱队列中曲目的顺序
+        // Кнопка случайного воспроизведения: перемешивает порядок треков в очереди
         Wt::WPushButton* shuffleBtn{ bindNew<Wt::WPushButton>("shuffle-btn", Wt::WString::tr("Lms.PlayQueue.template.shuffle-btn"), Wt::TextFormat::XHTML) };
         shuffleBtn->clicked().connect([this] {
             {
@@ -154,6 +174,8 @@ namespace lms::ui
             addSome();
         });
 
+        // 重复全部复选框：循环播放队列中的所有曲目
+        // Чекбокс "повторять всё": циклически воспроизводит все треки в очереди
         _repeatBtn = bindNew<Wt::WCheckBox>("repeat-btn");
         _repeatBtn->clicked().connect([this] {
             state::writeValue<bool>("player_repeat_all", isRepeatAllSet());
@@ -161,6 +183,8 @@ namespace lms::ui
         if (state::readValue<bool>("player_repeat_all").value_or(false))
             _repeatBtn->setCheckState(Wt::CheckState::Checked);
 
+        // 电台模式复选框：自动添加推荐曲目到队列
+        // Чекбокс режима радио: автоматически добавляет рекомендуемые треки в очередь
         _radioBtn = bindNew<Wt::WCheckBox>("radio-btn");
         _radioBtn->clicked().connect([this] {
             {
@@ -170,15 +194,21 @@ namespace lms::ui
                 enqueueRadioTracksIfNeeded();
         });
 
+        // 恢复电台模式状态（如果之前已启用）
+        // Восстанавливаем состояние режима радио (если было включено ранее)
         if (state::readValue<bool>("player_radio_mode").value_or(false))
         {
             _radioBtn->setCheckState(Wt::CheckState::Checked);
             enqueueRadioTracksIfNeeded();
         }
 
+        // 显示队列统计信息（曲目数量和总时长）
+        // Отображаем статистику очереди (количество треков и общая длительность)
         _nbTracks = bindNew<Wt::WText>("track-count");
         _duration = bindNew<Wt::WText>("duration");
 
+        // 当播放器设置加载完成后，恢复之前播放的曲目位置
+        // После загрузки настроек плеера восстанавливаем позицию ранее воспроизводимого трека
         LmsApp->getMediaPlayer().settingsLoaded.connect([this] {
             if (_mediaPlayerSettingsLoaded)
                 return;
@@ -189,6 +219,8 @@ namespace lms::ui
             loadTrack(trackPos, false);
         });
 
+        // 会话结束前清理：演示用户退出时删除队列
+        // Очистка перед завершением сессии: удаляем очередь при выходе демо-пользователя
         LmsApp->preQuit().connect([this] {
             if (LmsApp->getUserType() == db::UserType::DEMO)
             {
