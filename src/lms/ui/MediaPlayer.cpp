@@ -49,6 +49,8 @@ namespace lms::ui
     {
         // settingsToJSString: 将播放器设置序列化为 JSON 字符串，传给前端 JS。
         // settingsToJSString: сериализует настройки плеера в JSON для передачи в JS.
+        // 将转码模式和 ReplayGain 设置转换为 JSON 格式，供前端 JavaScript 播放器使用。
+        // Преобразует режим транскодирования и настройки ReplayGain в формат JSON для использования JavaScript-плеером на фронтенде.
         std::string settingsToJSString(const MediaPlayer::Settings& settings)
         {
             namespace Json = Wt::Json;

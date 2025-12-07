@@ -74,6 +74,8 @@ namespace lms::ui
 
         // createMessageResourceBundle: 加载所有 UI 模板所需的多语言资源。
         // createMessageResourceBundle: загружает все ресурсные файлы сообщений для UI‑шаблонов.
+        // 这些资源文件包含所有界面文本的翻译，支持多语言切换。
+        // Эти файлы ресурсов содержат переводы всех текстов интерфейса, поддерживают переключение языков.
         std::shared_ptr<Wt::WMessageResourceBundle> createMessageResourceBundle()
         {
             const std::string appRoot{ Wt::WApplication::appRoot() };
@@ -113,6 +115,8 @@ namespace lms::ui
 
         // getOrCreateMessageBundle: 全局缓存 message bundle，避免每个会话重复加载。
         // getOrCreateMessageBundle: кэширует bundle сообщений, чтобы не загружать его для каждой сессии заново.
+        // 使用静态变量实现单例模式，所有会话共享同一个资源包。
+        // Использует статическую переменную для реализации паттерна Singleton, все сессии используют один и тот же пакет ресурсов.
         std::shared_ptr<Wt::WMessageResourceBundle> getOrCreateMessageBundle()
         {
             static std::shared_ptr<Wt::WMessageResourceBundle> res{ createMessageResourceBundle() };
@@ -121,6 +125,8 @@ namespace lms::ui
 
         // createLocale: 从翻译资源中读取本地化格式，创建自定义 WLocale。
         // createLocale: создаёт WLocale, заполняя формат дат/времени из ресурсов перевода.
+        // 设置日期、时间、数字格式等本地化信息，确保界面显示符合用户的语言习惯。
+        // Настраивает локализацию для дат, времени, чисел и т.д., чтобы интерфейс отображался согласно языковым предпочтениям пользователя.
         Wt::WLocale createLocale(const std::string& name)
         {
             Wt::WLocale locale{ name };
@@ -148,6 +154,16 @@ namespace lms::ui
 
         // handlePathChange: 根据 internalPath 切换主内容区的页，并更新导航高亮。
         // handlePathChange: переключает текущую страницу в mainStack и обновляет активный пункт меню.
+        // 功能：
+        // 1. 解析当前 URL 路径（如 /artists, /releases 等）
+        // 2. 切换到对应的视图页面
+        // 3. 更新页面标题
+        // 4. 通过 JavaScript 高亮当前导航项
+        // Функции:
+        // 1. Парсит текущий URL-путь (например, /artists, /releases и т.д.)
+        // 2. Переключается на соответствующую страницу представления
+        // 3. Обновляет заголовок страницы
+        // 4. Выделяет текущий пункт навигации через JavaScript
         void handlePathChange(Wt::WStackedWidget& stack, bool isAdmin)
         {
             static const struct
@@ -272,20 +288,30 @@ namespace lms::ui
 
     LmsApplication::~LmsApplication() = default;
 
+    // init: 初始化 Web 应用：设置主题、样式、JavaScript、本地化和事件处理。
+    // init: инициализирует веб-приложение: настраивает тему, стили, JavaScript, локализацию и обработку событий.
     void LmsApplication::init()
     {
         LMS_SCOPED_TRACE_OVERVIEW("UI", "ApplicationInit");
 
+        // 设置自定义主题
+        // Устанавливаем пользовательскую тему
         setTheme(std::make_shared<LmsTheme>());
 
+        // 加载 Font Awesome 图标库和媒体播放器 JavaScript
+        // Загружаем библиотеку иконок Font Awesome и JavaScript медиаплеера
         useStyleSheet("resources/font-awesome/css/font-awesome.min.css");
         require("js/mediaplayer.js");
 
+        // 设置标题、多语言资源和本地化
+        // Настраиваем заголовок, ресурсы многоязычности и локализацию
         setTitle();
         setLocalizedStrings(getOrCreateMessageBundle());
         setLocale(createLocale(Wt::WLocale::currentLocale().name()));
 
         // Handle Media Scanner events and other session events
+        // 启用服务器推送更新，用于处理媒体扫描器事件和其他会话事件
+        // Включаем серверные push-обновления для обработки событий сканера медиа и других событий сессии
         enableUpdates(true);
 
         db::UserId userId;
@@ -317,6 +343,10 @@ namespace lms::ui
             processPasswordAuth();
     }
 
+    // processPasswordAuth: 处理基于密码的认证流程。
+    // processPasswordAuth: обрабатывает процесс аутентификации на основе пароля.
+    // 如果是首次连接且使用内部认证，显示初始化向导；否则显示登录表单。
+    // Если это первое подключение и используется внутренняя аутентификация, показывает мастер инициализации; иначе показывает форму входа.
     void LmsApplication::processPasswordAuth()
     {
         bool firstConnection{};
@@ -330,12 +360,16 @@ namespace lms::ui
         assert(_authBackend == AuthenticationBackend::Internal || _authBackend == AuthenticationBackend::PAM);
         auth::IPasswordService& passwordService{ *core::Service<auth::IPasswordService>::get() };
 
+        // 首次连接：显示初始化向导，让管理员创建第一个用户
+        // Первое подключение: показываем мастер инициализации для создания первого пользователя администратором
         if (firstConnection && _authBackend == AuthenticationBackend::Internal)
         {
             root()->addNew<InitWizardView>(passwordService);
             return;
         }
 
+        // 显示登录表单，连接登录成功信号
+        // Показываем форму входа, подключаем сигнал успешного входа
         PasswordAuth* auth{ root()->addNew<PasswordAuth>(passwordService) };
         auth->userLoggedIn.connect(this, [this](db::UserId userId) {
             onUserLoggedIn(userId, true /* strongAuth */);
@@ -376,6 +410,8 @@ namespace lms::ui
         goHomeAndQuit();
     }
 
+    // onUserLoggedIn: 用户登录成功后的处理：设置用户信息、注册应用、检查重复会话、创建主界面。
+    // onUserLoggedIn: обработка после успешного входа пользователя: установка информации о пользователе, регистрация приложения, проверка дублирующих сессий, создание главного интерфейса.
     void LmsApplication::onUserLoggedIn(db::UserId userId, bool strongAuth)
     {
         root()->clear();
@@ -384,7 +420,12 @@ namespace lms::ui
 
         LMS_LOG(UI, INFO, "User '" << getUserLoginName() << "' logged in from '" << environment().clientAddress() << "', user agent = " << environment().userAgent() << ", locale = '" << locale().name() << "'");
 
+        // 注册当前应用实例到应用管理器
+        // Регистрируем текущий экземпляр приложения в менеджере приложений
         _appManager.registerApplication(*this);
+        
+        // 监听新应用注册事件：如果同一用户有多个活动会话，关闭旧会话（演示用户除外）
+        // Слушаем событие регистрации нового приложения: если у одного пользователя несколько активных сессий, закрываем старую (кроме демо-пользователя)
         _appManager.applicationRegistered.connect(this, [this](LmsApplication& otherApplication) {
             // Only one active session by user
             if (otherApplication.getUserId() == getUserId())
@@ -416,12 +457,22 @@ namespace lms::ui
         };
     }
 
+    // createHome: 创建主界面：初始化资源、JavaScript 函数、导航栏、内容区域和事件连接。
+    // createHome: создаёт главный интерфейс: инициализирует ресурсы, JavaScript-функции, панель навигации, область контента и подключения событий.
     void LmsApplication::createHome()
     {
         LMS_SCOPED_TRACE_OVERVIEW("UI", "ApplicationCreateHome");
 
+        // 创建封面资源处理器
+        // Создаём обработчик ресурсов обложек
         _artworkResource = std::make_shared<ArtworkResource>();
 
+        // 声明全局 JavaScript 函数：
+        // 1. onLoadCover: 当封面图片加载完成时添加 CSS 类
+        // 2. updateActiveNav: 更新导航栏中当前活动项的样式
+        // Объявляем глобальные JavaScript-функции:
+        // 1. onLoadCover: добавляет CSS-класс при завершении загрузки изображения обложки
+        // 2. updateActiveNav: обновляет стиль текущего активного пункта в навигации
         declareJavaScriptFunction("onLoadCover", "function(id) { id.className += \" Lms-cover-loaded\"}");
         declareJavaScriptFunction("updateActiveNav",
                                   R"(function(current) {

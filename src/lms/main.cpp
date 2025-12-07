@@ -60,11 +60,14 @@ namespace lms
     {
         // Compute how many threads should be used for background work (Wt HTTP server, IO, DB, etc.).
         // 计算后台工作线程数量（Wt HTTP 服务器、IO、数据库等）。
+        // Вычисляет количество потоков для фоновых задач (Wt HTTP сервер, IO, БД и т.д.).
         std::size_t getThreadCount()
         {
             const unsigned long configHttpServerThreadCount{ core::Service<core::IConfig>::get()->getULong("http-server-thread-count", 0) };
 
             // Reserve at least 2 threads since we still have some blocking IO (for example when reading from ffmpeg)
+            // 保留至少 2 个线程，因为我们仍有一些阻塞 IO（例如从 ffmpeg 读取时）
+            // Резервируем минимум 2 потока, так как у нас всё ещё есть блокирующий IO (например, при чтении из ffmpeg)
             return configHttpServerThreadCount ? configHttpServerThreadCount : std::max<unsigned long>(2, std::thread::hardware_concurrency());
         }
 
@@ -74,6 +77,11 @@ namespace lms
         // - internal: 内置用户名/密码；
         // - pam:      使用系统 PAM 认证；
         // - http-headers: 信任反向代理注入的 HTTP 头。
+        // Читает бэкенд аутентификации UI из конфига ("internal" / "pam" / "http-headers").
+        // Это значение напрямую влияет на способ входа:
+        // - internal: встроенная аутентификация по имени/паролю;
+        // - pam:      использование системной PAM-аутентификации;
+        // - http-headers: доверие HTTP-заголовкам, внедрённым обратным прокси.
         ui::AuthenticationBackend getUIAuthenticationBackend()
         {
             const std::string backend{ core::stringUtils::stringToLower(core::Service<core::IConfig>::get()->getString("authentication-backend", "internal")) };
@@ -89,6 +97,7 @@ namespace lms
 
         // Read tracing level for detailed performance tracing ("disabled" / "overview" / "detailed").
         // 从配置中读取 tracing 级别：用于性能/行为跟踪（禁用 / 概览 / 详细）。
+        // Читает уровень трассировки из конфига: для отслеживания производительности/поведения (отключено / обзор / детально).
         std::optional<core::tracing::Level> getTracingLevel()
         {
             std::string_view tracingLevel{ core::Service<core::IConfig>::get()->getString("tracing-level", "disabled") };
@@ -106,6 +115,8 @@ namespace lms
         // Build command‑line arguments for Wt::WServer and generate wt_config.xml file.
         // 为 Wt::WServer 生成命令行参数，并写出 wt_config.xml 配置文件。
         // 演示功能：你在日志里看到的一串 ARG=... 就是这里生成的。
+        // Строит аргументы командной строки для Wt::WServer и генерирует файл wt_config.xml.
+        // Примечание: строка ARG=... в логах генерируется здесь.
         std::vector<std::string> generateWtConfig(std::string execPath)
         {
             core::IConfig& config{ *core::Service<core::IConfig>::get() };
@@ -181,11 +192,17 @@ namespace lms
             return args;
         }
 
+        // proxyScannerEventsToApplication: 将扫描器服务的事件转发到所有活动的 Web 应用会话。
+        // 当扫描器状态改变时（开始、完成、进度更新等），所有已登录的用户界面都会收到通知。
+        // proxyScannerEventsToApplication: перенаправляет события сервиса сканера во все активные сессии веб-приложения.
+        // При изменении состояния сканера (начало, завершение, обновление прогресса и т.д.) все залогиненные UI получают уведомления.
         void proxyScannerEventsToApplication(scanner::IScannerService& scanner, Wt::WServer& server)
         {
             auto postAll{ [](Wt::WServer& server, std::function<void()> cb) {
                 server.postAll([cb = std::move(cb)] {
                     // may be nullptr, see https://redmine.webtoolkit.eu/issues/8202
+                    // 可能为 nullptr，参见 https://redmine.webtoolkit.eu/issues/8202
+                    // может быть nullptr, см. https://redmine.webtoolkit.eu/issues/8202
                     if (LmsApp)
                         cb();
                 });
@@ -227,6 +244,8 @@ namespace lms
             });
         }
 
+        // getLogMinSeverity: 从配置中读取最小日志级别，用于过滤日志输出。
+        // getLogMinSeverity: читает минимальный уровень логирования из конфига для фильтрации вывода логов.
         core::logging::Severity getLogMinSeverity()
         {
             std::string_view minSeverity{ core::Service<core::IConfig>::get()->getString("log-min-severity", "info") };
@@ -245,6 +264,8 @@ namespace lms
             throw core::LmsException{ "Invalid config value for 'log-min-severity'" };
         }
 
+        // LmsLogSink: 将 Wt 框架的日志输出重定向到 LMS 的日志系统。
+        // LmsLogSink: перенаправляет логи фреймворка Wt в систему логирования LMS.
         class LmsLogSink : public Wt::WLogSink
         {
         public:
@@ -257,6 +278,8 @@ namespace lms
             void log(const std::string& type, const std::string& scope, const std::string& message) const noexcept override
             {
                 // Some wt code path may go here without testing logging()
+                // 某些 Wt 代码路径可能不检查 logging() 就调用这里
+                // некоторые пути кода Wt могут вызвать это без проверки logging()
                 if (logging(type, scope))
                 {
                     const core::logging::Severity severity{ getSeverity(type, scope) };
@@ -304,6 +327,8 @@ namespace lms
 
     } // namespace
 
+    // main: LMS 服务器的主入口点，负责初始化所有服务、数据库、Web 服务器并启动事件循环。
+    // main: главная точка входа сервера LMS, инициализирует все сервисы, БД, веб-сервер и запускает цикл событий.
     int main(int argc, char* argv[])
     {
         std::filesystem::path configFilePath{ core::sysconfDirectory / "lms.conf" };
@@ -312,6 +337,8 @@ namespace lms
         assert(argc > 0);
         assert(argv[0] != NULL);
 
+        // displayUsage: 显示命令行用法帮助信息。
+        // displayUsage: показывает справку по использованию командной строки.
         auto displayUsage{ [&](std::ostream& os) {
             os << "Usage:\t" << argv[0] << "\t[conf_file]\n\n"
                << "Options:\n"
@@ -336,8 +363,12 @@ namespace lms
 
         try
         {
+            // 关闭标准输入，因为服务器不需要交互式输入
+            // Закрываем стандартный ввод, так как серверу не нужен интерактивный ввод
             close(STDIN_FILENO);
 
+            // 初始化核心服务：配置、日志、追踪
+            // Инициализация основных сервисов: конфигурация, логирование, трассировка
             core::Service<core::IConfig> config{ core::createConfig(configFilePath) };
             core::Service<core::logging::ILogger> logger{ createLogger(getLogMinSeverity(), config->getPath("log-file", "")) };
             core::Service<core::tracing::ITraceLogger> traceLogger;
@@ -345,18 +376,24 @@ namespace lms
                 traceLogger.assign(core::tracing::createTraceLogger(level.value(), config->getULong("tracing-buffer-size", core::tracing::MinBufferSizeInMBytes)));
 
             // use system locale. libarchive relies on this to write filenames
+            // 使用系统区域设置。libarchive 依赖此来写入文件名
+            // Используем системную локаль. libarchive полагается на это для записи имён файлов
             if (char* locale{ ::setlocale(LC_ALL, "") })
                 LMS_LOG(MAIN, INFO, "locale set to '" << locale << "'");
             else
                 LMS_LOG(MAIN, WARNING, "Cannot set locale from system");
 
             // Make sure the working directory exists
+            // 确保工作目录存在（用于数据库、缓存等）
+            // Убеждаемся, что рабочий каталог существует (для БД, кэша и т.д.)
             const std::filesystem::path workingDirectoryPath{ config->getPath("working-dir", "/var/lms") };
             const std::filesystem::path cachePath{ workingDirectoryPath / "cache" };
             std::filesystem::create_directories(workingDirectoryPath);
             std::filesystem::create_directories(cachePath);
 
             // Construct WT configuration and get the argc/argv back
+            // 构建 Wt 配置并获取 argc/argv 参数
+            // Строим конфигурацию Wt и получаем аргументы argc/argv
             const std::vector<std::string> wtServerArgs{ generateWtConfig(argv[0]) };
 
             std::vector<const char*> wtArgv(wtServerArgs.size());
@@ -366,12 +403,16 @@ namespace lms
                 wtArgv[i] = wtServerArgs[i].c_str();
             }
 
+            // 设置 Wt 服务器：自定义日志、配置参数
+            // Настройка сервера Wt: пользовательский логгер, параметры конфигурации
             LmsLogSink lmsLogSink{ *logger };
             Wt::WServer server{ argv[0] };
             server.setCustomLogger(lmsLogSink);
             server.setServerConfiguration(wtServerArgs.size(), const_cast<char**>(&wtArgv[0]));
 
             // As initialization can take a while (db migration, analyze, etc.), we bind a temporary init entry point to warn the user
+            // 由于初始化可能需要较长时间（数据库迁移、分析等），我们绑定一个临时的初始化入口点来提示用户
+            // Так как инициализация может занять время (миграция БД, анализ и т.д.), привязываем временную точку входа для предупреждения пользователя
             server.addEntryPoint(Wt::EntryPointType::Application,
                                  [&](const Wt::WEnvironment& env) {
                                      return ui::LmsInitApplication::create(env);
@@ -380,14 +421,21 @@ namespace lms
             LMS_LOG(MAIN, INFO, "Starting init web server...");
             server.start();
 
-            boost::asio::io_context ioContext; // ioContext used to dispatch all the services that are out of the Wt event loop
+            // ioContext used to dispatch all the services that are out of the Wt event loop
+            // ioContext 用于调度所有在 Wt 事件循环之外的服务
+            // ioContext используется для диспетчеризации всех сервисов вне цикла событий Wt
+            boost::asio::io_context ioContext;
             core::IOContextRunner ioContextRunner{ ioContext, getThreadCount(), "Misc" };
 
+            // 查询计划记录器（可选，用于性能分析）
+            // Регистратор планов запросов (опционально, для анализа производительности)
             core::Service<db::IQueryPlanRecorder> queryPlanRecorder;
             if (config->getBool("db-record-query-plans", false))
                 queryPlanRecorder.assign(db::createQueryPlanRecorder());
 
             // Connection pool size must be twice the number of threads: we have at least 2 io pools with getThreadCount() each and they all may access the database
+            // 连接池大小必须是线程数的两倍：我们至少有 2 个 IO 池，每个有 getThreadCount() 个线程，它们都可能访问数据库
+            // Размер пула соединений должен быть в два раза больше числа потоков: у нас минимум 2 IO-пула по getThreadCount() потоков, и все они могут обращаться к БД
             auto database{ db::createDb(config->getPath("working-dir", "/var/lms") / "lms.db", getThreadCount() * 2) };
             {
                 db::Session session{ *database };
@@ -396,6 +444,8 @@ namespace lms
                 session.createIndexesIfNeeded();
 
                 // As this may be quite long, we only do it during startup
+                // 由于这可能耗时较长，我们只在启动时执行
+                // Так как это может занять время, выполняем только при запуске
                 if (migrationPerformed)
                     session.vacuum();
                 else
@@ -406,6 +456,8 @@ namespace lms
 
             const std::size_t loginThrottlerMaxEntries{ config->getULong("login-throttler-max-entries", 10'000) };
             // Service initialization order is important (reverse-order for deinit)
+            // 服务初始化顺序很重要（析构时按相反顺序）
+            // Порядок инициализации сервисов важен (при деинициализации — обратный порядок)
             core::Service<core::IChildProcessManager> childProcessManagerService{ core::createChildProcessManager(ioContext) };
 
             const ui::AuthenticationBackend uiAuthenticationBackend{ getUIAuthenticationBackend() };
@@ -413,11 +465,15 @@ namespace lms
             core::Service<auth::IPasswordService> authPasswordService;
             core::Service<auth::IEnvService> authEnvService;
 
+            // 注册 UI 域的认证令牌参数：单次使用，有效期 8 周
+            // Регистрируем параметры токенов аутентификации для домена UI: одноразовое использование, срок действия 8 недель
             authTokenService->registerDomain("ui", auth::IAuthTokenService::DomainParameters{
                                                        .tokenMaxUseCount = 1,
                                                        .tokenDuration = std::chrono::weeks{ 8 },
                                                    });
 
+            // 注册 Subsonic API 域的认证令牌参数：无使用次数限制，无时间限制
+            // Регистрируем параметры токенов для домена Subsonic API: без ограничения использования, без ограничения времени
             authTokenService->registerDomain("subsonic", auth::IAuthTokenService::DomainParameters{
                                                              .tokenMaxUseCount = std::nullopt, // no usage limit
                                                              .tokenDuration = std::nullopt,    // no time limit
@@ -444,6 +500,10 @@ namespace lms
             core::Service<transcoding::ITranscodeService> transcodingService{ transcoding::createTranscodeService(*database, *childProcessManagerService) };
             core::Service<podcast::IPodcastService> podcastService{ podcast::createPodcastService(ioContext, *database, cachePath / "podcasts") };
 
+            // 扫描完成时刷新封面缓存（即使没有变更）
+            // 封面可能是外部文件，可能已更改但我们目前不跟踪它们（但应该跟踪）
+            // При завершении сканирования сбрасываем кэш обложек (даже если изменений нет)
+            // Обложки могут быть внешними файлами, которые изменились, но мы пока не отслеживаем их (но должны)
             scannerService->getEvents().scanComplete.connect([&] {
                 // Flush cover cache even if no changes:
                 // covers may be external files that changed and we don't keep track of them for now (but we should)
@@ -460,6 +520,8 @@ namespace lms
 
             std::unique_ptr<Wt::WResource> subsonicResource;
             // bind API resources
+            // 绑定 API 资源（Subsonic 兼容 API）
+            // Привязываем ресурсы API (совместимый с Subsonic API)
             if (config->getBool("api-subsonic", true))
             {
                 subsonicResource = api::subsonic::createSubsonicResource(*database);
@@ -467,6 +529,8 @@ namespace lms
             }
 
             // bind UI entry point
+            // 绑定 UI 入口点（主 Web 应用）
+            // Привязываем точку входа UI (основное веб-приложение)
             server.addEntryPoint(Wt::EntryPointType::Application,
                                  [&database, &appManager, uiAuthenticationBackend](const Wt::WEnvironment& env) {
                                      return ui::LmsApplication::create(env, *database, appManager, uiAuthenticationBackend);

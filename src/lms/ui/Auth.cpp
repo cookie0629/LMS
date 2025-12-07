@@ -47,6 +47,18 @@ namespace lms::ui
         static const std::string authCookieName{ "LmsAuth" };
         static const std::string authCookieSalt{ Wt::Auth::SHA1HashFunction{}.compute(authCookieName, authTokenDomain.c_str()) };
 
+        // createAuthToken: 创建"记住我"认证令牌并设置 HTTP cookie。
+        // createAuthToken: создаёт токен аутентификации "запомнить меня" и устанавливает HTTP cookie.
+        // 流程：
+        // 1. 生成随机 64 字符的令牌
+        // 2. 使用 SHA1 哈希函数对令牌进行哈希（使用盐值）
+        // 3. 将哈希值存储到数据库
+        // 4. 将原始令牌设置为 HTTP cookie（仅在 HTTPS 时设置安全标志）
+        // Процесс:
+        // 1. Генерирует случайный токен из 64 символов
+        // 2. Хеширует токен с помощью SHA1 (с использованием соли)
+        // 3. Сохраняет хеш в БД
+        // 4. Устанавливает исходный токен как HTTP cookie (флаг безопасности только при HTTPS)
         void createAuthToken(db::UserId userId, const Wt::WDateTime& expiry)
         {
             const std::string authCookie{ Wt::WRandom::generateId(64) };
@@ -61,10 +73,14 @@ namespace lms::ui
                               LmsApp->environment().urlScheme() == "https");
         }
 
+        // AuthModel: 登录表单的数据模型，处理字段验证和用户认证。
+        // AuthModel: модель данных формы входа, обрабатывает валидацию полей и аутентификацию пользователя.
         class AuthModel : public Wt::WFormModel
         {
         public:
             // Associate each field with a unique string literal.
+            // 将每个字段与唯一的字符串字面量关联
+            // Связывает каждое поле с уникальным строковым литералом
             static const Field LoginNameField;
             static const Field PasswordField;
             static const Field RememberMeField;
@@ -72,6 +88,8 @@ namespace lms::ui
             AuthModel(auth::IPasswordService& passwordService)
                 : _passwordService{ passwordService }
             {
+                // 添加表单字段并设置验证器
+                // Добавляем поля формы и устанавливаем валидаторы
                 addField(LoginNameField);
                 addField(PasswordField);
                 addField(RememberMeField);
@@ -80,12 +98,16 @@ namespace lms::ui
                 setValidator(PasswordField, createMandatoryValidator());
             }
 
+            // saveData: 保存登录数据：更新用户最后登录时间，如果勾选了"记住我"则创建认证令牌。
+            // saveData: сохраняет данные входа: обновляет время последнего входа пользователя, создаёт токен аутентификации, если отмечено "запомнить меня".
             void saveData()
             {
                 bool isDemo;
                 {
                     auto transaction{ LmsApp->getDbSession().createWriteTransaction() };
 
+                    // 查找用户并更新最后登录时间
+                    // Находим пользователя и обновляем время последнего входа
                     db::User::pointer user{ db::User::find(LmsApp->getDbSession(), valueText(LoginNameField).toUTF8()) };
                     user.modify()->setLastLogin(Wt::WDateTime::currentDateTime());
                     _userId = user->getId();
@@ -93,6 +115,8 @@ namespace lms::ui
                     isDemo = user->isDemo();
                 }
 
+                // 如果勾选了"记住我"，创建认证令牌（演示用户 3 天，普通用户 1 年）
+                // Если отмечено "запомнить меня", создаём токен аутентификации (для демо-пользователя 3 дня, для обычного — 1 год)
                 if (Wt::asNumber(value(RememberMeField)))
                 {
                     const Wt::WDateTime now{ Wt::WDateTime::currentDateTime() };
@@ -100,12 +124,16 @@ namespace lms::ui
                 }
             }
 
+            // validateField: 验证表单字段。对密码字段进行实际认证检查。
+            // validateField: валидирует поле формы. Для поля пароля выполняет фактическую проверку аутентификации.
             bool validateField(Field field)
             {
                 Wt::WString error;
 
                 if (field == PasswordField)
                 {
+                    // 调用密码服务验证用户名和密码
+                    // Вызываем сервис паролей для проверки имени пользователя и пароля
                     const auto checkResult{ _passwordService.checkUserPassword(
                         boost::asio::ip::make_address(LmsApp->environment().clientAddress()),
                         valueText(LoginNameField).toUTF8(),
@@ -113,12 +141,18 @@ namespace lms::ui
                     switch (checkResult.state)
                     {
                     case auth::IPasswordService::CheckResult::State::Granted:
+                        // 认证成功：保存用户 ID
+                        // Аутентификация успешна: сохраняем ID пользователя
                         _userId = checkResult.userId;
                         break;
                     case auth::IPasswordService::CheckResult::State::Denied:
+                        // 认证失败：用户名或密码错误
+                        // Аутентификация отклонена: неверное имя пользователя или пароль
                         error = Wt::WString::tr("Lms.password-bad-login-combination");
                         break;
                     case auth::IPasswordService::CheckResult::State::Throttled:
+                        // 请求被限流：登录尝试过于频繁
+                        // Запрос ограничен: слишком частые попытки входа
                         error = Wt::WString::tr("Lms.password-client-throttled");
                         break;
                     }
@@ -145,6 +179,18 @@ namespace lms::ui
         const AuthModel::Field AuthModel::RememberMeField{ "remember-me" };
     } // namespace
 
+    // processAuthToken: 处理"记住我"cookie，验证认证令牌并返回用户 ID。
+    // processAuthToken: обрабатывает cookie "запомнить меня", проверяет токен аутентификации и возвращает ID пользователя.
+    // 流程：
+    // 1. 从 cookie 中读取认证令牌
+    // 2. 对令牌进行哈希并与数据库中的哈希值比较
+    // 3. 如果验证成功，创建新令牌（单次使用令牌需要刷新）
+    // 4. 如果验证失败或被限流，清除 cookie
+    // Процесс:
+    // 1. Читает токен аутентификации из cookie
+    // 2. Хеширует токен и сравнивает с хешем в БД
+    // 3. При успешной проверке создаёт новый токен (одноразовые токены требуют обновления)
+    // 4. При неудаче или ограничении очищает cookie
     db::UserId processAuthToken(const Wt::WEnvironment& env)
     {
         const std::string* authCookie{ env.getCookie(authCookieName) };
@@ -158,10 +204,14 @@ namespace lms::ui
         {
         case auth::IAuthTokenService::AuthTokenProcessResult::State::Denied:
         case auth::IAuthTokenService::AuthTokenProcessResult::State::Throttled:
+            // 验证失败或被限流：清除无效的 cookie
+            // Проверка не пройдена или ограничена: очищаем недействительный cookie
             LmsApp->setCookie(authCookieName, std::string{}, 0, "", "", env.urlScheme() == "https");
             return db::UserId{};
 
         case auth::IAuthTokenService::AuthTokenProcessResult::State::Granted:
+            // 验证成功：单次使用令牌需要创建新令牌以继续使用
+            // Проверка успешна: одноразовые токены требуют создания нового токена для продолжения использования
             assert(res.authTokenInfo->maxUseCount && res.authTokenInfo->maxUseCount.value() == 1); // single-use token
             createAuthToken(res.authTokenInfo->userId, res.authTokenInfo->expiry);
             break;
@@ -175,11 +225,15 @@ namespace lms::ui
         core::Service<auth::IAuthTokenService>::get()->clearAuthTokens(authTokenDomain, userId);
     }
 
+    // PasswordAuth 构造函数：创建登录表单视图，设置字段、验证器和事件处理。
+    // Конструктор PasswordAuth: создаёт представление формы входа, настраивает поля, валидаторы и обработку событий.
     PasswordAuth::PasswordAuth(auth::IPasswordService& passwordService)
         : Wt::WTemplateFormView{ Wt::WString::tr("Lms.Auth.template") }
     {
         auto model{ std::make_shared<AuthModel>(passwordService) };
 
+        // processAuth: 处理登录提交：验证表单，保存数据，发出登录成功信号。
+        // processAuth: обрабатывает отправку формы входа: валидирует форму, сохраняет данные, испускает сигнал успешного входа.
         auto processAuth = [this, model] {
             updateModel(model.get());
 
