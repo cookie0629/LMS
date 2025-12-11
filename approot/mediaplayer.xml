@@ -1,54 +1,53 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages xmlns:if="Wt.WTemplate.conditions">
-<!--FORMS message blocks-->
 
 <message id="Lms.MediaPlayer.template">
-	<audio id="lms-mp-audio">
+	<audio id="lms-mp-audio"> <!-- 音频元素，ID为lms-mp-audio -->
 	</audio>
 	<div class="container">
 		<div class="p-1 my-1 position-relative">
 			<input id="lms-mp-seek" class="Lms-player-seek-common Lms-player-seek" type="range" min="0" max="100" step="1" value="0"/>
-			<div class="progress Lms-player-seek-common bg-secondary rounded">
+			<div class="progress Lms-player-seek-common bg-secondary rounded"> <!-- 进度条容器 -->
 				<div id="lms-mp-progress" class="progress-bar" role="progressbar" aria-valuenow="20" aria-valuemin="0" aria-valuemax="100" style="width: 0%"></div>
 			</div>
 		</div>
 
-		<div class="d-flex align-items-center">
-			<div class="py-2 pe-2 d-inline-flex">
-				<button id="lms-mp-previous" class="btn btn-sm btn-outline-primary border-0">
+		<div class="d-flex align-items-center"> <!-- 弹性布局容器，垂直居中 -->
+			<div class="py-2 pe-2 d-inline-flex"> <!-- 内层弹性布局容器，设置垂直内边距和右侧外边距 -->
+				<button id="lms-mp-previous" class="btn btn-sm btn-outline-primary border-0"> <!-- 上一曲按钮 -->
 					<i class="fa fa-fw fa-step-backward"/>
 				</button>
-				<button id="lms-mp-playpause" class="btn btn-outline-primary border-0">
+				<button id="lms-mp-playpause" class="btn btn-outline-primary border-0"> <!-- 播放/暂停按钮 -->
 					<i class="fa fa-fw fa-play"/>
 				</button>
-				<button id="lms-mp-next" class="btn btn-sm btn-outline-primary border-0">
+				<button id="lms-mp-next" class="btn btn-sm btn-outline-primary border-0"> <!-- 下一曲按钮 -->
 					<i class="fa fa-fw fa-step-forward"/>
 				</button>
 			</div>
-			<div class="flex-fill text-center text-truncate">
-				${title class="d-block text-truncate"}
-				${artist class="d-inline text-decoration-none text-truncate link-success"}
+			<div class="flex-fill text-center text-truncate"> <!-- 歌曲信息显示区域 -->
+				${title class="d-block text-truncate"} <!-- 歌曲标题 -->
+				${artist class="d-inline text-decoration-none text-truncate link-success"} <!-- 艺术家名称 -->
 				<span class="d-none d-md-inline">
 					${separator}
 					${release class="text-decoration-none text-truncate link-success"}
 				</span>
 			</div>
-			<div class="p-2 d-none d-sm-block text-muted text-nowrap">
+			<div class="p-2 d-none d-sm-block text-muted text-nowrap"> <!-- 播放时间和时长显示区域，在小屏幕及以上显示 -->
 				<span id="lms-transcoding-active" title="${tr:Lms.Player.transcoding-active}" class="p-2" style="display:none"><i class="fa fa-fw fa-info-circle" aria-hidden="true"></i></span>
-				<span id="lms-mp-curtime">--</span> / <span id="lms-mp-duration">--</span>
+				<span id="lms-mp-curtime">--</span> / <span id="lms-mp-duration">--</span> <!-- 当前播放时间和总时长显示 -->
 			</div>
-			<div class="p-2 d-none d-md-flex align-items-center Lms-player-volume-container">
-				<i id="lms-mp-volume" class="fa fa-fw fa-volume-up link-primary me-1"></i>
+			<div class="p-2 d-none d-md-flex align-items-center Lms-player-volume-container"> <!-- 音量控制区域，在中等屏幕及以上显示 -->
+				<i id="lms-mp-volume" class="fa fa-fw fa-volume-up link-primary me-1"></i> <!-- 音量图标 -->
 				<input id ="lms-mp-volume-slider" class="form-range" type="range" min="0" max="1" step="0.01" value="0.8"/>
 			</div>
 			<div class="py-2 ps-2">
-				${playqueue-btn class="btn btn-outline-primary border-0"}
+				${playqueue-btn class="btn btn-outline-primary border-0"} <!-- 播放列表按钮，使用模板生成 -->
 			</div>
 		</div>
 	</div>
 </message>
 
-<message id="Lms.MediaPlayer.template.playqueue-btn">
+<message id="Lms.MediaPlayer.template.playqueue-btn"> <!-- 播放列表按钮模板 -->
 	<span>
 		<i class="fa fa-fw fa-th-list d-inline"/><div class="d-none d-sm-inline ms-2 small">{1}</div>
 	</span>

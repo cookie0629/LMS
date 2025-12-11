@@ -1,41 +1,41 @@
 
-<?xml version="1.0" encoding="UTF-8" ?>
-<messages xmlns:if="Wt.WTemplate.conditions">
+<?xml version="1.0" encoding="UTF-8" ?> 
+<messages xmlns:if="Wt.WTemplate.conditions"> <!-- 这是LMS认证模板的XML定义文件，使用了WTemplate的条件命名空间 -->
 
 <message id="Lms.Auth.template">
-	<div class="container">
+	<div class="container"> <!-- 定义了一个容器div，用于存放认证表单 -->
 		<form class="row mt-3 justify-content-md-center">
 			<div class="col-lg-6">
 				<div class="row g-3">
 					<h2>${tr:Lms.Auth.welcome}</h2>
-					<div class="col-12">
+					<div class="col-12"> <!-- 登录名输入框部分 -->
 						<label class="form-label" for="${id:login-name}">
 							${tr:Lms.login}
 						</label>
-						${login-name class="form-control"}
+						${login-name class="form-control"} <!-- 登录名输入框，使用form-control类进行样式美化 -->
 						<div class="invalid-feedback">
 							${login-name-info}
 						</div>
 					</div>
-					<div class="col-12">
-						<label class="form-label" for="${id:password}">
+					<div class="col-12"> <!-- 密码输入框部分 -->
+						<label class="form-label" for="${id:password}"> <!-- 为密码输入框添加标签 -->
 							${tr:Lms.password}
 						</label>
 						${password class="form-control"}
-						<div class="invalid-feedback">
+						<div class="invalid-feedback"> <!-- 无效反馈提示框 -->
 							${password-info}
 						</div>
 					</div>
 					<div class="col-12">
-						<div class="form-check">
+						<div class="form-check"> <!-- 表单复选框容器 -->
 							${remember-me class="form-check-input"}
-							<label class="form-check-label" for="${id:remember-me}">
+							<label class="form-check-label" for="${id:remember-me}"> <!-- 记住我标签，关联到复选框 -->
 								${tr:Lms.Auth.remember-me}
 							</label>
 						</div>
 					</div>
 					<div class="col-12">
-						${login-btn class="btn btn-primary"}
+						${login-btn class="btn btn-primary"} <!-- 登录按钮，使用btn和btn-primary样式类 -->
 					</div>
 				</div>
 			</div>

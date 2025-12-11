@@ -1,33 +1,32 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<messages xmlns:if="Wt.WTemplate.conditions">
-<!--FORMS message blocks-->
+<messages xmlns:if="Wt.WTemplate.conditions"> <!--  这是一个XML消息模板文件，用于定义播放队列相关的界面元素和按钮。  文件中使用了Wt模板系统，包含多个消息定义，每个消息都有一个唯一的id。  模板中使用了Font Awesome图标库来显示各种按钮图标。-->
 
-<message id="Lms.PlayQueue.template.clear-btn"><i class="fa fa-fw fa-times"></i></message>
-<message id="Lms.PlayQueue.template.shuffle-btn"><i class="fa fa-fw fa-random"></i></message>
-<message id="Lms.PlayQueue.template.repeat-btn"><i class="fa fa-fw fa-repeat"></i></message>
-<message id="Lms.PlayQueue.template.radio-btn"><i class="fa fa-fw fa-rss"></i></message>
-<message id="Lms.PlayQueue.template.save-btn"><i class="fa fa-fw fa-save"></i></message>
+<message id="Lms.PlayQueue.template.clear-btn"><i class="fa fa-fw fa-times"></i></message> <!-- 清除按钮的消息模板，使用Font Awesome的关闭图标 -->
+<message id="Lms.PlayQueue.template.shuffle-btn"><i class="fa fa-fw fa-random"></i></message> <!-- 随机播放按钮的消息模板，使用Font Awesome的随机图标 -->
+<message id="Lms.PlayQueue.template.repeat-btn"><i class="fa fa-fw fa-repeat"></i></message> <!-- 重复播放按钮的消息模板，使用Font Awesome的重复图标 -->
+<message id="Lms.PlayQueue.template.radio-btn"><i class="fa fa-fw fa-rss"></i></message> <!-- 广播按钮的消息模板，使用Font Awesome的RSS图标 -->
+<message id="Lms.PlayQueue.template.save-btn"><i class="fa fa-fw fa-save"></i></message> <!-- 保存按钮的消息模板，使用Font Awesome的保存图标 -->
 
-<message id="Lms.PlayQueue.template">
-	<div class="small text-muted mb-2">${track-count} · ${duration}</div>
-	<div class="mb-3">
-		<div class="btn-group me-2">
+<message id="Lms.PlayQueue.template"> <!-- 播放队列的主要模板 -->
+	<div class="small text-muted mb-2">${track-count} · ${duration}</div> <!-- 显示曲目数量和总时长的信息栏 -->
+	<div class="mb-3"> <!-- 按钮组区域 -->
+		<div class="btn-group me-2"> <!-- 重复和广播模式按钮组 -->
 			${repeat-btn class="btn-check"}
-			<label class="btn btn-outline-info" title="${tr:Lms.PlayQueue.repeat}" for="${id:repeat-btn}">${tr:Lms.PlayQueue.template.repeat-btn}</label>
-			${radio-btn class="btn-check"}
+ 			<label class="btn btn-outline-info" title="${tr:Lms.PlayQueue.repeat}" for="${id:repeat-btn}">${tr:Lms.PlayQueue.template.repeat-btn}</label>
+			${radio-btn class="btn-check"} <!-- 广播模式按钮 -->
 			<label class="btn btn-outline-info" title="${tr:Lms.PlayQueue.radio-mode}" for="${id:radio-btn}">${tr:Lms.PlayQueue.template.radio-btn}</label>
 		</div>
-		<div class="d-inline-block me-2" title="${tr:Lms.save}">
+		<div class="d-inline-block me-2" title="${tr:Lms.save}"> <!-- 保存按钮 -->
 			${save-btn class="btn btn-secondary"}
 		</div>
 		<div class="d-inline-block me-2" title="${tr:Lms.PlayQueue.shuffle}">
-			${shuffle-btn class="btn btn-secondary"}
+			${shuffle-btn class="btn btn-secondary"} <!-- 随机播放按钮 -->
 		</div>
 		<div class="d-inline-block me-2" title="${tr:Lms.PlayQueue.clear}">
-			${clear-btn class="btn btn-warning"}
+			${clear-btn class="btn btn-warning"} <!-- 清除按钮，使用警告样式 -->
 		</div>
 	</div>
-	${entries}
+	${entries} <!-- 播放队列条目列表 -->
 </message>
 
 <message id="Lms.PlayQueue.template.entry-container">
@@ -47,7 +46,7 @@
 					${<if-has-artists>}${artists class="d-block d-md-none text-truncate"}${</if-has-artists>}
 				</div>
 			</div>
-			<div class="col-md-6 col-lg-4">
+			<div class="col-md-6 col-lg-4"> <!-- 这是一个包含音乐条目信息的HTML结构，使用了Bootstrap的网格系统 -->
 				${<if-has-artists>}${artists-md class="d-none d-md-block text-truncate"}${</if-has-artists>}
 			</div>
 			<div class="col-lg-4 text-truncate">
@@ -57,41 +56,41 @@
 		<div class="p-2 d-none d-sm-block text-muted text-center Lms-tracks-entry-duration">
 			${duration}
 		</div>
-		<div class="p-2 d-flex">
-			${play-btn class="d-none d-sm-block btn btn-sm btn-outline-secondary border-0"}
-			${del-btn class="btn btn-sm btn-outline-secondary border-0"}
-			<div class="dropdown d-inline-block">
+		<div class="p-2 d-flex"> <!-- 包含播放按钮、删除按钮和更多选项的下拉菜单 -->
+			${play-btn class="d-none d-sm-block btn btn-sm btn-outline-secondary border-0"} <!-- 播放按钮，在小屏幕以上可见 -->
+			${del-btn class="btn btn-sm btn-outline-secondary border-0"} <!-- 删除按钮，始终可见 -->
+			<div class="dropdown d-inline-block"> <!-- 更多选项下拉菜单 -->
 				${more-btn data-bs-toggle="dropdown" aria-expanded="false" class="btn btn-sm btn-outline-secondary border-0"}
 				<ul class="dropdown-menu" aria-labelledby="${id:more-btn}">
-					<li>${play class="dropdown-item"}</li>
-					<li>${star class="dropdown-item"}</li>
-					<li>${download class="dropdown-item"}</li>
+					<li>${play class="dropdown-item"}</li> <!-- 播放选项 -->
+					<li>${star class="dropdown-item"}</li> <!-- 收藏选项 -->
+					<li>${download class="dropdown-item"}</li> <!-- 下载选项 -->
 				</ul>
 			</div>
 		</div>
 	</div>
 </message>
 
-<message id="Lms.PlayQueue.template.entry-artist">
+<message id="Lms.PlayQueue.template.entry-artist"> <!-- 播放队列模板中的艺术家信息 -->
 	${artist}
 </message>
 
-<message id="Lms.PlayQueue.template.save-as-tracklist">
-	<div class="modal fade" tabindex="-1">
+<message id="Lms.PlayQueue.template.save-as-tracklist"> <!-- 保存为播放列表的模态框模板 -->
+	<div class="modal fade" tabindex="-1"> <!-- 模态框容器，设置淡入淡出效果和tabindex -->
 		<div class="modal-dialog">
 			<div class="modal-content">
 				<div class="modal-header">
 					<h5 class="modal-title">${tr:Lms.save}</h5>
 					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 				</div>
-				<div class="modal-body">
+				<div class="modal-body"> <!-- 模态框主体内容 -->
 					<form>
-						<div class="mb-2">
-							<div class="form-check form-check-inline">
+						<div class="mb-2"> <!-- 表单组，添加底部外边距 -->
+							<div class="form-check form-check-inline"> <!-- 创建播放列表的选项 -->
 								${create-tracklist-btn class="form-check-input" name="action-type"}
 								<label class="form-check-label" for="${id:create-tracklist-btn}">${tr:Lms.PlayQueue.create-tracklist}</label>
 							</div>
-							<div class="form-check form-check-inline">
+							<div class="form-check form-check-inline"> <!-- 替换播放列表的选项 -->
 								${replace-tracklist-btn class="form-check-input" name="action-type"}
 								<label class="form-check-label" for="${id:replace-tracklist-btn}">${tr:Lms.PlayQueue.replace-tracklist}</label>
 							</div>

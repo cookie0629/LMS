@@ -1,21 +1,24 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <messages xmlns:if="Wt.WTemplate.conditions">
 
+<!-- 主页面模板 -->
+
 <message id="Lms.main.template">
-	${navbar}
-	<div class="container">
-		${contents}
-		${notifications class="toast-container Lms-notification-container p-3"}
-		${modal}
+	${navbar} <!-- 引入导航栏组件 -->
+	<div class="container"> <!-- 主内容容器 -->
+		${contents} <!-- 动态内容区域 -->
+		${notifications class="toast-container Lms-notification-container p-3"} <!-- 通知消息区域，使用Bootstrap Toast样式 -->
+		${modal} <!-- 模态对话框区域 -->
 	</div>
-	${player class="fixed-bottom bg-dark Lms-player"}
+	${player class="fixed-bottom bg-dark Lms-player"} <!-- 固定在底部的音乐播放器 -->
 </message>
 
 <message id="Lms.main.template.navbar">
+	<!-- 导航栏结构 -->
 	<nav class="navbar navbar-expand-md navbar-dark bg-dark mb-3">
 		<div class="container">
 		    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-				<span class="navbar-toggler-icon"></span>
+				<span class="navbar-toggler-icon"></span> <!-- 折叠按钮图标 -->
 			</button>
 			<div class="collapse navbar-collapse" id="navbarSupportedContent">
 				<ul class="navbar-nav align-items-md-center me-md-2 mb-2 mb-md-0">
@@ -33,13 +36,13 @@
 					</li>
 				</ul>
 				${filters class="d-flex align-items-center me-auto mb-2 mb-md-0"}
-				<div class="navbar-nav align-items-md-center">
+				<div class="navbar-nav align-items-md-center"> <!-- 导航栏容器，使用flex布局，垂直居中对齐 -->
 				${<if-is-admin>}
-					<li class="nav-item dropdown">
+					<li class="nav-item dropdown"> <!-- 管理员下拉菜单项 -->
 						<a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false" title="${tr:Lms.administration}">
-							<i class="fa fa-cogs" aria-hidden="true"></i>
+							<i class="fa fa-cogs" aria-hidden="true"></i> <!-- 管理员图标 -->
 						</a>
-						<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown">
+						<ul class="dropdown-menu dropdown-menu-end" aria-labelledby="navbarDropdown"> <!-- 管理员下拉菜单内容 -->
 							<li>${media-libraries class="dropdown-item"}</li>
 							<li>${scan-settings class="dropdown-item"}</li>
 							<li>${scanner class="dropdown-item"}</li>
