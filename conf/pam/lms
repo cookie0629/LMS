@@ -1,3 +1,3 @@
-account		required		pam_unix.so
-auth		required		pam_unix.so
-password	required		pam_deny.so
+account		required		pam_unix.so # 使用pam_unix模块进行账户验证，该模块用于处理Unix账户相关的认证
+auth		required		pam_unix.so # 使用pam_unix模块进行身份认证，该模块用于处理用户名和密码的认证
+password	required		pam_deny.so # 使用pam_deny模块拒绝所有密码更改请求，该模块总是返回失败状态
