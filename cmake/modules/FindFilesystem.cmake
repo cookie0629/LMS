@@ -1,130 +1,27 @@
-# Distributed under the OSI-approved BSD 3-Clause License.  See accompanying
-# file Copyright.txt or https://cmake.org/licensing for details.
-
-#[=======================================================================[.rst:
-
-FindFilesystem
-##############
-
-This module supports the C++17 standard library's filesystem utilities. Use the
-:imp-target:`std::filesystem` imported target to
-
-Options
-*******
-
-The ``COMPONENTS`` argument to this module supports the following values:
-
-.. find-component:: Experimental
-    :name: fs.Experimental
-
-    Allows the module to find the "experimental" Filesystem TS version of the
-    Filesystem library. This is the library that should be used with the
-    ``std::experimental::filesystem`` namespace.
-
-.. find-component:: Final
-    :name: fs.Final
-
-    Finds the final C++17 standard version of the filesystem library.
-
-If no components are provided, behaves as if the
-:find-component:`fs.Final` component was specified.
-
-If both :find-component:`fs.Experimental` and :find-component:`fs.Final` are
-provided, first looks for ``Final``, and falls back to ``Experimental`` in case
-of failure. If ``Final`` is found, :imp-target:`std::filesystem` and all
-:ref:`variables <fs.variables>` will refer to the ``Final`` version.
-
-
-Imported Targets
-****************
-
-.. imp-target:: std::filesystem
-
-    The ``std::filesystem`` imported target is defined when any requested
-    version of the C++ filesystem library has been found, whether it is
-    *Experimental* or *Final*.
-
-    If no version of the filesystem library is available, this target will not
-    be defined.
-
-    .. note::
-        This target has ``cxx_std_17`` as an ``INTERFACE``
-        :ref:`compile language standard feature <req-lang-standards>`. Linking
-        to this target will automatically enable C++17 if no later standard
-        version is already required on the linking target.
-
-
-.. _fs.variables:
-
-Variables
-*********
-
-.. variable:: CXX_FILESYSTEM_IS_EXPERIMENTAL
-
-    Set to ``TRUE`` when the :find-component:`fs.Experimental` version of C++
-    filesystem library was found, otherwise ``FALSE``.
-
-.. variable:: CXX_FILESYSTEM_HAVE_FS
-
-    Set to ``TRUE`` when a filesystem header was found.
-
-.. variable:: CXX_FILESYSTEM_HEADER
-
-    Set to either ``filesystem`` or ``experimental/filesystem`` depending on
-    whether :find-component:`fs.Final` or :find-component:`fs.Experimental` was
-    found.
-
-.. variable:: CXX_FILESYSTEM_NAMESPACE
-
-    Set to either ``std::filesystem`` or ``std::experimental::filesystem``
-    depending on whether :find-component:`fs.Final` or
-    :find-component:`fs.Experimental` was found.
-
-
-Examples
-********
-
-Using `find_package(Filesystem)` with no component arguments:
-
-.. code-block:: cmake
-
-    find_package(Filesystem REQUIRED)
-
-    add_executable(my-program main.cpp)
-    target_link_libraries(my-program PRIVATE std::filesystem)
-
-
-#]=======================================================================]
-
-
 if(TARGET std::filesystem)
-    # This module has already been processed. Don't do it again.
     return()
 endif()
 
-include(CMakePushCheckState)
-include(CheckIncludeFileCXX)
-include(CheckCXXSourceCompiles)
+include(CMakePushCheckState) # 用于保存和恢复 CMake 检查状态
+include(CheckIncludeFileCXX) # 用于检查 C++ 头文件是否存在
+include(CheckCXXSourceCompiles) # 用于检查 C++ 源代码是否能编译
 
-cmake_push_check_state()
+cmake_push_check_state() # 保存当前的 CMake 检查状态
 
 set(CMAKE_REQUIRED_QUIET ${Filesystem_FIND_QUIETLY})
 
-# Normalize and check the component list we were given
-set(want_components ${Filesystem_FIND_COMPONENTS})
-if(Filesystem_FIND_COMPONENTS STREQUAL "")
+set(want_components ${Filesystem_FIND_COMPONENTS}) # 获取用户请求的组件列表
+if(Filesystem_FIND_COMPONENTS STREQUAL "") # 如果没有指定组件，则默认只查找 Final 组件
     set(want_components Final)
 endif()
 
-# Warn on any unrecognized components
 set(extra_components ${want_components})
 list(REMOVE_ITEM extra_components Final Experimental)
-foreach(component IN LISTS extra_components)
+foreach(component IN LISTS extra_components) # 遍历并警告用户指定的额外组件
     message(WARNING "Extraneous find_package component for Filesystem: ${component}")
 endforeach()
 
-# Detect which of Experimental and Final we should look for
-set(find_experimental TRUE)
+set(find_experimental TRUE) # 设置查找标志，默认同时查找 Final 和 Experimental 组件
 set(find_final TRUE)
 if(NOT "Final" IN_LIST want_components)
     set(find_final FALSE)
@@ -133,35 +30,33 @@ if(NOT "Experimental" IN_LIST want_components)
     set(find_experimental FALSE)
 endif()
 
-if(find_final)
+if(find_final) # 检查C++文件系统支持情况的代码# 如果find_final为真，则检查标准filesystem头文件是否存在
     check_include_file_cxx("filesystem" _CXX_FILESYSTEM_HAVE_HEADER)
     mark_as_advanced(_CXX_FILESYSTEM_HAVE_HEADER)
     if(_CXX_FILESYSTEM_HAVE_HEADER)
-        # We found the non-experimental header. Don't bother looking for the
-        # experimental one.
         set(find_experimental FALSE)
     endif()
 else()
-    set(_CXX_FILESYSTEM_HAVE_HEADER FALSE)
+    set(_CXX_FILESYSTEM_HAVE_HEADER FALSE) # 如果find_final为假，则设置_CXX_FILESYSTEM_HAVE_HEADER为FALSE
 endif()
 
-if(find_experimental)
+if(find_experimental) # 如果find_experimental为真，则检查实验性filesystem头文件是否存在
     check_include_file_cxx("experimental/filesystem" _CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER)
     mark_as_advanced(_CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER)
 else()
-    set(_CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER FALSE)
+    set(_CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER FALSE) # 如果find_experimental为假，则设置_CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER为FALSE
 endif()
 
-if(_CXX_FILESYSTEM_HAVE_HEADER)
+if(_CXX_FILESYSTEM_HAVE_HEADER) # 根据检查结果设置文件系统相关的变量
     set(_have_fs TRUE)
     set(_fs_header filesystem)
     set(_fs_namespace std::filesystem)
 elseif(_CXX_FILESYSTEM_HAVE_EXPERIMENTAL_HEADER)
-    set(_have_fs TRUE)
-    set(_fs_header experimental/filesystem)
-    set(_fs_namespace std::experimental::filesystem)
+    set(_have_fs TRUE) # 设置_have_fs为TRUE，表示找到了文件系统支持
+    set(_fs_header experimental/filesystem) # 设置使用的头文件为实验性filesystem
+    set(_fs_namespace std::experimental::filesystem) # 设置使用的命名空间为std::experimental::filesystem
 else()
-    set(_have_fs FALSE)
+    set(_have_fs FALSE) # 如果既没有标准filesystem也没有实验性filesystem，则设置_have_fs为FALSE
 endif()
 
 set(CXX_FILESYSTEM_HAVE_FS ${_have_fs} CACHE BOOL "TRUE if we have the C++ filesystem headers")
@@ -171,7 +66,6 @@ set(CXX_FILESYSTEM_NAMESPACE ${_fs_namespace} CACHE STRING "The C++ namespace th
 set(_found FALSE)
 
 if(CXX_FILESYSTEM_HAVE_FS)
-    # We have some filesystem library available. Do link checks
     string(CONFIGURE [[
         #include <@CXX_FILESYSTEM_HEADER@>
 
@@ -181,24 +75,20 @@ if(CXX_FILESYSTEM_HAVE_FS)
         }
     ]] code @ONLY)
 
-    # Try to compile a simple filesystem program without any linker flags
     check_cxx_source_compiles("${code}" CXX_FILESYSTEM_NO_LINK_NEEDED)
 
     set(can_link ${CXX_FILESYSTEM_NO_LINK_NEEDED})
 
     if(NOT CXX_FILESYSTEM_NO_LINK_NEEDED)
 	    set(prev_libraries ${CMAKE_REQUIRED_LIBRARIES})
-	    # Try to compile a simple filesystem program with the libstdc++ flag
 	    set(CMAKE_REQUIRED_LIBRARIES ${prev_libraries} -lstdc++fs)
 	    check_cxx_source_compiles("${code}" CXX_FILESYSTEM_STDCPPFS_NEEDED)
 	    set(can_link ${CXX_FILESYSTEM_STDCPPFS_NEEDED})
 	    if(NOT CXX_FILESYSTEM_STDCPPFS_NEEDED)
-		    # Try to compile a simple filesystem program with the libc++ flag
 		    set(CMAKE_REQUIRED_LIBRARIES ${prev_libraries} -lc++fs)
 		    check_cxx_source_compiles("${code}" CXX_FILESYSTEM_CPPFS_NEEDED)
 		    set(can_link ${CXX_FILESYSTEM_CPPFS_NEEDED})
 		    if(NOT CXX_FILESYSTEM_CPPFS_NEEDED)
-			    # Try to compile a simple filesystem program without any linker flags
 			    check_cxx_source_compiles("${code}" CXX_FILESYSTEM_NO_LINK_NEEDED)
 			    set(can_link ${CXX_FILESYSTEM_NO_LINK_NEEDED})
 		    endif()
@@ -206,13 +96,12 @@ if(CXX_FILESYSTEM_HAVE_FS)
 
     endif()
 
-    if(can_link)
-        add_library(std::filesystem INTERFACE IMPORTED)
+    if(can_link) # 如果可以链接filesystem库
+        add_library(std::filesystem INTERFACE IMPORTED) # 创建一个名为std::filesystem的接口导入库
         target_compile_features(std::filesystem INTERFACE cxx_std_17)
         set(_found TRUE)
 
         if(CXX_FILESYSTEM_NO_LINK_NEEDED)
-            # Nothing to add...
         elseif(CXX_FILESYSTEM_STDCPPFS_NEEDED)
             target_link_libraries(std::filesystem INTERFACE -lstdc++fs)
         elseif(CXX_FILESYSTEM_CPPFS_NEEDED)
@@ -221,10 +110,10 @@ if(CXX_FILESYSTEM_HAVE_FS)
     endif()
 endif()
 
-cmake_pop_check_state()
+cmake_pop_check_state() # 恢复之前的检查状态
 
 set(Filesystem_FOUND ${_found} CACHE BOOL "TRUE if we can compile and link a program using std::filesystem" FORCE)
 
-if(Filesystem_FIND_REQUIRED AND NOT Filesystem_FOUND)
+if(Filesystem_FIND_REQUIRED AND NOT Filesystem_FOUND) # 如果要求必须找到filesystem但实际未找到，则报错
     message(FATAL_ERROR "Cannot Compile simple program using std::filesystem")
 endif()

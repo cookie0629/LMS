@@ -1,22 +1,12 @@
-# From http://code.google.com/p/pam-face-authentication/source/browse/branches/pam_face_authentication/cmake/modules/FindPAM.cmake?r=336
-
-# - Try to find the PAM libraries
-# Once done this will define
-#
-#  PAM_FOUND - system has pam
-#  PAM_INCLUDE_DIR - the pam include directory
-#  PAM_LIBRARIES - libpam library
-
 if (PAM_INCLUDE_DIR AND PAM_LIBRARY)
-	# Already in cache, be silent
 	set(PAM_FIND_QUIETLY TRUE)
 endif (PAM_INCLUDE_DIR AND PAM_LIBRARY)
 
-find_path(PAM_INCLUDE_DIR NAMES security/pam_appl.h pam/pam_appl.h)
-find_library(PAM_LIBRARY pam)
-find_library(DL_LIBRARY dl)
+find_path(PAM_INCLUDE_DIR NAMES security/pam_appl.h pam/pam_appl.h) # 查找PAM头文件的位置# NAMES参数指定可能存在的头文件名# 会在系统默认路径中查找security/pam_appl.h或pam/pam_appl.h
+find_library(PAM_LIBRARY pam) # 查找PAM库文件# 会在系统默认路径中查找名为pam的库
+find_library(DL_LIBRARY dl) # 查找动态链接库dl# 会在系统默认路径中查找名为dl的库
 
-if (PAM_INCLUDE_DIR AND PAM_LIBRARY)
+if (PAM_INCLUDE_DIR AND PAM_LIBRARY) # 再次检查PAM头文件和库是否都被找到
 	set(PAM_FOUND TRUE)
 	if (DL_LIBRARY)
 		set(PAM_LIBRARIES ${PAM_LIBRARY} ${DL_LIBRARY})
@@ -25,13 +15,11 @@ if (PAM_INCLUDE_DIR AND PAM_LIBRARY)
 	endif (DL_LIBRARY)
 
 	if (EXISTS ${PAM_INCLUDE_DIR}/pam/pam_appl.h)
-		# darwin claims to be something special
 		set(HAVE_PAM_PAM_APPL_H 1)
 	endif (EXISTS ${PAM_INCLUDE_DIR}/pam/pam_appl.h)
 
 	if (NOT DEFINED PAM_MESSAGE_CONST)
 		include(CheckCXXSourceCompiles)
-		# XXX does this work with plain c?
 		check_cxx_source_compiles("
 #if ${HAVE_PAM_PAM_APPL_H}+0
 # include <pam/pam_appl.h>
