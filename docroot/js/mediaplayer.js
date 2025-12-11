@@ -1,18 +1,19 @@
-// @license magnet:?xt=urn:btih:1f739d935676111cfff4b4693e3816e664797050&dn=gpl-3.0.txt GPL-v3-or-Later
-
-// Keep in sync with MediaPlayer::TranscodingMode cpp
 LMSTranscodingMode = {
 	Never: 0,
 	Always: 1,
 	IfFormatNotSupported: 2,
 }
-Object.freeze(LMSTranscodingMode);
+Object.freeze(LMSTranscodingMode); /** * 冻结LMSTranscodingMode对象，防止其被修改 * 冻结后的对象不能添加新属性，不能删除现有属性，不能修改现有属性的可枚举性、可配置性、可写性，也不能修改现有属性的值 * 也不能修改其原型 */
 
+// LMSMediaPlayer 是一个媒体播放器类，用于处理音频播放功能，支持转码和文件两种模式，并提供音量控制、播放进度调整、设置保存等功能。
+// 参数：
+// root: 播放器根元素
+// defaultSettings: 默认设置对象
+// params: 音频轨道参数
+// settings: 播放器设置对象
 class LMSMediaPlayer {
-	// How much to increase / decrease volume when adjusting it with keyboard shortcuts
 	static #volumeStepAmount = 0.05;
 
-	// How much to seek back / forward (in seconds) with keyboard shortcuts
 	static #seekAmount = 5;
 
 	static #Mode = {
@@ -34,7 +35,12 @@ class LMSMediaPlayer {
 	#pendingTrackParameters;
 	#gainNode;
 	#audioCtx;
-
+	/**
+	这是一个音频播放器的构造函数，用于初始化音频播放器的核心组件和事件监听器。它设置音频元素、播放/暂停按钮，并添加键盘和触摸事件监听器以控制播放器功能。
+	参数：
+	root：播放器的根元素
+	defaultSettings：播放器的默认设置对象}
+	*/
 	constructor(root, defaultSettings) {
 		this.#root = root;
 		this.#elems = {};
@@ -122,10 +128,10 @@ class LMSMediaPlayer {
 			}
 		});
 
-		document.addEventListener("keydown", (event) => {
+		document.addEventListener("keydown", (event) => { //  为文档添加键盘按下事件监听器 用于处理全局键盘快捷键
 			let handled = false;
 
-			if (event.target instanceof HTMLInputElement)
+			if (event.target instanceof HTMLInputElement) //  如果事件目标是输入框，则不处理任何快捷键
 				return;
 
 			if (event.keyCode == 32) {
@@ -166,6 +172,9 @@ class LMSMediaPlayer {
 		document.addEventListener("click", this.#unlock.bind(this));
 	}
 
+	/**
+	 * 该方法用于解锁音频上下文，通过移除所有事件监听器（touchstart、touchend 和 click）来解除锁定状态，并初始化音频上下文
+	 */
 	#unlock() {
 		document.removeEventListener("touchstart", this.#unlock.bind(this));
 		document.removeEventListener("touchend", this.#unlock.bind(this));
@@ -173,6 +182,12 @@ class LMSMediaPlayer {
 		this.#initAudioCtx();
 	};
 
+	/**
+	 初始化音频上下文，设置音频处理节点，并配置媒体会话控制功能。
+	 如果音频上下文已经初始化，则直接返回。否则，创建音频上下文和增益节点，连接音频源。
+	 如果支持媒体会话API，则设置播放、暂停、上一首、下一首和跳转等控制功能。
+	 如果存在待处理的音频轨道参数，则应用这些参数。
+	 */
 	#initAudioCtx() {
 		if (this.#audioIsInit)
 			return;
@@ -209,6 +224,9 @@ class LMSMediaPlayer {
 		}
 	}
 
+	/**
+	 如果存在待处理的音频轨道参数，则应用这些参数。
+	 */
 	#updateControls() {
 		const pauseClass = "fa-pause";
 		const playClass = "fa-play";
@@ -223,19 +241,27 @@ class LMSMediaPlayer {
 		}
 	}
 
+	/**
+	 * 启动计时器，记录当前时间，如果是首次播放则触发"scrobbleListenNow"事件
+	 */
 	#startTimer() {
 		if (this.#lastStartPlaying == null)
 			Wt.emit(this.#root, "scrobbleListenNow", this.#trackId);
 		this.#lastStartPlaying = Date.now();
 	}
 
+	/**
+	 * 暂停计时器，计算已播放时间并重置计时器
+	 */
 	#pauseTimer() {
 		if (this.#lastStartPlaying != null) {
 			this.#playedDuration += Date.now() - this.#lastStartPlaying;
 			this.#lastStartPlaying = null;
 		}
 	}
-
+	/**
+	 * 重置计时器，如果已播放时间大于0则触发"scrobbleListenFinished"事件，并重置已播放时间为0
+	 */
 	#resetTimer() {
 		if (this.#lastStartPlaying != null)
 			this.#pauseTimer();
@@ -246,6 +272,9 @@ class LMSMediaPlayer {
 		}
 	}
 
+	/**
+	将一个表示持续时间的数字转换为易读的时间字符串格式，格式为 HH:MM:SS，其中小时是可选的。
+	 */
 	#durationToString(duration) {
 		const seconds = parseInt(duration, 10);
 		const h = Math.floor(seconds / 3600);
@@ -258,12 +287,14 @@ class LMSMediaPlayer {
 		].filter(Boolean).join(':');
 	}
 
+	// 播放音频
 	#playTrack() {
 		this.#elems.audio.play()
 			.then(_ => { })
 			.catch(error => { console.log("Cannot play audio: " + error); });
 	}
 
+	// 控制音频的播放和暂停功能。当音频处于暂停状态且有音轨时，则播放音轨；否则暂停音频播放。
 	#playPause() {
 		this.#initAudioCtx();
 
@@ -278,16 +309,19 @@ class LMSMediaPlayer {
 			this.#elems.audio.pause();
 	}
 
+	// 播放上一个媒体项目。
 	#playPrevious() {
 		this.#initAudioCtx();
 		Wt.emit(this.#root, "playPrevious");
 	}
 
+	// 触发播放下一个音频的功能。
 	#playNext() {
 		this.#initAudioCtx();
 		Wt.emit(this.#root, "playNext");
 	}
 
+	// 初始化音量设置，从本地存储中读取保存的音量值并应用到音量滑块，然后设置当前音量。
 	#initVolume() {
 		if (typeof (Storage) !== "undefined" && localStorage.volume) {
 			this.#elems.volumeslider.value = Number(localStorage.volume);
@@ -307,6 +341,7 @@ class LMSMediaPlayer {
 		Wt.emit(this.#root, "settingsLoaded", JSON.stringify(this.#settings));
 	}
 
+	//设置音频音量，并更新音量滑块和音量图标的显示状态，同时将音量值保存到本地存储。
 	#setVolume(volume) {
 		this.#elems.lastvolume = this.#elems.audio.volume;
 
@@ -334,6 +369,10 @@ class LMSMediaPlayer {
 		}
 	}
 
+	/**
+	 * 该方法用于减小音频音量，按照设定的音量步长进行递减。
+	 * 如果当前音量不是步长的整数倍，则递减到最接近的较低步长值。音量最小不会低于0。
+	 */
 	#stepVolumeDown() {
 		let currentVolume = this.#elems.audio.volume;
 		let remainder = (currentVolume * 10) % (LMSMediaPlayer.#volumeStepAmount * 10);
@@ -341,6 +380,7 @@ class LMSMediaPlayer {
 		this.#setVolume(Math.max(newVolume, 0));
 	}
 
+	// 用于将音量按固定步长增加，如果当前音量不是步长的整数倍，则调整到下一个步长。
 	#stepVolumeUp() {
 		let currentVolume = this.#elems.audio.volume;
 		let remainder = (currentVolume * 10) % (LMSMediaPlayer.#volumeStepAmount * 10);
@@ -348,10 +388,16 @@ class LMSMediaPlayer {
 		this.#setVolume(Math.min(newVolume, 1));
 	}
 
+	// 设置音频的重播增益值，通过计算并调整增益节点的增益值来实现
 	#setReplayGain(replayGain) {
 		this.#gainNode.gain.value = Math.pow(10, (this.#settings.replayGain.preAmpGain + replayGain) / 20);
 	}
 
+	/**
+	该功能用于将音频播放器的播放位置跳转到指定的时间点。
+	根据当前的音频模式（转码模式或文件模式）采取不同的跳转策略。
+	如果音频原本正在播放，跳转后会继续播放。
+	 */
 	#seekTo(seekTime) {
 		this.#initAudioCtx();
 		let mode = this.#getAudioMode();
@@ -380,6 +426,7 @@ class LMSMediaPlayer {
 		this.#updateMediaSessionState();
 	}
 
+	// 该方法用于将音频播放位置向后回退指定的时间量
 	#seekBack() {
 		let currentPosition = this.#offset + this.#elems.audio.currentTime;
 		let newPosition = currentPosition - LMSMediaPlayer.#seekAmount;
@@ -392,6 +439,7 @@ class LMSMediaPlayer {
 		this.#seekTo(Math.min(newPosition, this.#duration));
 	}
 
+	// 更新媒体会话(Media Session)的状态，包括播放进度、播放状态和持续时间信息
 	#updateMediaSessionState() {
 		if ("mediaSession" in navigator) {
 			navigator.mediaSession.setPositionState({
@@ -407,18 +455,21 @@ class LMSMediaPlayer {
 		}
 	}
 
+	// 该方法用于移除音频元素中的所有子元素，以便清除之前的音频源。
 	#removeAudioSources() {
 		while (this.#elems.audio.lastElementChild) {
 			this.#elems.audio.removeChild(this.#elems.audio.lastElementChild);
 		}
 	}
 
+	// 该方法用于向音频元素中添加一个新的音频源，通过创建一个新的source元素并设置其src属性来实现。
 	#addAudioSource(audioSrc) {
 		let source = document.createElement('source');
 		source.src = audioSrc;
 		this.#elems.audio.appendChild(source);
 	}
 
+	// 该方法用于获取当前音频播放的模式，即是否处于转码模式或文件模式。
 	#getAudioMode() {
 		if (this.#elems.audio.currentSrc) {
 			if (this.#elems.audio.currentSrc.includes("format"))
@@ -430,6 +481,7 @@ class LMSMediaPlayer {
 			return undefined;
 	}
 
+	// 该方法用于应用音频轨道的参数，包括重播增益、媒体会话的元数据等。
 	#applyAudioTrackParameters(params) {
 		this.#setReplayGain(params.replayGain);
 		if ("mediaSession" in navigator) {
@@ -442,6 +494,7 @@ class LMSMediaPlayer {
 		}
 	}
 
+	// 该方法用于播放音频轨道，包括初始化音频上下文、加载音频轨道、设置播放状态等。
 	loadTrack(params, autoplay) {
 		this.#resetTimer();
 
@@ -454,7 +507,6 @@ class LMSMediaPlayer {
 		this.#elems.seek.max = this.#duration;
 
 		this.#removeAudioSources();
-		// ! order is important
 		if (this.#settings.transcoding.mode == LMSTranscodingMode.Never || this.#settings.transcoding.mode == LMSTranscodingMode.IfFormatNotSupported) {
 			this.#addAudioSource(this.#audioNativeSrc);
 		}
@@ -477,10 +529,12 @@ class LMSMediaPlayer {
 			this.#playTrack();
 	}
 
+	// 暂停音频播放。
 	stop() {
 		this.#elems.audio.pause();
 	}
 
+	// 此方法用于设置实例的配置，并将配置保存到浏览器的本地存储中（如果支持
 	setSettings(settings) {
 		this.#settings = settings;
 

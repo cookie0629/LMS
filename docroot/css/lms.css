@@ -1,39 +1,37 @@
-/* Generic rules */
-
-:root {
+:root { /* 定义根元素的变量，用于存储条纹背景颜色 */
 	--lms-striped-bg: #022f3a;
 }
 
-.link-success {
+.link-success { /* 定义成功链接的样式，添加颜色过渡效果 */
 	transition: color 0.15s ease;
 }
 
-.link-secondary {
+.link-secondary { /* 次要链接样式，带有颜色过渡效果 */
 	transition: color 0.15s ease;
 }
 
-.Lms-bg-dark-hover {
+.Lms-bg-dark-hover { /* 深色背景悬停效果类 */
 	transition: background-color 0.15s ease;
 }
 
-.Lms-bg-dark-hover:hover {
+.Lms-bg-dark-hover:hover { /* 深色背景悬停效果的具体样式 */
 	background-color: var(--bs-dark);
 }
 
-.Lms-row-container {
+.Lms-row-container { /* LMS行容器样式 */
 	--lms-striped-bg: #022f3a;
 	--lms-hover-bg: var(--bs-dark);
 }
 
-.Lms-row-container > :nth-child(odd) {
+.Lms-row-container > :nth-child(odd) { /* LMS行容器中奇数子元素的样式 */
 	background-color: var(--lms-striped-bg);
 }
 
-.Lms-row-container > *:hover {
-	background-color: var(--lms-hover-bg);
+.Lms-row-container > *:hover { /* LMS行容器中所有子元素的悬停效果 */
+	background-color: var(--lms-hover-bg); /* 设置鼠标悬停时的背景颜色 */
 }
 
-/* Specific rules */
+
 body {
 	padding-bottom: 78px;
 }
@@ -52,24 +50,24 @@ body {
 	background-color: #0d4655!important;
 }
 
-.Lms-cover {
+.Lms-cover { /** * LMS封面图片的样式 * 包含透明度过渡和滤镜效果 */
 	opacity: 0;
 	transition: opacity 0.5s ease-in, filter 0.15s ease;
 }
 
-.Lms-cover-anchor:hover {
+.Lms-cover-anchor:hover { /* 鼠标悬停在封面链接上时的样式，亮度降低到85% */
 	filter: brightness(85%);
 }
 
-.Lms-cover-container {
+.Lms-cover-container { /* 封面容器样式，设置为相对定位 */
 	position: relative;
 }
 
-.Lms-cover-loaded {
+.Lms-cover-loaded { /* 封面加载完成后的样式，不透明度设置为1（完全不透明） */
 	opacity: 1;
 }
 
-.Lms-cover-release {
+.Lms-cover-release { /* 封面发布样式，设置最大高度和宽度为100%，保持宽高比，使用绝对定位居中 */
 	max-height: 100%;
 	max-width: 100%;
 	width: auto;
