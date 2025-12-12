@@ -1,3 +1,4 @@
+// 事务状态检查与守卫实现
 
 #include "TransactionChecker.hpp"
 

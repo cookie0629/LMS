@@ -1,3 +1,4 @@
+// 强类型 ID 定义与运算
 
 #pragma once
 

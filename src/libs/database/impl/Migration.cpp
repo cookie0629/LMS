@@ -1,3 +1,4 @@
+// 数据库迁移脚本执行与版本管理实现
 
 #include "Migration.hpp"
 

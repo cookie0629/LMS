@@ -1,3 +1,4 @@
+// SQL 查询构建与执行声明
 
 #pragma once
 

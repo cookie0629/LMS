@@ -1,3 +1,4 @@
+// 唱片公司/厂牌 ID 定义
 
 #pragma once
 

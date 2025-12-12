@@ -1,3 +1,4 @@
+// 数据库会话与事务边界实现
 
 #include "database/Session.hpp"
 

@@ -1,3 +1,4 @@
+// 收藏曲目关系的持久化实现
 
 #include "database/objects/StarredTrack.hpp"
 

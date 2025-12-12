@@ -1,3 +1,4 @@
+// 唱片介质 ID 定义
 
 #pragma once
 

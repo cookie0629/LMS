@@ -1,3 +1,4 @@
+// 收藏艺人关系 ID 定义
 
 #pragma once
 

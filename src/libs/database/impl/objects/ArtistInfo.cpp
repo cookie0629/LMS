@@ -1,3 +1,4 @@
+// 艺人信息附属表的持久化实现
 
 #include "database/objects/ArtistInfo.hpp"
 

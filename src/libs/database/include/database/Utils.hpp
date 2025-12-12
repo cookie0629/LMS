@@ -1,3 +1,4 @@
+// 数据库通用工具声明
 #pragma once
 
 #include <functional>

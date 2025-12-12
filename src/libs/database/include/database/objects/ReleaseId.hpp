@@ -1,3 +1,4 @@
+// 专辑/发行 ID 定义
 
 #pragma once
 

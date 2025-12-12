@@ -1,3 +1,4 @@
+// 艺人实体定义
 
 #pragma once
 

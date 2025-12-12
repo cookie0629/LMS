@@ -1,3 +1,4 @@
+// ID 范围与分页工具定义
 
 #pragma once
 

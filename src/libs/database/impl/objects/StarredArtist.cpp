@@ -1,3 +1,4 @@
+// 收藏艺人关系的持久化实现
 
 #include "database/objects/StarredArtist.hpp"
 

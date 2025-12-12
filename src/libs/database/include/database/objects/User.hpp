@@ -1,3 +1,4 @@
+// 用户实体定义
 
 #pragma once
 

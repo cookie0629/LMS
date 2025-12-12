@@ -1,3 +1,4 @@
+// 艺人 ID 类型定义
 
 #pragma once
 

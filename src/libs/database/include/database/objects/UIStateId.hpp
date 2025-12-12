@@ -1,3 +1,4 @@
+// 用户界面状态 ID 定义
 
 #pragma once
 

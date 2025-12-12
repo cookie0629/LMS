@@ -1,3 +1,4 @@
+// 封面/图片元数据的持久化实现
 
 #include "database/objects/Artwork.hpp"
 

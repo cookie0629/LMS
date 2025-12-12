@@ -1,3 +1,4 @@
+// 发行类型 ID 定义
 
 #pragma once
 

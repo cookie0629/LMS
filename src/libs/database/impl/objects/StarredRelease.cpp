@@ -1,3 +1,4 @@
+// 收藏专辑关系的持久化实现
 
 #include "database/objects/StarredRelease.hpp"
 

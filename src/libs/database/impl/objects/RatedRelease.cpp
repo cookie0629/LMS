@@ -1,3 +1,4 @@
+// 专辑评分实体的持久化实现
 
 #include "database/objects/RatedRelease.hpp"
 

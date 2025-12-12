@@ -1,3 +1,4 @@
+// 唱片介质/碟片实体的持久化实现
 
 #include "database/objects/Medium.hpp"
 

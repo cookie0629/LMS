@@ -1,3 +1,4 @@
+// 国家/地区 ID 定义
 
 #pragma once
 

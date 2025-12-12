@@ -1,3 +1,4 @@
+// 封面/图片 ID 定义
 
 #pragma once
 

@@ -1,3 +1,4 @@
+// 歌词文本的持久化实现
 
 #include "database/objects/TrackLyrics.hpp"
 

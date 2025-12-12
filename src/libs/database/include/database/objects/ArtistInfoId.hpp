@@ -1,3 +1,4 @@
+// 艺人附加信息 ID 定义
 
 #pragma once
 

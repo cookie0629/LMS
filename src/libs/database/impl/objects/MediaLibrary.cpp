@@ -1,3 +1,4 @@
+// 媒体库实体的持久化实现
 
 #include "database/objects/MediaLibrary.hpp"
 

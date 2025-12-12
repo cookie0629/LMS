@@ -1,3 +1,4 @@
+// 艺人实体的数据库持久化实现
 #include "database/objects/Artist.hpp"
 
 #include <Wt/Dbo/Impl.h>

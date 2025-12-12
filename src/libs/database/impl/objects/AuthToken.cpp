@@ -1,3 +1,4 @@
+// 登录 token 持久化与查询实现
 
 #include "database/objects/AuthToken.hpp"
 

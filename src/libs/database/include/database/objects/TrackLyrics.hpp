@@ -1,3 +1,4 @@
+// 歌词实体定义
 
 #pragma once
 

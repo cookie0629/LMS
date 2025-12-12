@@ -1,3 +1,4 @@
+// 扫描设置实体的持久化实现
 
 #include "database/objects/ScanSettings.hpp"
 

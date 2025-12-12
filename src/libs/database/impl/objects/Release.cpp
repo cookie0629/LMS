@@ -1,3 +1,4 @@
+// 专辑/发行实体的持久化实现
 
 #include "database/objects/Release.hpp"
 

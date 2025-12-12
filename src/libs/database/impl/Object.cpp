@@ -1,3 +1,4 @@
+// 数据库持久化对象基类实现
 
 #include "database/Object.hpp"
 

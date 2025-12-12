@@ -1,3 +1,4 @@
+// 媒体目录实体的持久化实现
 
 #include "database/objects/Directory.hpp"
 

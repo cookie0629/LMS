@@ -1,3 +1,4 @@
+// 登录 token 实体定义
 
 #pragma once
 

@@ -1,3 +1,4 @@
+// 数据库强类型 ID 的辅助实现
 
 #include "database/IdType.hpp"
 

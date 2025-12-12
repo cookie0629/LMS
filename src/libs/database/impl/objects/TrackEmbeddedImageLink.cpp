@@ -1,3 +1,4 @@
+// 曲目与嵌入封面关联的持久化实现
 
 #include "database/objects/TrackEmbeddedImageLink.hpp"
 

@@ -1,3 +1,4 @@
+// 收藏专辑关系 ID 定义
 
 #pragma once
 

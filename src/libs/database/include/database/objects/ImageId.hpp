@@ -1,3 +1,4 @@
+// 图片资源 ID 定义
 
 #pragma once
 

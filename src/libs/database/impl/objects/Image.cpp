@@ -1,3 +1,4 @@
+// 图片资源记录的持久化实现
 
 #include "database/objects/Image.hpp"
 

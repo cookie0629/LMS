@@ -1,3 +1,4 @@
+// 用户界面状态的持久化实现
 
 #include "database/objects/UIState.hpp"
 

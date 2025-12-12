@@ -1,3 +1,4 @@
+// 曲目评分实体的持久化实现
 
 #include "database/objects/RatedTrack.hpp"
 

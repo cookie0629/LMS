@@ -1,3 +1,4 @@
+// 用户实体的持久化实现
 
 #include "database/objects/User.hpp"
 

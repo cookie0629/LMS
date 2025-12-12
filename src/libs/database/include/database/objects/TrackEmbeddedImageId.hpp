@@ -1,3 +1,4 @@
+// 曲目嵌入封面 ID 定义
 
 #pragma once
 

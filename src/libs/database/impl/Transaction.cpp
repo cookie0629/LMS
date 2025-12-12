@@ -1,3 +1,4 @@
+// 事务包装与提交/回滚实现
 
 #include "database/Transaction.hpp"
 

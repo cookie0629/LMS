@@ -1,3 +1,4 @@
+// 专辑评分 ID 定义
 
 #pragma once
 

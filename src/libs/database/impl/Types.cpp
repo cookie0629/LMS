@@ -1,3 +1,4 @@
+// 数据库通用类型与转换实现
 
 #include "database/Types.hpp"
 

@@ -1,3 +1,4 @@
+// 歌词 ID 定义
 #pragma once
 
 #include "database/IdType.hpp"

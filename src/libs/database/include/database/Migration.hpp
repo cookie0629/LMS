@@ -1,3 +1,4 @@
+// 数据库迁移接口与元数据
 #pragma once
 
 #include <cstddef>
