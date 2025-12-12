@@ -1,40 +1,26 @@
+
 /*
- * Copyright (C) 2020 Emeric Poupon
- *
- * This file is part of LMS.
- *
- * LMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
+ * 这是一个音频文件处理的头文件，使用FFmpeg库来处理音频文件。
+ * 定义了音频文件相关的数据结构和类，包括容器信息、流信息、图片等。
  */
+#pragma once  // 确保头文件只被包含一次，防止重复包含
 
-#pragma once
-
-#include <chrono>
-#include <filesystem>
-#include <functional>
-#include <optional>
-#include <span>
+#include <chrono>    // 时间相关功能，用于处理音频时长
+#include <filesystem> // 文件系统操作，用于处理文件路径
+#include <functional> // 函数对象，用于回调处理图片
+#include <optional>   // 可选值，用于可能不存在的数据
+#include <span>       // 数组视图，用于高效访问数据
 #include <string>
-#include <vector>
+#include <vector>     // 动态数组
 
-#include "audio/AudioTypes.hpp"
+#include "audio/AudioTypes.hpp" // 自定义音频类型定义
 
-extern "C"
+extern "C" // 使用C语言链接，与FFmpeg的C接口兼容
 {
-    struct AVFormatContext;
+    struct AVFormatContext; // FFmpeg格式上下文结构体前向声明
 }
 
-namespace lms::audio::ffmpeg
+namespace lms::audio::ffmpeg // 定义命名空间，组织音频处理相关代码
 {
     struct Picture
     {

@@ -1,23 +1,9 @@
-/*
- * Copyright (C) 2015 Emeric Poupon
- *
- * This file is part of LMS.
- *
- * LMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 
-#include "AudioFile.hpp"
+/*
+ * AudioFile类实现，使用FFmpeg库处理音频文件
+ * 包含容器信息、元数据、流信息和附件图片等功能
+ */
+#include "AudioFile.hpp"  // 音频文件相关头文件
 
 #include <array>
 #include <unordered_map>
@@ -25,21 +11,27 @@
 extern "C"
 {
 #define __STDC_CONSTANT_MACROS
-#include <libavcodec/avcodec.h>
-#include <libavformat/avformat.h>
-#include <libavutil/error.h>
+#include <libavcodec/avcodec.h>  // FFmpeg编解码器库头文件
+#include <libavformat/avformat.h> // FFmpeg格式库头文件
+#include <libavutil/error.h>      // FFmpeg错误处理库头文件
 }
 
-#include "core/ILogger.hpp"
-#include "core/String.hpp"
+#include "core/ILogger.hpp"    // 日志记录器接口头文件
+#include "core/String.hpp"     // 字符串处理工具头文件
 
-#include "audio/AudioTypes.hpp"
-#include "audio/IAudioFileInfo.hpp"
+#include "audio/AudioTypes.hpp"       // 音频类型定义头文件
+#include "audio/IAudioFileInfo.hpp"   // 音频文件信息接口头文件
 
 namespace lms::audio::ffmpeg
 {
+    // 匿名命名空间，包含内部辅助函数
     namespace
     {
+        /**
+         * 将FFmpeg错误码转换为错误信息字符串
+         * @param error FFmpeg错误码
+         * @return 错误信息字符串
+         */
         std::string averror_to_string(int error)
         {
             std::array<char, 128> buf = { 0 };
@@ -50,15 +42,28 @@ namespace lms::audio::ffmpeg
             return "Unknown error";
         }
 
+        /**
+         * 自定义音频文件异常类
+         * 继承自AudioFileParsingException
+         */
         class AudioFileException : public AudioFileParsingException
         {
         public:
+            /**
+             * 构造函数
+             * @param avError FFmpeg错误码
+             */
             AudioFileException(int avError)
                 : AudioFileParsingException{ averror_to_string(avError) }
             {
             }
         };
 
+        /**
+         * 从FFmpeg字典中提取元数据
+         * @param dictionnary FFmpeg字典指针
+         * @param res 元数据映射表引用
+         */
         void getMetaDataFromDictionnary(AVDictionary* dictionnary, AudioFile::MetadataMap& res)
         {
             if (!dictionnary)
@@ -71,6 +76,11 @@ namespace lms::audio::ffmpeg
             }
         }
 
+        /**
+         * 将FFmpeg容器类型名转换为自定义容器类型
+         * @param name 容器类型名
+         * @return 对应的容器类型，如果不支持则返回std::nullopt
+         */
         std::optional<ContainerType> avdemuxerToContainerType(std::string_view name)
         {
             if (name == "aiff")
@@ -103,6 +113,11 @@ namespace lms::audio::ffmpeg
             return std::nullopt;
         }
 
+        /**
+         * 将FFmpeg编解码器ID转换为自定义编解码器类型
+         * @param codec FFmpeg编解码器ID
+         * @return 对应的编解码器类型，如果不支持则返回std::nullopt
+         */
         std::optional<CodecType> avcodecToCodecType(AVCodecID codec)
         {
             switch (codec)
@@ -151,6 +166,10 @@ namespace lms::audio::ffmpeg
         }
     } // namespace
 
+    /**
+     * AudioFile构造函数
+     * @param p 音频文件路径
+     */
     AudioFile::AudioFile(const std::filesystem::path& p)
         : _p{ p }
     {
@@ -170,16 +189,28 @@ namespace lms::audio::ffmpeg
         }
     }
 
+    /**
+     * AudioFile析构函数
+     * 关闭FFmpeg上下文
+     */
     AudioFile::~AudioFile()
     {
         avformat_close_input(&_context);
     }
 
+    /**
+     * 获取音频文件路径
+     * @return 文件路径引用
+     */
     const std::filesystem::path& AudioFile::getPath() const
     {
         return _p;
     }
 
+    /**
+     * 获取容器信息
+     * @return 包含容器类型、名称、比特率和持续时间的ContainerInfo对象
+     */
     ContainerInfo AudioFile::getContainerInfo() const
     {
         ContainerInfo info;
@@ -193,14 +224,16 @@ namespace lms::audio::ffmpeg
         return info;
     }
 
+    /**
+     * 获取元数据
+     * @return 包含所有元数据的MetadataMap
+     */
     AudioFile::MetadataMap AudioFile::getMetaData() const
     {
         MetadataMap res;
 
         getMetaDataFromDictionnary(_context->metadata, res);
 
-        // HACK for OGG files
-        // If we did not find tags, search metadata in streams
         if (res.empty())
         {
             for (std::size_t i{}; i < _context->nb_streams; ++i)
@@ -215,6 +248,10 @@ namespace lms::audio::ffmpeg
         return res;
     }
 
+    /**
+     * 获取所有流信息
+     * @return 包含所有音频流信息的StreamInfo向量
+     */
     std::vector<StreamInfo> AudioFile::getStreamInfo() const
     {
         std::vector<StreamInfo> res;
@@ -229,6 +266,10 @@ namespace lms::audio::ffmpeg
         return res;
     }
 
+    /**
+     * 获取最佳音频流索引
+     * @return 最佳音频流索引，如果没有则返回std::nullopt
+     */
     std::optional<std::size_t> AudioFile::getBestStreamIndex() const
     {
         int res = ::av_find_best_stream(_context,
