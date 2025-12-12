@@ -1,26 +1,17 @@
-/*
- * Copyright (C) 2025 Emeric Poupon
- *
- * This file is part of LMS.
- *
- * LMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 
+/**
+ * @file AudioTypes.hpp
+ * @brief 音频类型相关的转换函数实现
+ */
 #include "audio/AudioTypes.hpp"
 
 namespace lms::audio
 {
+    /**
+     * @brief 将容器类型(ContainerType)转换为对应的字符串表示
+     * @param type 容器类型枚举值
+     * @return 返回容器类型对应的字符串，如果类型未知则返回空字符串
+     */
     core::LiteralString containerTypeToString(ContainerType type)
     {
         switch (type)

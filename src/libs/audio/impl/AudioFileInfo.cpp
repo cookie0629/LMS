@@ -1,45 +1,50 @@
-#include "audio/IAudioFileInfo.hpp"
+#include "audio/IAudioFileInfo.hpp"  // 包含音频文件信息接口的头文件
 
-#include <array>
-#include <cstring>
-#include <filesystem>
-#include <map>
-#include <memory>
-#include <optional>
-#include <span>
-#include <string>
-#include <system_error>
-#include <utility>
-#include <vector>
+#include <array>                    // 包含数组容器
+#include <cstring>                  // 包含C风格字符串操作
+#include <filesystem>               // 包含文件系统操作
+#include <map>                      // 包含映射容器
+#include <memory>                   // 包含智能指针
+#include <optional>                 // 包含可选值类型
+#include <span>                     // 包含span视图容器
+#include <string>                   // 包含字符串类
+#include <system_error>             // 包含系统错误处理
+#include <utility>                  // 包含实用工具
+#include <vector>                   // 包含动态数组容器
 
+// 如果定义了LMS_AUDIO_HAS_TAGLIB宏，则包含TagLib相关的头文件
 #if defined(LMS_AUDIO_HAS_TAGLIB)
-#include <taglib/audioproperties.h>
-#include <taglib/attachedpictureframe.h>
-#include <taglib/fileref.h>
-#include <taglib/flacfile.h>
-#include <taglib/flacpicture.h>
-#include <taglib/id3v2tag.h>
-#include <taglib/mpegfile.h>
-#include <taglib/mp4coverart.h>
-#include <taglib/mp4file.h>
-#include <taglib/mp4tag.h>
-#include <taglib/tag.h>
-#include <taglib/tbytevector.h>
-#include <taglib/tpropertymap.h>
+#include <taglib/audioproperties.h>     // TagLib音频属性
+#include <taglib/attachedpictureframe.h> // TagLib ID3v2附加图片帧
+#include <taglib/fileref.h>             // TagLib文件引用
+#include <taglib/flacfile.h>            // TagLib FLAC文件
+#include <taglib/flacpicture.h>         // TagLib FLAC图片
+#include <taglib/id3v2tag.h>            // TagLib ID3v2标签
+#include <taglib/mpegfile.h>            // TagLib MPEG文件
+#include <taglib/mp4coverart.h>         // TagLib MP4封面艺术
+#include <taglib/mp4file.h>             // TagLib MP4文件
+#include <taglib/mp4tag.h>              // TagLib MP4标签
+#include <taglib/tag.h>                 // TagLib标签
+#include <taglib/tbytevector.h>         // TagLib字节向量
+#include <taglib/tpropertymap.h>        // TagLib属性映射
 #endif
 
-#include "audio/AudioProperties.hpp"
-#include "audio/Exception.hpp"
-#include "audio/IImageReader.hpp"
-#include "audio/ITagReader.hpp"
+#include "audio/AudioProperties.hpp"    // 包含音频属性
+#include "audio/Exception.hpp"          // 包含异常类
+#include "audio/IImageReader.hpp"       // 包含图像读取器接口
+#include "audio/ITagReader.hpp"         // 包含标签读取器接口
 
-namespace lms::audio
+namespace lms::audio  // 定义lms::audio命名空间
 {
-    namespace
+    namespace  // 匿名命名空间，用于内部实现
     {
+        /**
+         * @brief 简单的标签读取器实现
+         */
         class SimpleTagReader : public ITagReader
         {
         public:
+            // 获取指定类型的单个标签值
             std::optional<std::string> getTag(TagType tagType) const override
             {
                 auto it = _values.find(tagType);
@@ -51,6 +56,7 @@ namespace lms::audio
                 return it->second.front();
             }
 
+            // 获取指定类型的多个标签值
             std::vector<std::string> getMultiTag(TagType tagType) const override
             {
                 auto it = _values.find(tagType);
@@ -61,11 +67,13 @@ namespace lms::audio
                 return it->second;
             }
 
+            // 检查是否存在指定类型的标签
             bool hasTag(TagType tagType) const override
             {
                 return _values.contains(tagType) && !_values.at(tagType).empty();
             }
 
+            // 设置指定类型的标签值
             void setValue(TagType tagType, std::string value, bool overwriteIfExists = false)
             {
                 if (value.empty())
@@ -81,6 +89,7 @@ namespace lms::audio
                 _values[tagType] = { std::move(value) };
             }
 
+            // 设置指定类型的多个标签值
             void setValues(TagType tagType, std::vector<std::string> values, bool overwriteIfExists = false)
             {
                 if (values.empty())
@@ -97,21 +106,23 @@ namespace lms::audio
             }
 
         private:
-            std::map<TagType, std::vector<std::string>> _values;
+            std::map<TagType, std::vector<std::string>> _values;  // 存储标签值的映射
         };
     } // namespace
 
     /**
-     * @brief 音频文件信息实现
+     * @brief 音频文件信息实现类
      */
     class AudioFileInfo : public IAudioFileInfo
     {
     public:
+        // 默认构造函数
         AudioFileInfo()
             : AudioFileInfo(AudioProperties{}, std::make_unique<ImageReader>(), std::make_unique<TagReader>())
         {
         }
 
+        // 带参数的构造函数
         AudioFileInfo(AudioProperties audioProps,
                       std::unique_ptr<IImageReader> imageReader,
                       std::unique_ptr<ITagReader> tagReader)
@@ -121,35 +132,40 @@ namespace lms::audio
         {
         }
 
+        // 获取音频属性
         const AudioProperties& getAudioProperties() const override
         {
             return _audioProperties;
         }
 
+        // 获取图像读取器
         const IImageReader& getImageReader() const override
         {
             return *_imageReader;
         }
 
+        // 获取标签读取器
         const ITagReader& getTagReader() const override
         {
             return *_tagReader;
         }
 
     private:
-        AudioProperties _audioProperties;
-        std::unique_ptr<IImageReader> _imageReader;
-        std::unique_ptr<ITagReader> _tagReader;
+        AudioProperties _audioProperties;  // 音频属性
+        std::unique_ptr<IImageReader> _imageReader;  // 图像读取器
+        std::unique_ptr<ITagReader> _tagReader;      // 标签读取器
     };
 
 #if defined(LMS_AUDIO_HAS_TAGLIB)
-    namespace
+    namespace  // 匿名命名空间，用于TagLib相关实现
     {
+        // 将TagLib字符串转换为UTF8字符串
         std::string toUtf8(const TagLib::String& str)
         {
             return str.toCString(true);
         }
 
+        // 将解析器选项转换为TagLib读取风格
         TagLib::AudioProperties::ReadStyle toTagLibReadStyle(ParserOptions::AudioPropertiesReadStyle style)
         {
             switch (style)
@@ -164,6 +180,7 @@ namespace lms::audio
             }
         }
 
+        // 将TagLib字符串列表转换为字符串向量
         std::vector<std::string> toStringVector(const TagLib::StringList& list)
         {
             std::vector<std::string> values;
@@ -179,6 +196,7 @@ namespace lms::audio
             return values;
         }
 
+        // 填充标准标签信息
         void populateStandardTags(const TagLib::Tag& tag, SimpleTagReader& reader)
         {
             reader.setValue(TagType::Title, toUtf8(tag.title()));
@@ -198,6 +216,7 @@ namespace lms::audio
             }
         }
 
+        // 填充属性映射标签信息
         void populatePropertyMapTags(const TagLib::File& file, SimpleTagReader& reader)
         {
             static const std::array<std::pair<const char*, TagType>, 6> propertyMappings = {
@@ -222,12 +241,14 @@ namespace lms::audio
             }
         }
 
+        // 嵌入式图片数据结构
         struct EmbeddedImageData
         {
-            std::vector<std::byte> bytes;
-            std::string mimeType{ "application/octet-stream" };
+            std::vector<std::byte> bytes;  // 图片字节数据
+            std::string mimeType{ "application/octet-stream" };  // MIME类型
         };
 
+        // 将TagLib字节向量转换为字节向量
         std::vector<std::byte> toByteVector(const TagLib::ByteVector& byteVector)
         {
             if (byteVector.isEmpty())
@@ -240,6 +261,7 @@ namespace lms::audio
             return buffer;
         }
 
+        // 构建嵌入式图片数据
         EmbeddedImageData buildEmbeddedImageData(const TagLib::ByteVector& byteVector, std::string mimeType)
         {
             EmbeddedImageData data;
@@ -248,6 +270,7 @@ namespace lms::audio
             return data;
         }
 
+        // 从ID3v2标签中提取图片
         std::optional<EmbeddedImageData> extractFromId3v2(const TagLib::ID3v2::Tag& tag)
         {
             const auto& frames = tag.frameListMap();
@@ -277,6 +300,7 @@ namespace lms::audio
             return std::nullopt;
         }
 
+        // 从FLAC图片中提取图片
         std::optional<EmbeddedImageData> extractFromFlacPictures(const TagLib::List<TagLib::FLAC::Picture*>& pictures)
         {
             for (const auto* flacPicture : pictures)
@@ -298,6 +322,7 @@ namespace lms::audio
             return std::nullopt;
         }
 
+        // 将MP4图片格式转换为MIME类型
         const char* mp4ImageFormatToMimeType(TagLib::MP4::CoverArt::Format format)
         {
             switch (format)
@@ -316,6 +341,7 @@ namespace lms::audio
             }
         }
 
+        // 从MP4文件中提取图片
         std::optional<EmbeddedImageData> extractFromMp4(const TagLib::MP4::File& mp4File)
         {
             const auto* tag = mp4File.tag();
@@ -345,6 +371,7 @@ namespace lms::audio
             return std::nullopt;
         }
 
+        // 从音频文件中提取嵌入式图片
         std::optional<EmbeddedImageData> extractEmbeddedImage(TagLib::File& file)
         {
             if (auto* mpegFile = dynamic_cast<TagLib::MPEG::File*>(&file))
@@ -383,6 +410,7 @@ namespace lms::audio
             return std::nullopt;
         }
 
+        // 构建音频属性
         AudioProperties buildAudioProperties(const TagLib::AudioProperties* props)
         {
             if (!props)
