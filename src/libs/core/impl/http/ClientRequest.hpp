@@ -1,3 +1,4 @@
+// HTTP 客户端请求封装声明
 
 #pragma once
 

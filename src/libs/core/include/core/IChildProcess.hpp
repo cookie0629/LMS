@@ -1,3 +1,4 @@
+// 子进程抽象接口
 #pragma once
 
 #include <cstddef>

@@ -1,3 +1,4 @@
+// 日志接口定义
 
 #pragma once
 

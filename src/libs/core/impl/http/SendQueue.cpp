@@ -1,3 +1,4 @@
+// HTTP 发送队列与重试实现
 
 #include "SendQueue.hpp"
 

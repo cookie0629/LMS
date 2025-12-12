@@ -1,3 +1,4 @@
+// 部分日期时间类型声明
 #pragma once
 
 #include <cstdint>

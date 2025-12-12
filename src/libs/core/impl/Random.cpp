@@ -1,3 +1,4 @@
+// 随机数与随机字符串工具实现
 
 #include "core/Random.hpp"
 

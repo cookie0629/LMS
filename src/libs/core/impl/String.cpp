@@ -1,3 +1,4 @@
+// 字符串工具与编码处理实现
 
 #include "core/String.hpp"
 

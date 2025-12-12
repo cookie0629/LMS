@@ -1,3 +1,4 @@
+// HTTP 客户端接口定义
 
 #pragma once
 

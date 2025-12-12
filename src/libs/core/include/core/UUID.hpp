@@ -1,3 +1,4 @@
+// UUID 类型与工具声明
 
 #pragma once
 

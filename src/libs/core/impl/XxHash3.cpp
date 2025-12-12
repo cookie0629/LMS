@@ -1,3 +1,4 @@
+// XxHash3 哈希计算实现
 
 #include "core/XxHash3.hpp"
 

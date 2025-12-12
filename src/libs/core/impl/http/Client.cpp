@@ -1,3 +1,4 @@
+// HTTP 客户端实现（发送请求、处理响应）
 
 #include "Client.hpp"
 #include "core/Exception.hpp"

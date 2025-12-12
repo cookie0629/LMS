@@ -1,3 +1,4 @@
+// 配置读取接口定义
 #pragma once
 
 #include <filesystem>

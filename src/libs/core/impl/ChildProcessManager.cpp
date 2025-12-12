@@ -1,3 +1,4 @@
+// 子进程生命周期与池化管理实现
 
 #include "ChildProcessManager.hpp"
 

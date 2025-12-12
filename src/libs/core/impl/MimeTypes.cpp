@@ -1,3 +1,4 @@
+// MIME 类型与扩展名映射表
 
 #include "core/MimeTypes.hpp"
 

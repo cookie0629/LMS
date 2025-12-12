@@ -1,3 +1,4 @@
+// HTTP 客户端请求参数封装
 
 #pragma once
 

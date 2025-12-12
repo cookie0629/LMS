@@ -1,3 +1,4 @@
+// XxHash3 哈希接口
 
 #pragma once
 

@@ -1,3 +1,4 @@
+// HTTP 发送队列与重试声明
 
 #pragma once
 

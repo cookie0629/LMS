@@ -1,3 +1,4 @@
+// MIME 类型映射接口/常量
 
 #pragma once
 

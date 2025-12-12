@@ -1,3 +1,4 @@
+// CRC32 校验计算工具
 
 #pragma once
 

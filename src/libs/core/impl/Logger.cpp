@@ -1,3 +1,4 @@
+// 日志记录实现，输出到控制台/文件
 
 #include "Logger.hpp"
 

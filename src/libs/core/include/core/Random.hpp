@@ -1,3 +1,4 @@
+// 随机工具接口
 
 #pragma once
 

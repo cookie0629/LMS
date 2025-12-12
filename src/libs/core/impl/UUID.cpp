@@ -1,3 +1,4 @@
+// UUID 生成与解析实现
 
 #include "core/UUID.hpp"
 
