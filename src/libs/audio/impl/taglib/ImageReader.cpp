@@ -1,22 +1,8 @@
-/*
- * Copyright (C) 2025 Emeric Poupon
- *
- * This file is part of LMS.
- *
- * LMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 
+/**
+ * @file ImageReader.cpp
+ * @brief 图片读取器实现，支持多种音频格式的图片标签读取
+ */
 #include "ImageReader.hpp"
 
 #include "TagLibDefs.hpp"
@@ -42,8 +28,14 @@
 
 namespace lms::audio::taglib
 {
+    // 匿名命名空间，包含辅助函数
     namespace
     {
+        /**
+         * @brief 将ID3v2图片类型转换为系统图片类型
+         * @param type TagLib的ID3v2图片类型
+         * @return 对应的系统图片类型
+         */
         Image::Type imageTypeFromfromID3v2(TagLib::ID3v2::AttachedPictureFrame::Type type)
         {
             switch (type)
@@ -95,6 +87,11 @@ namespace lms::audio::taglib
             return Image::Type::Unknown;
         }
 
+        /**
+         * @brief 将ASF图片类型转换为系统图片类型
+         * @param type TagLib的ASF图片类型
+         * @return 对应的系统图片类型
+         */
         Image::Type imageTypeFromfromASF(TagLib::ASF::Picture::Type type)
         {
             switch (type)
@@ -146,6 +143,11 @@ namespace lms::audio::taglib
             return Image::Type::Unknown;
         }
 
+        /**
+         * @brief 将FLAC图片类型转换为系统图片类型
+         * @param type TagLib的FLAC图片类型
+         * @return 对应的系统图片类型
+         */
         Image::Type imageTypeFromfromFLAC(TagLib::FLAC::Picture::Type type)
         {
             switch (type)
@@ -197,6 +199,11 @@ namespace lms::audio::taglib
             return Image::Type::Unknown;
         }
 
+        /**
+         * @brief 将MP4图片格式转换为MIME类型字符串
+         * @param format TagLib的MP4图片格式
+         * @return 对应的MIME类型字符串
+         */
         const char* mp4ImageFormatToMimeType(TagLib::MP4::CoverArt::Format format)
         {
             switch (format)
@@ -217,6 +224,11 @@ namespace lms::audio::taglib
         }
 
 #if LMS_TAGLIB_HAS_APE_COMPLEX_PROPERTIES
+        /**
+         * @brief 从APE图片类型字符串获取系统图片类型
+         * @param pictureType APE图片类型字符串
+         * @return 对应的系统图片类型
+         */
         Image::Type imageTypeFromAPEPictureType(std::string_view pictureType)
         {
             if (core::stringUtils::stringCaseInsensitiveContains(pictureType, "front"))
@@ -228,6 +240,11 @@ namespace lms::audio::taglib
         }
 #endif // LMS_TAGLIB_HAS_APE_COMPLEX_PROPERTIES
 
+        /**
+         * @brief 遍历ID3v2标签中的图片
+         * @param id3v2Tags ID3v2标签引用
+         * @param visitor 图片访问者回调函数
+         */
         void visitID3V2Images(const ::TagLib::ID3v2::Tag& id3v2Tags, const ImageReader::ImageVisitor& visitor)
         {
             const auto& frameListMap{ id3v2Tags.frameListMap() };
@@ -250,6 +267,11 @@ namespace lms::audio::taglib
             }
         }
 
+        /**
+         * @brief 遍历ASF标签中的图片
+         * @param asfTags ASF标签引用
+         * @param visitor 图片访问者回调函数
+         */
         void visitASFImages(const ::TagLib::ASF::Tag& asfTags, const ImageReader::ImageVisitor& visitor)
         {
             for (const ::TagLib::ASF::Attribute& attribute : asfTags.attribute("WM/Picture"))

@@ -1,26 +1,13 @@
-/*
- * Copyright (C) 2025 Emeric Poupon
- *
- * This file is part of LMS.
- *
- * LMS is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * LMS is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with LMS.  If not, see <http://www.gnu.org/licenses/>.
- */
 
+/*
+ * @file Utils.cpp
+ * @brief 工具函数实现，用于处理音频文件的元数据和属性
+ */
 #include "Utils.hpp"
 
 #include "TagLibDefs.hpp"
 
+// 引入TagLib支持的多种音频文件格式头文件
 #include <taglib/aifffile.h>
 #include <taglib/apefile.h>
 #include <taglib/asffile.h>
@@ -43,16 +30,23 @@
     #include <taglib/dsffile.h>
 #endif
 
+// 引入核心日志和字符串处理头文件
 #include "core/ILogger.hpp"
 #include "core/ITraceLogger.hpp"
 #include "core/String.hpp"
 
+// 引入音频文件信息接口头文件
 #include "audio/IAudioFileInfo.hpp"
 
 namespace lms::audio::taglib::utils
 {
+    /*
+     * @brief 获取支持的音频文件扩展名列表
+     * @return 返回支持的音频文件扩展名的span视图
+     */
     std::span<const std::filesystem::path> getSupportedExtensions()
     {
+        // 静态存储支持的音频文件扩展名列表
         static const std::vector<std::filesystem::path> supportedExtensions{
             ".mp3",
             ".mp2",
