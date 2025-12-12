@@ -1,3 +1,4 @@
+// 使用 FFmpeg 读取嵌入封面图的接口声明
 
 /*
  * ImageReader类声明，继承自IImageReader接口

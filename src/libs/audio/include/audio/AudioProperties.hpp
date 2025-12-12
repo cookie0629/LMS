@@ -1,3 +1,4 @@
+// 音频属性结构体定义（比特率、声道等）
 #pragma once
 
 #include <cstddef>

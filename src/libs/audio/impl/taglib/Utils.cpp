@@ -1,3 +1,4 @@
+// TagLib 相关的工具函数实现
 
 /*
  * @file Utils.cpp

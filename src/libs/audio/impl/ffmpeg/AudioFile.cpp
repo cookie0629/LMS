@@ -1,3 +1,4 @@
+// 基于 FFmpeg 的音频文件读取与解码封装
 
 /*
  * AudioFile类实现，使用FFmpeg库处理音频文件

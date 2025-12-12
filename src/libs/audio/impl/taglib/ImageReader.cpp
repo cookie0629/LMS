@@ -1,3 +1,4 @@
+// 使用 TagLib 读取音频封面图
 
 /**
  * @file ImageReader.cpp

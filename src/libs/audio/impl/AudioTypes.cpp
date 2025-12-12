@@ -1,3 +1,4 @@
+// 音频模块内部枚举与辅助类型的实现
 
 /**
  * @file AudioTypes.hpp

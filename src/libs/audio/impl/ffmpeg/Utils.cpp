@@ -1,3 +1,4 @@
+// FFmpeg 音频处理的通用工具函数实现
 
 #include "Utils.hpp"
 

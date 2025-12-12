@@ -1,3 +1,4 @@
+// 基于 FFmpeg 的音频转码器接口
 
 #pragma once
 

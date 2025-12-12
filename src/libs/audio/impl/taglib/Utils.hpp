@@ -1,3 +1,4 @@
+// TagLib 相关的工具函数声明
 
 #pragma once
 

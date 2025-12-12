@@ -1,3 +1,4 @@
+// 使用 FFmpeg 提取音频元数据
 
 /*
  * AudioFileInfo 类的实现文件

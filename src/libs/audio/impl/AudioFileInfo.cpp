@@ -1,3 +1,4 @@
+// 音频文件基础信息解析与缓存入口
 #include "audio/IAudioFileInfo.hpp"  // 包含音频文件信息接口的头文件
 
 #include <array>                    // 包含数组容器

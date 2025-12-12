@@ -1,3 +1,4 @@
+// TagLib 适配用的常量与类型定义
 
 #pragma once
 
