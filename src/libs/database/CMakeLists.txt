@@ -1,4 +1,4 @@
-add_library(lmsdatabase STATIC
+add_library(lmsdatabase STATIC # 创建一个名为 lmsdatabase 的静态库# STATIC 表示这是一个静态链接库
 	impl/objects/Artist.cpp
 	impl/objects/ArtistInfo.cpp
 	impl/objects/Artwork.cpp
@@ -44,7 +44,7 @@ add_library(lmsdatabase STATIC
 	)
 
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-	target_sources(lmsdatabase PRIVATE impl/TransactionChecker.cpp)
+	target_sources(lmsdatabase PRIVATE impl/TransactionChecker.cpp) # 在Debug模式下添加TransactionChecker.cpp到目标lmsdatabase的私有源文件中
 endif()
 
 target_include_directories(lmsdatabase INTERFACE
