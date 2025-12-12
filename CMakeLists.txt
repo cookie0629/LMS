@@ -1,13 +1,5 @@
-/*
- * CMake 最低版本要求
- * 指定项目需要的最低 CMake 版本为 3.12
- */
 cmake_minimum_required(VERSION 3.12)
 
-/*
- * 项目定义
- * 定义项目名称为 lms，版本号为 3.72.1
- */
 project(lms VERSION 3.72.1)
 
 # 添加自定义 CMake 模块的搜索路径
