@@ -35,7 +35,6 @@ namespace lms::ui
     // - 支持"电台"模式（自动添加推荐曲目）
     // - 支持"重复全部"模式（循环播放）
     // - 与 MediaPlayer 交互，通知播放器加载曲目
-    // - 保存队列为播放列表
     //
     // Функции:
     // - Управляет очередью воспроизведения (добавление, удаление, перестановка треков)
@@ -43,7 +42,6 @@ namespace lms::ui
     // - Поддерживает режим "радио" (автоматическое добавление рекомендуемых треков)
     // - Поддерживает режим "повторять всё" (циклическое воспроизведение)
     // - Взаимодействует с MediaPlayer, уведомляет плеер о загрузке треков
-    // - Сохраняет очередь как плейлист
     class PlayQueue : public Template
     {
     public:
@@ -107,10 +105,6 @@ namespace lms::ui
         void stop();
 
         std::optional<float> getReplayGain(std::size_t pos, const db::ObjectPtr<db::Track>& track) const;
-        void saveAsTrackList();
-
-        void exportToNewTrackList(const Wt::WString& name);
-        void exportToTrackList(db::TrackListId trackList);
 
         const std::size_t _capacity;
         static inline constexpr std::size_t _batchSize{ 12 };

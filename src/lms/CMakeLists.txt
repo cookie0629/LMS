@@ -50,8 +50,6 @@ add_executable(lms
 	ui/explore/ReleaseTypes.cpp
 	ui/explore/TrackCollector.cpp
 	ui/explore/TrackListHelpers.cpp
-	ui/explore/TrackListView.cpp
-	ui/explore/TrackListsView.cpp
 	ui/explore/TracksView.cpp
 	ui/resource/AudioFileResource.cpp
 	ui/resource/AudioTranscodingResource.cpp

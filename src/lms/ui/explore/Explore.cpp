@@ -9,8 +9,6 @@
 #include "Filters.hpp"
 #include "ReleaseView.hpp"
 #include "ReleasesView.hpp"
-#include "TrackListView.hpp"
-#include "TrackListsView.hpp"
 #include "TracksView.hpp"
 
 namespace lms::ui
@@ -23,8 +21,6 @@ namespace lms::ui
             {
                 IdxArtists = 0,
                 IdxArtist,
-                IdxTrackLists,
-                IdxTrackList,
                 IdxReleases,
                 IdxRelease,
                 IdxTracks,
@@ -33,8 +29,6 @@ namespace lms::ui
             static const std::map<std::string, int> indexes = {
                 { "/artists", IdxArtists },
                 { "/artist", IdxArtist },
-                { "/tracklists", IdxTrackLists },
-                { "/tracklist", IdxTrackList },
                 { "/releases", IdxReleases },
                 { "/release", IdxRelease },
                 { "/tracks", IdxTracks },
@@ -68,12 +62,6 @@ namespace lms::ui
 
         auto artist = std::make_unique<Artist>(filters, _playQueueController);
         contentsStack->addWidget(std::move(artist));
-
-        auto trackLists{ std::make_unique<TrackLists>(filters) };
-        auto trackList{ std::make_unique<TrackList>(filters, _playQueueController) };
-        trackList->trackListDeleted.connect(trackLists.get(), &TrackLists::onTrackListDeleted);
-        contentsStack->addWidget(std::move(trackLists));
-        contentsStack->addWidget(std::move(trackList));
 
         auto releases = std::make_unique<Releases>(filters, _playQueueController);
         contentsStack->addWidget(std::move(releases));

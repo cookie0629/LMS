@@ -45,9 +45,6 @@ namespace lms::ui
         Wt::Signal<>& updated() { return _sigUpdated; }
 
     private:
-        // showDialog: 显示过滤器设置对话框。
-        // showDialog: показывает диалог настройки фильтров.
-        void showDialog();
         
         // set: 设置标签过滤器。
         // set: устанавливает фильтр метки.

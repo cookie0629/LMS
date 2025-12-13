@@ -5,7 +5,6 @@
 <message id="Lms.PlayQueue.template.shuffle-btn"><i class="fa fa-fw fa-random"></i></message> <!-- 随机播放按钮的消息模板，使用Font Awesome的随机图标 -->
 <message id="Lms.PlayQueue.template.repeat-btn"><i class="fa fa-fw fa-repeat"></i></message> <!-- 重复播放按钮的消息模板，使用Font Awesome的重复图标 -->
 <message id="Lms.PlayQueue.template.radio-btn"><i class="fa fa-fw fa-rss"></i></message> <!-- 广播按钮的消息模板，使用Font Awesome的RSS图标 -->
-<message id="Lms.PlayQueue.template.save-btn"><i class="fa fa-fw fa-save"></i></message> <!-- 保存按钮的消息模板，使用Font Awesome的保存图标 -->
 
 <message id="Lms.PlayQueue.template"> <!-- 播放队列的主要模板 -->
 	<div class="small text-muted mb-2">${track-count} · ${duration}</div> <!-- 显示曲目数量和总时长的信息栏 -->
@@ -15,9 +14,6 @@
  			<label class="btn btn-outline-info" title="${tr:Lms.PlayQueue.repeat}" for="${id:repeat-btn}">${tr:Lms.PlayQueue.template.repeat-btn}</label>
 			${radio-btn class="btn-check"} <!-- 广播模式按钮 -->
 			<label class="btn btn-outline-info" title="${tr:Lms.PlayQueue.radio-mode}" for="${id:radio-btn}">${tr:Lms.PlayQueue.template.radio-btn}</label>
-		</div>
-		<div class="d-inline-block me-2" title="${tr:Lms.save}"> <!-- 保存按钮 -->
-			${save-btn class="btn btn-secondary"}
 		</div>
 		<div class="d-inline-block me-2" title="${tr:Lms.PlayQueue.shuffle}">
 			${shuffle-btn class="btn btn-secondary"} <!-- 随机播放按钮 -->
@@ -75,49 +71,5 @@
 	${artist}
 </message>
 
-<message id="Lms.PlayQueue.template.save-as-tracklist"> <!-- 保存为播放列表的模态框模板 -->
-	<div class="modal fade" tabindex="-1"> <!-- 模态框容器，设置淡入淡出效果和tabindex -->
-		<div class="modal-dialog">
-			<div class="modal-content">
-				<div class="modal-header">
-					<h5 class="modal-title">${tr:Lms.save}</h5>
-					<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-				</div>
-				<div class="modal-body"> <!-- 模态框主体内容 -->
-					<form>
-						<div class="mb-2"> <!-- 表单组，添加底部外边距 -->
-							<div class="form-check form-check-inline"> <!-- 创建播放列表的选项 -->
-								${create-tracklist-btn class="form-check-input" name="action-type"}
-								<label class="form-check-label" for="${id:create-tracklist-btn}">${tr:Lms.PlayQueue.create-tracklist}</label>
-							</div>
-							<div class="form-check form-check-inline"> <!-- 替换播放列表的选项 -->
-								${replace-tracklist-btn class="form-check-input" name="action-type"}
-								<label class="form-check-label" for="${id:replace-tracklist-btn}">${tr:Lms.PlayQueue.replace-tracklist}</label>
-							</div>
-						</div>
-						${contents}
-					</form>
-				</div>
-				<div class="modal-footer">
-					${save-btn class="btn btn-primary me-1"}${cancel-btn class="btn btn-secondary"}
-				</div>
-			</div>
-		</div>
-	</div>
-</message>
-
-<message id="Lms.PlayQueue.template.save-as-tracklist.create-tracklist">
-	${name class="form-control"}
-	<div class="invalid-feedback">
-		${name-info}
-	</div>
-</message>
-
-<message id="Lms.PlayQueue.template.save-as-tracklist.replace-tracklist">
-	${name class="form-control"}
-	<div class="invalid-feedback">
-		${name-info}
-	</div>
-</message>
 
 </messages>

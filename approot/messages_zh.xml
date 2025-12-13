@@ -189,15 +189,11 @@
 <message id="Lms.Auth.welcome">欢迎！</message>
 
 <!--Explore-->
-<message id="Lms.Explore.add-filter">添加过滤器</message>
 <message id="Lms.Explore.all">全部</message>
 <message id="Lms.Explore.artists">歌手</message>
 
 
 <message id="Lms.Explore.download">下载</message>
-
-<message id="Lms.Explore.filter-added">过滤器已添加</message>
-<message id="Lms.Explore.filters">过滤器</message>
 
 
 <message id="Lms.Explore.most-played">播放最多</message>
@@ -220,7 +216,6 @@
 <message id="Lms.Explore.starred">已收藏</message>
 
 
-<message id="Lms.Explore.tracklists">播放列表</message>
 <message id="Lms.Explore.tracks">音轨</message>
 <message id="Lms.Explore.type">类型</message>
 <message id="Lms.Explore.unstar">取消收藏</message>
@@ -295,8 +290,6 @@
 
 
 
-<!--Explore:TrackLists-->
-<message id="Lms.Explore.TrackLists.del-tracklist-confirm">删除播放列表？</message>
 
 
 
@@ -308,11 +301,9 @@
 
 <!--Playqueue-->
 <message id="Lms.PlayQueue.clear">清除</message>
-<message id="Lms.PlayQueue.create-tracklist">创建新播放列表</message>
 <message id="Lms.PlayQueue.playqueue">播放队列</message>
 <message id="Lms.PlayQueue.radio-mode">广播模式</message>
 <message id="Lms.PlayQueue.repeat">循环播放</message>
-<message id="Lms.PlayQueue.replace-tracklist">替换现有播放列表</message>
 <message id="Lms.PlayQueue.shuffle">随机播放</message>
 
 <!--PlayHistory-->

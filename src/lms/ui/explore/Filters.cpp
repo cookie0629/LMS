@@ -1,176 +1,25 @@
 
 #include "Filters.hpp"
 
-#include <variant>
-
-#include <Wt/WComboBox.h>
-#include <Wt/WDialog.h>
-#include <Wt/WPushButton.h>
-#include <Wt/WTemplate.h>
+#include <algorithm>
+#include <optional>
 
 #include "database/Session.hpp"
-#include "database/objects/Cluster.hpp"
-#include "database/objects/LabelId.hpp"
 #include "database/objects/MediaLibrary.hpp"
 #include "database/objects/Release.hpp"
-#include "database/objects/ReleaseTypeId.hpp"
 
 #include "LmsApplication.hpp"
-#include "ModalManager.hpp"
 #include "State.hpp"
 #include "Utils.hpp"
-#include "common/ValueStringModel.hpp"
 
 namespace lms::ui
 {
-    namespace
-    {
-        struct MediaLibraryTag
-        {
-        };
-
-        struct LabelTag
-        {
-        };
-
-        struct ReleaseTypeTag
-        {
-        };
-
-        using TypeVariant = std::variant<db::ClusterTypeId, MediaLibraryTag, LabelTag, ReleaseTypeTag>;
-        using TypeModel = ValueStringModel<TypeVariant>;
-
-        std::unique_ptr<TypeModel> createTypeModel()
-        {
-            auto typeModel{ std::make_unique<TypeModel>() };
-
-            {
-                auto transaction{ LmsApp->getDbSession().createReadTransaction() };
-                db::ClusterType::find(LmsApp->getDbSession(), [&](const db::ClusterType::pointer& clusterType) {
-                    typeModel->add(Wt::WString::fromUTF8(std::string{ clusterType->getName() }), clusterType->getId());
-                });
-            }
-
-            typeModel->add(Wt::WString::tr("Lms.Explore.media-library"), MediaLibraryTag{});
-            typeModel->add(Wt::WString::tr("Lms.Explore.label"), LabelTag{});
-            typeModel->add(Wt::WString::tr("Lms.Explore.release-type"), ReleaseTypeTag{});
-
-            return typeModel;
-        }
-
-        using ValueVariant = std::variant<db::ClusterId, db::MediaLibraryId, db::LabelId, db::ReleaseTypeId>;
-        using ValueModel = ValueStringModel<ValueVariant>;
-
-        std::unique_ptr<ValueModel> createValueModel(TypeVariant type)
-        {
-            db::Session& session{ LmsApp->getDbSession() };
-
-            auto valueModel{ std::make_unique<ValueModel>() };
-
-            auto transaction{ session.createReadTransaction() };
-
-            if (std::holds_alternative<MediaLibraryTag>(type))
-            {
-                db::MediaLibrary::find(session, [&](const db::MediaLibrary::pointer& library) {
-                    valueModel->add(Wt::WString::fromUTF8(std::string{ library->getName() }), library->getId());
-                });
-            }
-            else if (std::holds_alternative<LabelTag>(type))
-            {
-                db::Label::find(session, db::LabelSortMethod::Name, [&](const db::Label::pointer& label) {
-                    valueModel->add(Wt::WString::fromUTF8(std::string{ label->getName() }), label->getId());
-                });
-            }
-            else if (std::holds_alternative<ReleaseTypeTag>(type))
-            {
-                db::ReleaseType::find(session, db::ReleaseTypeSortMethod::Name, [&](const db::ReleaseType::pointer& releaseType) {
-                    valueModel->add(Wt::WString::fromUTF8(std::string{ releaseType->getName() }), releaseType->getId());
-                });
-            }
-            else if (const db::ClusterTypeId * clusterTypeId{ std::get_if<db::ClusterTypeId>(&type) })
-            {
-                db::Cluster::FindParameters params;
-                params.setClusterType(*clusterTypeId);
-                params.setSortMethod(db::ClusterSortMethod::Name);
-
-                db::Cluster::find(session, params, [&](const db::Cluster::pointer& cluster) {
-                    valueModel->add(Wt::WString::fromUTF8(std::string{ cluster->getName() }), cluster->getId());
-                });
-            }
-
-            return valueModel;
-        }
-    } // namespace
-
-    void Filters::showDialog()
-    {
-        auto dialog{ std::make_unique<Wt::WTemplate>(Wt::WString::tr("Lms.Explore.template.add-filter")) };
-        Wt::WWidget* dialogPtr{ dialog.get() };
-        dialog->addFunction("tr", &Wt::WTemplate::Functions::tr);
-        dialog->addFunction("id", &Wt::WTemplate::Functions::id);
-
-        Wt::WComboBox* typeCombo{ dialog->bindNew<Wt::WComboBox>("type") };
-        const std::shared_ptr<TypeModel> typeModel{ createTypeModel() };
-        typeCombo->setModel(typeModel);
-
-        Wt::WComboBox* valueCombo{ dialog->bindNew<Wt::WComboBox>("value") };
-
-        Wt::WPushButton* addBtn{ dialog->bindNew<Wt::WPushButton>("add-btn", Wt::WString::tr("Lms.Explore.add-filter")) };
-        addBtn->clicked().connect([this, valueCombo, dialogPtr] {
-            const auto valueModel{ std::static_pointer_cast<ValueModel>(valueCombo->model()) };
-            const ValueVariant value{ valueModel->getValue(valueCombo->currentIndex()) };
-
-            if (const db::MediaLibraryId * mediaLibraryId{ std::get_if<db::MediaLibraryId>(&value) })
-            {
-                set(*mediaLibraryId);
-                state::writeValue<db::MediaLibraryId::ValueType>("filters_media_library_id", mediaLibraryId->getValue());
-            }
-            else if (const db::LabelId * labelId{ std::get_if<db::LabelId>(&value) })
-            {
-                set(*labelId);
-                state::writeValue<db::LabelId::ValueType>("filters_label_id", labelId->getValue());
-            }
-            else if (const db::ReleaseTypeId * releaseTypeId{ std::get_if<db::ReleaseTypeId>(&value) })
-            {
-                set(*releaseTypeId);
-                state::writeValue<db::ReleaseTypeId::ValueType>("filters_release_type_id", releaseTypeId->getValue());
-            }
-            else if (const db::ClusterId * clusterId{ std::get_if<db::ClusterId>(&value) })
-            {
-                add(*clusterId);
-            }
-
-            // TODO
-            LmsApp->getModalManager().dispose(dialogPtr);
-        });
-
-        Wt::WPushButton* cancelBtn{ dialog->bindNew<Wt::WPushButton>("cancel-btn", Wt::WString::tr("Lms.cancel")) };
-        cancelBtn->clicked().connect([=] {
-            LmsApp->getModalManager().dispose(dialogPtr);
-        });
-
-        typeCombo->activated().connect([valueCombo, typeModel](int row) {
-            const TypeVariant type{ typeModel->getValue(row) };
-
-            const std::shared_ptr<ValueModel> valueModel{ createValueModel(type) };
-            valueCombo->clear();
-            valueCombo->setModel(valueModel);
-        });
-
-        typeCombo->activated().emit(0); // force emit to refresh the type combo model
-
-        LmsApp->getModalManager().show(std::move(dialog));
-    }
-
     Filters::Filters()
         : Wt::WTemplate{ Wt::WString::tr("Lms.Explore.template.filters") }
     {
-        addFunction("tr", &Functions::tr);
+        addFunction("tr", &Wt::WTemplate::Functions::tr);
 
         // Filters
-        Wt::WPushButton* addFilterBtn = bindNew<Wt::WPushButton>("add-filter", Wt::WText::tr("Lms.Explore.add-filter"));
-        addFilterBtn->clicked().connect(this, &Filters::showDialog);
-
         _filters = bindNew<Wt::WContainerWidget>("clusters");
 
         if (const std::optional<db::MediaLibraryId::ValueType> mediaLibraryId{ state::readValue<db::MediaLibraryId::ValueType>("filters_media_library_id") })
@@ -300,7 +149,7 @@ namespace lms::ui
             _dbFilters.releaseType = db::ReleaseTypeId{};
             _releaseTypeFilter = nullptr;
             _sigUpdated.emit();
-            state::writeValue<db::LabelId::ValueType>("filters_release_type_id", std::nullopt);
+            state::writeValue<db::ReleaseTypeId::ValueType>("filters_release_type_id", std::nullopt);
         });
 
         emitFilterAddedNotification();
@@ -308,8 +157,6 @@ namespace lms::ui
 
     void Filters::emitFilterAddedNotification()
     {
-        LmsApp->notifyMsg(Notification::Type::Info, Wt::WString::tr("Lms.Explore.filter-added"), std::chrono::seconds{ 2 });
-
         _sigUpdated.emit();
     }
 } // namespace lms::ui
