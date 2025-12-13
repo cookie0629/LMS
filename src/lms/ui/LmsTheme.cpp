@@ -11,11 +11,12 @@
 
 namespace lms::ui
 {
-    // init: 在应用启动时注入需要的 JS 资源（例如 Bootstrap bundle）。
-    // init: подключает необходимые JS‑ресурсы при старте приложения (Bootstrap bundle и т.п.).
+    // init: 在应用启动时注入需要的 JS 资源（例如 Bootstrap bundle + 音乐主题交互）。
+    // init: подключает необходимые JS‑ресурсы при старте приложения (Bootstrap bundle + музыкальная тема).
     void LmsTheme::init(Wt::WApplication* app) const
     {
         app->require("js/bootstrap.bundle.min.js");
+        app->require("js/music-theme.js");
     }
 
     // name: 返回主题名称，Wt 用它来选择默认样式。
@@ -32,13 +33,14 @@ namespace lms::ui
         return "";
     }
 
-    // styleSheets: 返回需要加载的 CSS 列表（Bootstrap 皮肤 + LMS 自定义样式）。
-    // styleSheets: список CSS‑файлов для подключения (тема Bootstrap и собственный стиль LMS).
+    // styleSheets: 返回需要加载的 CSS 列表（Bootstrap 皮肤 + LMS 自定义样式 + 音乐主题样式）。
+    // styleSheets: список CSS‑файлов для подключения (тема Bootstrap и собственный стиль LMS + музыкальная тема).
     std::vector<Wt::WLinkedCssStyleSheet> LmsTheme::styleSheets() const
     {
         static const std::vector<Wt::WLinkedCssStyleSheet> files{
             { "css/bootstrap.solar.min.css" },
             { "css/lms.css" },
+            { "css/music-theme.css" },
         };
 
         return files;

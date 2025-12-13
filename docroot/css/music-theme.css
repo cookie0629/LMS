@@ -1,0 +1,659 @@
+/* 音乐主题炫酷视觉风格 CSS */
+
+/* ========== 全局音乐主题变量 ========== */
+:root {
+	--music-primary: #ff006e;
+	--music-secondary: #8338ec;
+	--music-accent: #3a86ff;
+	--music-glow: #ff006e;
+	--music-bg-dark: #0a0a0f;
+	--music-bg-darker: #050508;
+	--music-text: #ffffff;
+	--music-text-muted: #b0b0b0;
+	--music-neon-pink: #ff006e;
+	--music-neon-purple: #8338ec;
+	--music-neon-blue: #3a86ff;
+	--music-neon-cyan: #06ffa5;
+}
+
+/* ========== 背景动画效果 ========== */
+body {
+	background: linear-gradient(135deg, var(--music-bg-darker) 0%, var(--music-bg-dark) 50%, #1a0a2e 100%);
+	background-attachment: fixed;
+	position: relative;
+	overflow-x: hidden;
+}
+
+/* 动态粒子背景 */
+body::before {
+	content: '';
+	position: fixed;
+	top: 0;
+	left: 0;
+	width: 100%;
+	height: 100%;
+	background-image: 
+		radial-gradient(circle at 20% 50%, rgba(255, 0, 110, 0.1) 0%, transparent 50%),
+		radial-gradient(circle at 80% 80%, rgba(131, 56, 236, 0.1) 0%, transparent 50%),
+		radial-gradient(circle at 40% 20%, rgba(58, 134, 255, 0.1) 0%, transparent 50%);
+	animation: particleFloat 20s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 0;
+}
+
+@keyframes particleFloat {
+	0%, 100% {
+		transform: translate(0, 0) scale(1);
+		opacity: 0.5;
+	}
+	33% {
+		transform: translate(30px, -30px) scale(1.1);
+		opacity: 0.7;
+	}
+	66% {
+		transform: translate(-20px, 20px) scale(0.9);
+		opacity: 0.6;
+	}
+}
+
+/* 音频波形背景效果 */
+body::after {
+	content: '';
+	position: fixed;
+	bottom: 0;
+	left: 0;
+	width: 100%;
+	height: 200px;
+	background: linear-gradient(to top, 
+		rgba(255, 0, 110, 0.1) 0%,
+		rgba(131, 56, 236, 0.05) 50%,
+		transparent 100%);
+	opacity: 0.6;
+	animation: waveAnimation 3s ease-in-out infinite;
+	pointer-events: none;
+	z-index: 0;
+}
+
+@keyframes waveAnimation {
+	0%, 100% {
+		transform: translateY(0) scaleY(1);
+	}
+	50% {
+		transform: translateY(-20px) scaleY(1.2);
+	}
+}
+
+/* 确保内容在背景之上 */
+.container {
+	position: relative;
+	z-index: 1;
+}
+
+/* ========== 导航栏音乐主题样式 ========== */
+.navbar {
+	background: linear-gradient(135deg, rgba(10, 10, 15, 0.95) 0%, rgba(26, 10, 46, 0.95) 100%) !important;
+	backdrop-filter: blur(10px);
+	border-bottom: 2px solid transparent;
+	border-image: linear-gradient(90deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 50%,
+		var(--music-neon-blue) 100%) 1;
+	box-shadow: 0 4px 20px rgba(255, 0, 110, 0.3);
+	position: relative;
+	z-index: 1000;
+}
+
+.navbar::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(90deg, 
+		transparent 0%,
+		rgba(255, 0, 110, 0.1) 50%,
+		transparent 100%);
+	animation: neonScan 3s linear infinite;
+	pointer-events: none;
+}
+
+@keyframes neonScan {
+	0% {
+		transform: translateX(-100%);
+	}
+	100% {
+		transform: translateX(100%);
+	}
+}
+
+.nav-link {
+	color: var(--music-text) !important;
+	transition: all 0.3s ease;
+	position: relative;
+	padding: 0.5rem 1rem !important;
+}
+
+.nav-link::before {
+	content: '';
+	position: absolute;
+	bottom: 0;
+	left: 50%;
+	width: 0;
+	height: 2px;
+	background: linear-gradient(90deg, var(--music-neon-pink), var(--music-neon-purple));
+	transition: all 0.3s ease;
+	transform: translateX(-50%);
+}
+
+.nav-link:hover::before {
+	width: 80%;
+	box-shadow: 0 0 10px var(--music-neon-pink);
+}
+
+.nav-link:hover {
+	color: var(--music-neon-pink) !important;
+	text-shadow: 0 0 10px var(--music-neon-pink);
+	transform: translateY(-2px);
+}
+
+/* ========== 按钮音乐主题样式 ========== */
+.btn-primary {
+	background: linear-gradient(135deg, var(--music-neon-pink) 0%, var(--music-neon-purple) 100%);
+	border: none;
+	box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4);
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.btn-primary::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	background: rgba(255, 255, 255, 0.3);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	transition: width 0.6s, height 0.6s;
+}
+
+.btn-primary:hover::before {
+	width: 300px;
+	height: 300px;
+}
+
+.btn-primary:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 6px 20px rgba(255, 0, 110, 0.6);
+}
+
+.btn-primary:active {
+	transform: translateY(0);
+}
+
+.btn-outline-primary {
+	border: 2px solid var(--music-neon-pink);
+	color: var(--music-neon-pink);
+	background: transparent;
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.btn-outline-primary::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 0, 110, 0.3), transparent);
+	transition: left 0.5s;
+}
+
+.btn-outline-primary:hover::before {
+	left: 100%;
+}
+
+.btn-outline-primary:hover {
+	border-color: var(--music-neon-purple);
+	color: var(--music-neon-purple);
+	box-shadow: 0 0 15px rgba(255, 0, 110, 0.5);
+	transform: scale(1.05);
+}
+
+/* ========== 播放器音乐主题样式 ========== */
+.Lms-player {
+	background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 10, 46, 0.98) 100%) !important;
+	backdrop-filter: blur(15px);
+	border-top: 2px solid;
+	border-image: linear-gradient(90deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 50%,
+		var(--music-neon-blue) 100%) 1;
+	box-shadow: 0 -4px 30px rgba(255, 0, 110, 0.4);
+}
+
+/* 进度条音乐主题样式 */
+.Lms-player-seek-common {
+	border-radius: 0;
+}
+
+#lms-mp-progress {
+	background: linear-gradient(90deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 50%,
+		var(--music-neon-blue) 100%);
+	box-shadow: 0 0 10px rgba(255, 0, 110, 0.6);
+	position: relative;
+	overflow: visible;
+}
+
+#lms-mp-progress::after {
+	content: '';
+	position: absolute;
+	right: 0;
+	top: 50%;
+	width: 12px;
+	height: 12px;
+	background: var(--music-neon-pink);
+	border-radius: 50%;
+	transform: translate(50%, -50%);
+	box-shadow: 0 0 15px var(--music-neon-pink);
+	animation: progressPulse 1.5s ease-in-out infinite;
+}
+
+@keyframes progressPulse {
+	0%, 100% {
+		transform: translate(50%, -50%) scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: translate(50%, -50%) scale(1.3);
+		opacity: 0.7;
+	}
+}
+
+/* 播放按钮特殊效果 */
+#lms-mp-playpause {
+	position: relative;
+	overflow: visible;
+}
+
+#lms-mp-playpause::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 0;
+	height: 0;
+	border-radius: 50%;
+	background: rgba(255, 0, 110, 0.3);
+	transform: translate(-50%, -50%);
+	transition: width 0.4s, height 0.4s;
+}
+
+#lms-mp-playpause:active::after {
+	width: 100px;
+	height: 100px;
+}
+
+/* ========== 封面图片音乐主题效果 ========== */
+.Lms-cover {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	border-radius: 8px;
+	overflow: hidden;
+	position: relative;
+}
+
+.Lms-cover::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	background: linear-gradient(135deg, 
+		rgba(255, 0, 110, 0.2) 0%,
+		rgba(131, 56, 236, 0.2) 100%);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	z-index: 1;
+	pointer-events: none;
+}
+
+.Lms-cover:hover::before {
+	opacity: 1;
+}
+
+.Lms-cover-anchor:hover .Lms-cover {
+	transform: scale(1.05) rotate(2deg);
+	filter: brightness(1.1) drop-shadow(0 10px 20px rgba(255, 0, 110, 0.4));
+}
+
+/* 黑胶唱片旋转效果 */
+.Lms-cover-container {
+	position: relative;
+}
+
+.Lms-cover-container::after {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 50%;
+	width: 20px;
+	height: 20px;
+	background: radial-gradient(circle, var(--music-bg-dark) 30%, transparent 30%);
+	border-radius: 50%;
+	transform: translate(-50%, -50%);
+	opacity: 0;
+	transition: opacity 0.3s ease;
+	z-index: 2;
+	pointer-events: none;
+}
+
+.Lms-cover-anchor:hover .Lms-cover-container::after {
+	opacity: 1;
+}
+
+/* ========== 列表项音乐主题样式 ========== */
+.Lms-row-container > * {
+	transition: all 0.3s ease;
+	border-radius: 8px;
+	margin-bottom: 4px;
+	position: relative;
+	overflow: hidden;
+}
+
+.Lms-row-container > *::before {
+	content: '';
+	position: absolute;
+	left: 0;
+	top: 0;
+	width: 4px;
+	height: 100%;
+	background: linear-gradient(180deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 100%);
+	transform: scaleY(0);
+	transition: transform 0.3s ease;
+}
+
+.Lms-row-container > *:hover::before {
+	transform: scaleY(1);
+}
+
+.Lms-row-container > *:hover {
+	background: linear-gradient(90deg, 
+		rgba(255, 0, 110, 0.1) 0%,
+		rgba(131, 56, 236, 0.1) 100%) !important;
+	transform: translateX(5px);
+	box-shadow: -5px 0 15px rgba(255, 0, 110, 0.3);
+}
+
+.Lms-entry-playing {
+	background: linear-gradient(90deg, 
+		rgba(255, 0, 110, 0.2) 0%,
+		rgba(131, 56, 236, 0.2) 100%) !important;
+	box-shadow: inset 4px 0 0 var(--music-neon-pink);
+	animation: playingPulse 2s ease-in-out infinite;
+}
+
+@keyframes playingPulse {
+	0%, 100% {
+		box-shadow: inset 4px 0 0 var(--music-neon-pink), 0 0 10px rgba(255, 0, 110, 0.2);
+	}
+	50% {
+		box-shadow: inset 4px 0 0 var(--music-neon-purple), 0 0 20px rgba(131, 56, 236, 0.4);
+	}
+}
+
+/* ========== 卡片音乐主题样式 ========== */
+.Lms-bg-dark-hover {
+	transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+	border: 1px solid transparent;
+	position: relative;
+	overflow: hidden;
+}
+
+.Lms-bg-dark-hover::before {
+	content: '';
+	position: absolute;
+	top: -50%;
+	left: -50%;
+	width: 200%;
+	height: 200%;
+	background: radial-gradient(circle, 
+		rgba(255, 0, 110, 0.1) 0%,
+		transparent 70%);
+	opacity: 0;
+	transition: opacity 0.4s ease;
+	pointer-events: none;
+}
+
+.Lms-bg-dark-hover:hover::before {
+	opacity: 1;
+}
+
+.Lms-bg-dark-hover:hover {
+	border-color: var(--music-neon-pink);
+	box-shadow: 0 8px 25px rgba(255, 0, 110, 0.3);
+	transform: translateY(-5px);
+}
+
+/* ========== 链接音乐主题样式 ========== */
+.link-success {
+	color: var(--music-neon-cyan) !important;
+	text-decoration: none;
+	position: relative;
+}
+
+.link-success::after {
+	content: '';
+	position: absolute;
+	bottom: -2px;
+	left: 0;
+	width: 0;
+	height: 2px;
+	background: linear-gradient(90deg, var(--music-neon-cyan), var(--music-neon-blue));
+	transition: width 0.3s ease;
+}
+
+.link-success:hover::after {
+	width: 100%;
+}
+
+.link-success:hover {
+	color: var(--music-neon-blue) !important;
+	text-shadow: 0 0 8px var(--music-neon-cyan);
+}
+
+.link-secondary {
+	color: var(--music-text-muted) !important;
+	transition: all 0.3s ease;
+}
+
+.link-secondary:hover {
+	color: var(--music-neon-purple) !important;
+	text-shadow: 0 0 8px var(--music-neon-purple);
+}
+
+/* ========== 输入框音乐主题样式 ========== */
+.form-control {
+	background: rgba(10, 10, 15, 0.8);
+	border: 1px solid rgba(255, 0, 110, 0.3);
+	color: var(--music-text);
+	transition: all 0.3s ease;
+}
+
+.form-control:focus {
+	background: rgba(10, 10, 15, 0.9);
+	border-color: var(--music-neon-pink);
+	box-shadow: 0 0 15px rgba(255, 0, 110, 0.4);
+	outline: none;
+}
+
+.form-control::placeholder {
+	color: var(--music-text-muted);
+}
+
+/* ========== 下拉菜单音乐主题样式 ========== */
+.dropdown-menu {
+	background: rgba(10, 10, 15, 0.95);
+	backdrop-filter: blur(10px);
+	border: 1px solid rgba(255, 0, 110, 0.3);
+	box-shadow: 0 8px 25px rgba(255, 0, 110, 0.3);
+}
+
+.dropdown-item {
+	color: var(--music-text);
+	transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+	background: linear-gradient(90deg, 
+		rgba(255, 0, 110, 0.2) 0%,
+		rgba(131, 56, 236, 0.2) 100%);
+	color: var(--music-neon-pink);
+}
+
+/* ========== 模态框音乐主题样式 ========== */
+.modal-content {
+	background: linear-gradient(135deg, rgba(10, 10, 15, 0.98) 0%, rgba(26, 10, 46, 0.98) 100%);
+	border: 2px solid;
+	border-image: linear-gradient(135deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 50%,
+		var(--music-neon-blue) 100%) 1;
+	box-shadow: 0 10px 40px rgba(255, 0, 110, 0.4);
+}
+
+.modal-header {
+	border-bottom: 1px solid rgba(255, 0, 110, 0.3);
+}
+
+.modal-footer {
+	border-top: 1px solid rgba(255, 0, 110, 0.3);
+}
+
+/* ========== 徽章音乐主题样式 ========== */
+.Lms-badge-cluster {
+	transition: all 0.3s ease;
+	position: relative;
+	overflow: hidden;
+}
+
+.Lms-badge-cluster::before {
+	content: '';
+	position: absolute;
+	top: 0;
+	left: -100%;
+	width: 100%;
+	height: 100%;
+	background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+	transition: left 0.5s;
+}
+
+.Lms-badge-cluster:hover::before {
+	left: 100%;
+}
+
+.Lms-badge-cluster:hover {
+	transform: scale(1.1);
+	box-shadow: 0 4px 15px rgba(255, 0, 110, 0.4);
+}
+
+/* ========== 音频波形可视化效果 ========== */
+.music-waveform {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 3px;
+	height: 40px;
+	padding: 0 10px;
+}
+
+.wave-bar {
+	width: 4px;
+	background: linear-gradient(180deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 100%);
+	border-radius: 2px;
+	animation: waveBar 1.5s ease-in-out infinite;
+	box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+}
+
+.wave-bar:nth-child(1) { animation-delay: 0s; height: 20%; }
+.wave-bar:nth-child(2) { animation-delay: 0.1s; height: 60%; }
+.wave-bar:nth-child(3) { animation-delay: 0.2s; height: 100%; }
+.wave-bar:nth-child(4) { animation-delay: 0.3s; height: 80%; }
+.wave-bar:nth-child(5) { animation-delay: 0.4s; height: 40%; }
+.wave-bar:nth-child(6) { animation-delay: 0.5s; height: 70%; }
+.wave-bar:nth-child(7) { animation-delay: 0.6s; height: 90%; }
+.wave-bar:nth-child(8) { animation-delay: 0.7s; height: 50%; }
+
+@keyframes waveBar {
+	0%, 100% {
+		transform: scaleY(0.3);
+		opacity: 0.7;
+	}
+	50% {
+		transform: scaleY(1);
+		opacity: 1;
+	}
+}
+
+/* ========== 页面过渡动画 ========== */
+@keyframes fadeInUp {
+	from {
+		opacity: 0;
+		transform: translateY(30px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.fade-in-up {
+	animation: fadeInUp 0.6s ease-out;
+}
+
+/* ========== 滚动条音乐主题样式 ========== */
+::-webkit-scrollbar {
+	width: 10px;
+	height: 10px;
+}
+
+::-webkit-scrollbar-track {
+	background: var(--music-bg-dark);
+}
+
+::-webkit-scrollbar-thumb {
+	background: linear-gradient(180deg, 
+		var(--music-neon-pink) 0%,
+		var(--music-neon-purple) 100%);
+	border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+	background: linear-gradient(180deg, 
+		var(--music-neon-purple) 0%,
+		var(--music-neon-blue) 100%);
+	box-shadow: 0 0 10px rgba(255, 0, 110, 0.5);
+}
+
+/* ========== 响应式调整 ========== */
+@media (max-width: 768px) {
+	body::after {
+		height: 100px;
+	}
+	
+	.navbar {
+		box-shadow: 0 2px 10px rgba(255, 0, 110, 0.3);
+	}
+}
+
